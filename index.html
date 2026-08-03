@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fdf2f7">
+<title>小佳专属小屋</title>
+<style>
+/* ============ 颜色（浅色/深色自动切换） ============ */
+:root{
+  --bg:#fdf2f7; --bg2:#f8e9f5; --card:#ffffff;
+  --text:#4a3b52; --text2:#a08ba6; --border:#f3dce8;
+  --pink:#f48fb1; --lav:#b39ddb; --pink-deep:#ec6f9d; --lav-deep:#9575cd;
+  --mine:#8b7bd8; --xiaojia:#ff8fb3;
+  --shadow:0 6px 20px rgba(244,143,177,.16);
+  --nav-bg:rgba(255,255,255,.92);
+  --ok:#7bc47f; --warn:#e8a04c;
+}
+[data-theme="dark"]{
+  --bg:#241b30; --bg2:#2c2138; --card:#342a45;
+  --text:#efe7f7; --text2:#a99bbd; --border:#4a3a5e;
+  --pink:#f48fb1; --lav:#b39ddb; --pink-deep:#f48fb1; --lav-deep:#b39ddb;
+  --mine:#a89be0; --xiaojia:#ff9dbb;
+  --shadow:0 6px 20px rgba(0,0,0,.35);
+  --nav-bg:rgba(36,27,48,.92);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0; padding:0}
+body{
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:linear-gradient(160deg,var(--bg),var(--bg2));
+  color:var(--text); min-height:100vh; padding-bottom:86px;
+}
+button{font-family:inherit; cursor:pointer}
+input,select,textarea{font-family:inherit; font-size:15px; color:var(--text)}
+
+/* ============ 顶部栏 ============ */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px 10px;
+  background:linear-gradient(180deg,var(--bg) 70%,transparent);
+}
+.brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; color:var(--pink-deep)}
+.brand .logo{
+  width:34px; height:34px; border-radius:50%; object-fit:cover; display:block;
+  background:#fff; border:2px solid var(--border); box-shadow:0 3px 10px rgba(149,117,205,.2);
+}
+.top-actions{display:flex; gap:8px}
+.icon-btn{
+  border:none; background:var(--card); color:var(--text);
+  width:38px; height:38px; border-radius:50%; font-size:17px;
+  box-shadow:var(--shadow); display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:active{transform:scale(.93)}
+
+/* ============ 页面 ============ */
+.page{display:none; padding:4px 14px 20px; max-width:560px; margin:0 auto}
+.page.active{display:block; animation:fadein .25s}
+@keyframes fadein{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+
+/* ============ 卡片 ============ */
+.card{
+  background:var(--card); border-radius:20px; padding:14px 16px;
+  box-shadow:var(--shadow); margin-bottom:14px; border:1px solid var(--border);
+}
+.card-title{font-weight:700; font-size:15px; margin-bottom:10px; display:flex; align-items:center; gap:6px}
+.card-title .more{margin-left:auto; font-size:12px; color:var(--text2); font-weight:400}
+.card-title .more button{border:none; background:none; color:var(--lav-deep); font-size:13px}
+
+/* ============ 演示数据提示 ============ */
+.demo-banner{
+  background:linear-gradient(120deg,#fff3d6,#ffe9f2);
+  color:#8a6d3b; border-radius:16px; padding:10px 14px; font-size:13px;
+  margin-bottom:14px; display:flex; align-items:center; gap:10px; border:1px dashed #e8c97a;
+}
+[data-theme="dark"] .demo-banner{background:linear-gradient(120deg,#3d3226,#3d2a36); color:#e8cf9a; border-color:#6b5833}
+.demo-banner button{
+  margin-left:auto; flex-shrink:0; border:none; border-radius:12px;
+  background:#e8a04c; color:#fff; padding:6px 12px; font-size:12px;
+}
+
+/* ============ 底部导航 ============ */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:60;
+  display:flex; background:var(--nav-bg); backdrop-filter:blur(12px);
+  border-top:1px solid var(--border); padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+}
+.bottom-nav button{
+  flex:1; border:none; background:none; color:var(--text2);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:11px; padding:4px 0;
+}
+.bottom-nav button .nav-ico{
+  width:29px; height:29px; display:block; overflow:hidden; border-radius:10px;
+  background:#fff; border:1px solid var(--border); box-shadow:0 2px 7px rgba(149,117,205,.13);
+  transition:transform .2s, border-color .2s, box-shadow .2s;
+}
+.bottom-nav button .nav-ico img{width:100%; height:100%; display:block; object-fit:cover}
+.bottom-nav button.active{color:var(--pink-deep); font-weight:600}
+.bottom-nav button.active .nav-ico{
+  transform:translateY(-2px) scale(1.1); border-color:var(--pink);
+  box-shadow:0 4px 11px rgba(244,143,177,.28);
+}
+
+/* ============ 表单 ============ */
+.row{display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap}
+.input{
+  flex:1; min-width:120px; border:1.5px solid var(--border); border-radius:14px;
+  background:var(--bg); padding:10px 12px; outline:none;
+}
+.input:focus{border-color:var(--pink)}
+.btn{
+  border:none; border-radius:14px; padding:10px 18px; font-size:14px; font-weight:600;
+  background:linear-gradient(120deg,var(--pink),var(--lav)); color:#fff;
+  box-shadow:0 4px 12px rgba(244,143,177,.35);
+}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--bg); color:var(--text2); box-shadow:none; border:1.5px solid var(--border)}
+.btn.small{padding:6px 12px; font-size:12px; border-radius:12px}
+.chip{
+  border:1.5px solid var(--border); background:var(--bg); color:var(--text2);
+  border-radius:999px; padding:7px 14px; font-size:13px;
+}
+.chip.on{background:linear-gradient(120deg,var(--pink),var(--lav)); color:#fff; border-color:transparent}
+.chip.who{display:inline-flex; align-items:center; gap:5px; border-radius:999px; padding:4px 10px; font-size:12px}
+.who-mine{background:rgba(139,123,216,.15); color:var(--mine); border:1px solid rgba(139,123,216,.35)}
+.who-xiaojia{background:rgba(255,143,179,.15); color:var(--xiaojia); border:1px solid rgba(255,143,179,.4)}
+.chk{width:22px; height:22px; accent-color:var(--pink-deep); flex-shrink:0}
+label.small{font-size:12px; color:var(--text2); display:flex; align-items:center; gap:5px}
+.photo-input{width:100%; min-width:0; border:1.5px dashed var(--border); border-radius:14px; background:var(--bg); padding:9px 10px; color:var(--text2); font-size:12px}
+.photo-note{font-size:11.5px; color:var(--text2); line-height:1.6}
+.cloud-status{margin-left:auto; font-size:11px; font-weight:500; color:var(--text2)}
+.cloud-status.ok{color:var(--ok)}
+.cloud-status.warn{color:var(--warn)}
+.cloud-status.off{color:var(--text2)}
+.cloud-box{background:var(--bg); border:1px solid var(--border); border-radius:14px; padding:10px 12px; font-size:12px; line-height:1.7}
+.cloud-box b{color:var(--text)}
+.cloud-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.cloud-actions .btn{flex:1; min-width:118px}
+
+/* ============ 列表 ============ */
+.list-item{
+  display:flex; align-items:center; gap:10px; padding:11px 4px;
+  border-bottom:1px dashed var(--border); font-size:14.5px;
+}
+.list-item:last-child{border-bottom:none}
+.list-item .txt{flex:1; min-width:0}
+.list-item .txt.done{text-decoration:line-through; color:var(--text2)}
+.list-item .meta{font-size:11.5px; color:var(--text2); display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:3px}
+.del-btn{border:none; background:none; color:var(--text2); font-size:15px; padding:4px 6px; border-radius:8px}
+.del-btn:active{background:var(--border)}
+.empty{
+  text-align:center; color:var(--text2); font-size:13.5px; padding:26px 0 18px; line-height:1.8;
+}
+.empty .big{font-size:30px; display:block; margin-bottom:6px}
+.empty-art{
+  width:78px; height:74px; display:block; object-fit:cover; object-position:center 58%;
+  margin:0 auto 8px; border-radius:24px; border:1px solid var(--border); background:#fff;
+  box-shadow:0 4px 13px rgba(149,117,205,.13);
+}
+.photo-wall{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px}
+.photo-tile{position:relative; aspect-ratio:1; overflow:hidden; border-radius:14px; border:1px solid var(--border); background:var(--bg)}
+.photo-tile img{width:100%; height:100%; display:block; object-fit:cover}
+.photo-tile .del-btn{position:absolute; top:3px; right:3px; width:25px; height:25px; padding:0; border-radius:50%; background:rgba(40,25,45,.62); color:#fff}
+.photo-empty{grid-column:1/-1; text-align:center; color:var(--text2); font-size:12.5px; padding:13px 8px; line-height:1.7; border:1px dashed var(--border); border-radius:14px}
+.photo-strip{display:flex; gap:6px; margin-top:6px; overflow-x:auto}
+.photo-strip img{width:46px; height:46px; flex:0 0 46px; object-fit:cover; border-radius:10px; border:1px solid var(--border); background:var(--bg)}
+
+/* ============ 心情 ============ */
+.mood-row{display:flex; justify-content:space-between; gap:6px}
+.mood{font-size:26px; border:none; background:none; border-radius:14px; padding:6px 8px; filter:grayscale(.4); opacity:.7}
+.mood.on{filter:none; opacity:1; background:var(--bg); box-shadow:0 0 0 2px var(--pink)}
+
+/* ============ 子页签 ============ */
+.sub-tabs{display:flex; gap:8px; margin-bottom:14px; overflow-x:auto}
+.sub-tabs .chip{flex-shrink:0}
+
+/* ============ 数字统计 ============ */
+.stat-row{display:flex; gap:10px; margin-bottom:14px}
+.stat{
+  flex:1; background:var(--card); border:1px solid var(--border); border-radius:18px;
+  padding:12px; text-align:center; box-shadow:var(--shadow);
+}
+.stat .num{font-size:22px; font-weight:800; color:var(--pink-deep)}
+.stat .lab{font-size:11.5px; color:var(--text2); margin-top:2px}
+
+/* ============ 弹窗 ============ */
+.modal-mask{
+  position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-mask.show{display:flex}
+.modal{
+  background:var(--card); width:100%; max-width:560px;
+  border-radius:24px 24px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  max-height:86vh; overflow-y:auto; animation:up .25s;
+}
+@keyframes up{from{transform:translateY(40px); opacity:.6} to{transform:none; opacity:1}}
+.modal h3{margin:0 0 14px; font-size:16px}
+.modal .close-row{display:flex; justify-content:flex-end}
+
+/* ============ 提示条 ============ */
+.toast{
+  position:fixed; left:50%; bottom:100px; transform:translateX(-50%);
+  background:rgba(50,35,60,.92); color:#fff; font-size:13px;
+  padding:9px 18px; border-radius:999px; z-index:200; opacity:0; transition:opacity .25s; pointer-events:none;
+}
+.toast.show{opacity:1}
+
+/* ============ 小部件 ============ */
+.quick-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.quick{
+  border:1.5px solid var(--border); background:var(--bg); border-radius:16px;
+  padding:10px 4px; text-align:center; font-size:12px; color:var(--text2);
+}
+.quick .q-ico{font-size:20px; display:block; margin-bottom:3px}
+.quick:active{transform:scale(.95)}
+
+.mascot{
+  width:94px; height:94px; flex-shrink:0; display:block; object-fit:cover; object-position:center;
+  border-radius:28px; border:2px solid var(--border); background:#fff; box-shadow:var(--shadow);
+}
+.greet{display:flex; align-items:center; gap:14px; margin:6px 0 16px}
+.greet h1{font-size:20px; margin:0 0 4px}
+.greet .date{font-size:12.5px; color:var(--text2)}
+.count-num{font-size:26px; font-weight:800; color:var(--pink-deep)}
+</style>
+</head>
+<body>
+
+<!-- ================= 顶部栏 ================= -->
+<header class="topbar">
+  <div class="brand">
+    <!-- 已匹配：厨师拿面包近景图，适合作为顶部圆形小标识 -->
+    <img class="logo" data-photo="logo" alt="大耳狗厨师小图标">
+    小佳专属小屋
+  </div>
+  <div class="top-actions">
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">🌙</button>
+    <button class="icon-btn" id="settingsBtn" title="设置">⚙️</button>
+  </div>
+</header>
+
+<main>
+  <!-- ================= 首页 ================= -->
+  <section class="page active" id="page-home">
+    <div class="demo-banner" id="demoBanner">
+      <span>👀 你现在看到的是<b>演示数据</b>，用来展示界面效果，不是真实记录。</span>
+      <button id="clearDemoBtn">清空，从空白开始</button>
+    </div>
+
+    <div class="greet">
+      <!-- 已匹配：蓝粉水彩烘焙图，作为首页主视觉 -->
+      <img class="mascot" data-photo="mascot" alt="大耳狗和蓝色蛋糕水彩图">
+      <div>
+        <h1 id="greetText">你好呀 👋</h1>
+        <div class="date" id="todayLine"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📌 今天的待办 <span class="more" id="todoStatText"></span></div>
+      <div id="homeTodoList"></div>
+      <div class="card-title" style="margin-top:10px">
+        <span style="font-size:13px; font-weight:400; color:var(--text2)">去待办页安排更多</span>
+        <span class="more"><button onclick="goPage('todo')">去待办 →</button></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🥣 今天吃了什么</div>
+      <div class="quick-grid">
+        <button class="quick" data-quick="breakfast"><span class="q-ico">🌅</span>早餐</button>
+        <button class="quick" data-quick="lunch"><span class="q-ico">☀️</span>午餐</button>
+        <button class="quick" data-quick="dinner"><span class="q-ico">🌙</span>晚餐</button>
+        <button class="quick" data-quick="snack"><span class="q-ico">🍰</span>加餐</button>
+      </div>
+      <div id="homeMealList" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📷 我们的照片墙 <span class="more" id="wallPhotoHint"></span></div>
+      <div class="photo-wall" id="homePhotoWall"></div>
+      <div class="row">
+        <input class="photo-input" id="wallPhotoInput" type="file" accept="image/*" multiple>
+      </div>
+      <div class="row" style="margin-bottom:0">
+        <span class="photo-note" id="wallPhotoNote">连接云端后，可以把原图放进这里；未连接时不会上传。</span>
+        <button class="btn small" id="wallPhotoBtn" style="margin-left:auto">上传照片</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚖️ 体重 <span class="more" id="weightTodayText"></span></div>
+      <div class="row">
+        <input class="input" id="homeWeightInput" type="number" step="0.1" min="20" max="200" placeholder="今天的体重，如 52.5">
+        <button class="btn small" id="homeWeightBtn">记录</button>
+      </div>
+      <div class="row">
+        <button class="chip who who-mine" data-who="mine">我</button>
+        <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+      </div>
+      <div id="homeWeightHistory"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💪 今天运动了 <span class="more"><button onclick="goPage('record')">去记录 →</button></span></div>
+      <div id="homeSportList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">😊 今天的心情</div>
+      <div class="mood-row" id="homeMoodRow"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">❤️ 纪念日 <span class="more"><button onclick="goPage('diary')">去日记 →</button></span></div>
+      <div id="homeAnnivList"></div>
+    </div>
+  </section>
+
+  <!-- ================= 待办 ================= -->
+  <section class="page" id="page-todo">
+    <div class="card">
+      <div class="card-title">➕ 添加待办</div>
+      <div class="row"><input class="input" id="todoInput" placeholder="要做什么？比如：一起去买菜"></div>
+      <div class="row">
+        <button class="chip" data-bucket="today">今天</button>
+        <button class="chip" data-bucket="tomorrow">明天</button>
+        <button class="chip" data-bucket="later">以后</button>
+        <label class="small"><input type="checkbox" id="todoRepeat"> 每天重复</label>
+      </div>
+      <div class="row">
+        <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+        <button class="chip who who-mine" data-who="mine">我</button>
+        <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        <button class="btn small" id="todoAddBtn" style="margin-left:auto">添加</button>
+      </div>
+    </div>
+
+    <div id="todoGroups"></div>
+  </section>
+
+  <!-- ================= 记录 ================= -->
+  <section class="page" id="page-record">
+    <div class="sub-tabs">
+      <button class="chip on" data-sub="diet">🍚 饮食</button>
+      <button class="chip" data-sub="weight">⚖️ 体重</button>
+      <button class="chip" data-sub="sport">💪 运动</button>
+    </div>
+
+    <div id="sub-diet">
+      <div class="card">
+        <div class="card-title">🍚 今天吃了什么</div>
+        <div class="row" style="margin-bottom:12px">
+          <button class="chip on" data-meal="breakfast">早餐</button>
+          <button class="chip" data-meal="lunch">午餐</button>
+          <button class="chip" data-meal="dinner">晚餐</button>
+          <button class="chip" data-meal="snack">加餐</button>
+        </div>
+        <div class="row">
+          <input class="input" id="mealInput" placeholder="吃了什么？如：豆浆、包子">
+          <button class="btn small" id="mealAddBtn">记录</button>
+        </div>
+        <div class="row">
+          <input class="photo-input" id="mealPhotoInput" type="file" accept="image/*" multiple>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title" id="mealListTitle">今天的三餐</div><div id="mealList"></div></div>
+    </div>
+
+    <div id="sub-weight" style="display:none">
+      <div class="card">
+        <div class="card-title">⚖️ 记体重</div>
+        <div class="row">
+          <input class="input" id="weightInput" type="number" step="0.1" min="20" max="200" placeholder="公斤，如 52.5">
+          <button class="btn small" id="weightAddBtn">记录</button>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+          <span style="font-size:11px; color:var(--text2); margin-left:auto">同一天同一个人再记会自动覆盖</span>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">📈 体重记录（最近 7 条）</div><div id="weightList"></div></div>
+    </div>
+
+    <div id="sub-sport" style="display:none">
+      <div class="card">
+        <div class="card-title">💪 记运动</div>
+        <div class="row">
+          <select class="input" id="sportType" style="flex:1">
+            <option>散步</option><option>跑步</option><option>跳绳</option><option>游泳</option>
+            <option>羽毛球</option><option>力量训练</option><option>瑜伽</option><option>其他</option>
+          </select>
+          <input class="input" id="sportMinutes" type="number" min="1" max="600" placeholder="几分钟" style="flex:0 0 90px">
+          <button class="btn small" id="sportAddBtn">记录</button>
+        </div>
+        <div class="row">
+          <input class="photo-input" id="sportPhotoInput" type="file" accept="image/*" multiple>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">📝 运动记录（最近 7 条）</div><div id="sportList"></div></div>
+    </div>
+  </section>
+
+  <!-- ================= 日记 ================= -->
+  <section class="page" id="page-diary">
+    <div class="sub-tabs">
+      <button class="chip on" data-sub="diary">📖 日记</button>
+      <button class="chip" data-sub="mood">😊 心情</button>
+      <button class="chip" data-sub="anniv">❤️ 纪念日</button>
+    </div>
+
+    <div id="sub-diary">
+      <div class="card">
+        <div class="card-title">✏️ 写日记</div>
+        <div class="row"><input class="input" id="diaryDate" type="date"></div>
+        <div class="row"><textarea class="input" id="diaryText" rows="3" placeholder="今天发生了什么？想写什么写什么…" style="resize:none"></textarea></div>
+        <div class="row">
+          <input class="photo-input" id="diaryPhotoInput" type="file" accept="image/*" multiple>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁写的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+          <button class="btn small" id="diaryAddBtn" style="margin-left:auto">保存</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">📖 日记本（最近 7 篇）</div><div id="diaryList"></div></div>
+    </div>
+
+    <div id="sub-mood" style="display:none">
+      <div class="card">
+        <div class="card-title">😊 今天的心情</div>
+        <div class="mood-row" id="moodRow"></div>
+        <div class="row" style="margin-top:10px">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+        <div class="row"><input class="input" id="moodNote" placeholder="为什么？（选填）"></div>
+        <div class="row"><button class="btn small" id="moodSaveBtn" style="margin-left:auto">保存心情</button></div>
+      </div>
+      <div class="card"><div class="card-title">📋 心情记录（最近 7 条）</div><div id="moodList"></div></div>
+    </div>
+
+    <div id="sub-anniv" style="display:none">
+      <div class="card">
+        <div class="card-title">❤️ 添加纪念日</div>
+        <div class="row"><input class="input" id="annivName" placeholder="名称，如：在一起的日子"></div>
+        <div class="row"><input class="input" id="annivDate" type="date"></div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">提前提醒：</span>
+          <button class="chip" data-remind="0">当天</button>
+          <button class="chip" data-remind="3">提前3天</button>
+          <button class="chip" data-remind="7">提前7天</button>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+          <button class="btn small" id="annivAddBtn" style="margin-left:auto">添加</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">❤️ 纪念日列表</div><div id="annivList"></div></div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= 底部导航 ================= -->
+<nav class="bottom-nav">
+  <button data-page="home" class="active"><span class="nav-ico"><img data-photo="navHome" alt="" aria-hidden="true"></span>首页</button>
+  <button data-page="todo"><span class="nav-ico"><img data-photo="navTodo" alt="" aria-hidden="true"></span>待办</button>
+  <button data-page="record"><span class="nav-ico"><img data-photo="navRecord" alt="" aria-hidden="true"></span>记录</button>
+  <button data-page="diary"><span class="nav-ico"><img data-photo="navDiary" alt="" aria-hidden="true"></span>日记</button>
+</nav>
+
+<!-- ================= 设置弹窗 ================= -->
+<div class="modal-mask" id="settingsModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="settingsClose">✕</button></div>
+    <h3>⚙️ 设置</h3>
+
+    <div class="card" style="box-shadow:none">
+      <div class="card-title">🎨 外观</div>
+      <div class="row">
+        <button class="chip" data-theme-opt="light">☀️ 浅色</button>
+        <button class="chip" data-theme-opt="dark">🌙 深色</button>
+        <button class="chip" data-theme-opt="auto">🔄 跟随系统</button>
+      </div>
+    </div>
+
+    <div class="card" style="box-shadow:none" id="cloudCard">
+      <div class="card-title">☁️ 云端同步 <span class="cloud-status off" id="cloudStatus">本地模式</span></div>
+      <div class="cloud-box" id="cloudConfigMissing">
+        还没有填写 Supabase 配置。当前继续使用本地模式；先完成照片和页面体验，不会上传任何数据。
+      </div>
+      <div id="cloudGuestBox" style="display:none">
+        <div class="row"><input class="input" id="cloudEmail" type="email" placeholder="邮箱地址"></div>
+        <div class="row"><input class="input" id="cloudPassword" type="password" placeholder="密码（至少 8 位）"></div>
+        <div class="cloud-actions">
+          <button class="btn small" id="cloudLoginBtn">登录</button>
+          <button class="btn small ghost" id="cloudSignupBtn">注册新账号</button>
+        </div>
+        <div class="photo-note" id="cloudAuthHint" style="margin-top:7px">两个人各注册一个账号；密码只交给 Supabase，不会保存到这个网页。</div>
+      </div>
+      <div id="cloudUserBox" style="display:none">
+        <div class="cloud-box" id="cloudUserText"></div>
+        <div id="cloudHouseSetup" style="margin-top:8px">
+          <div class="row"><input class="input" id="cloudDisplayName" placeholder="你在小屋里的称呼，如：我 / 小佳"></div>
+          <div class="row"><input class="input" id="cloudHouseName" placeholder="第一个人：给小屋起个名字"><button class="btn small" id="createHouseBtn">创建小屋</button></div>
+          <div class="row"><input class="input" id="cloudInviteCode" placeholder="第二个人：输入邀请码"><button class="btn small" id="joinHouseBtn">加入小屋</button></div>
+        </div>
+        <div id="cloudHouseConnected" style="display:none; margin-top:8px">
+          <div class="cloud-box" id="cloudHouseText"></div>
+          <div class="cloud-actions">
+            <button class="btn small" id="cloudUploadBtn">把本机数据上传</button>
+            <button class="btn small ghost" id="cloudDownloadBtn">从云端拉取</button>
+          </div>
+        </div>
+        <div class="cloud-actions">
+          <button class="btn small ghost" id="cloudSignoutBtn">退出登录</button>
+        </div>
+      </div>
+      <div class="photo-note" id="cloudGeneralHint" style="margin-top:8px">
+        第一次连接时必须手动选择“上传本机数据”或“从云端拉取”，之后新增和修改会自动同步。两台设备同时修改同一项时，后保存的一方会覆盖前一方。
+      </div>
+    </div>
+
+    <div class="card" style="box-shadow:none">
+      <div class="card-title">💾 备份与恢复</div>
+      <div class="row">
+        <button class="btn small" id="exportBtn">导出备份文件</button>
+        <button class="btn small ghost" id="importBtn">导入备份文件</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+      <div style="font-size:12px; color:var(--text2); line-height:1.7">
+        换手机时：旧手机点「导出备份文件」→ 把文件发到新手机（如微信发给自己）→ 新手机点「导入备份文件」。<br>
+        ⚠️ 导入会覆盖当前所有数据，导入前会再让你确认一次。
+      </div>
+    </div>
+
+    <div class="card" style="box-shadow:none">
+      <div class="card-title">🧹 数据</div>
+      <div class="row">
+        <button class="btn small ghost" id="clearAllBtn">清空所有数据</button>
+      </div>
+      <div style="font-size:12px; color:var(--text2); line-height:1.7">
+        清空所有数据前会连续确认两次，放心。<br>
+        没有连接云端时，数据只保存在这台设备的浏览器里；连接后只有你明确选择同步，才会上传。<br>
+        图片放在小屋的 assets 文件夹里，移动时请把整个「小佳专属小屋」文件夹一起移动。<br>
+        提醒：网页的「提醒」在手机锁屏时可能不准时，打开工作台就能看到今天的事。
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="supabase-config.js"></script>
+<script>
+"use strict";
+/* ================================================================
+   小佳专属小屋 v0.2（第一阶段云端接入版）
+   - 没有云端配置时，数据保存在本设备浏览器（localStorage）
+   - 连接云端并明确选择后，数据和照片才会同步到 Supabase
+   - 谁记的：mine=我，xiaojia=小佳
+   ================================================================ */
+
+/* ---------- 已从桌面图片文件夹筛选并匹配；素材仅限两人本地自用 ---------- */
+const PHOTOS = {
+  mascot: "assets/mascot-watercolor.jpg",
+  logo: "assets/logo-chef-bread.jpg",
+  empty: "assets/empty-roll-cake.jpg",
+  navHome: "assets/nav-home.jpg",
+  navTodo: "assets/nav-todo.jpg",
+  navRecord: "assets/nav-record.jpg",
+  navDiary: "assets/nav-diary.jpg"
+};
+
+const SUPABASE_CONFIG = window.XIAOJIA_SUPABASE_CONFIG || { url:"", anonKey:"" };
+const PHOTO_BUCKET = "xiaojia-photos";
+const PHOTO_MAX_BYTES = 20 * 1024 * 1024;
+const LS_KEY = "xiaojia-app-data-v1";
+const CLOUD_LINK_KEY = "xiaojia-cloud-link-v1";
+const TODAY = (()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); })();
+const WEEK = ["日","一","二","三","四","五","六"];
+const MEALS = { breakfast:"早餐", lunch:"午餐", dinner:"晚餐", snack:"加餐" };
+const MOODS = [
+  { id:"happy",  e:"😊", t:"开心" },
+  { id:"love",   e:"🥰", t:"甜蜜" },
+  { id:"calm",   e:"😌", t:"平静" },
+  { id:"tired",  e:"😴", t:"困倦" },
+  { id:"sad",    e:"😢", t:"难过" },
+  { id:"angry",  e:"😠", t:"生气" }
+];
+
+/* ---------- 初始演示数据（仅用于展示界面，可一键清空） ---------- */
+function daysAgo(n){
+  const d = new Date(); d.setDate(d.getDate()-n);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function seedDemo(){
+  return {
+    version: 2,
+    demo: true,
+    theme: "auto",
+    todos: [
+      { id:"t1", text:"一起去买菜", bucket:"today",    repeat:false, done:false, who:"xiaojia", date:TODAY },
+      { id:"t2", text:"晚上散步 30 分钟", bucket:"today", repeat:false, done:true,  who:"mine", date:TODAY },
+      { id:"t3", text:"给花浇水", bucket:"tomorrow", repeat:false, done:false, who:"mine", date:TODAY },
+      { id:"t4", text:"早睡（每天重复）", bucket:"today", repeat:true,  done:false, who:"xiaojia", date:TODAY },
+      { id:"t5", text:"周末去看电影", bucket:"later", repeat:false, done:false, who:"mine", date:TODAY }
+    ],
+    meals: [
+      { id:"m1", date:TODAY, meal:"breakfast", text:"豆浆、小笼包", who:"xiaojia" },
+      { id:"m2", date:TODAY, meal:"lunch", text:"番茄鸡蛋面", who:"mine" }
+    ],
+    weights: [
+      { date:TODAY, kg:52.5, who:"xiaojia" },
+      { date:TODAY, kg:65.2, who:"mine" },
+      { date:daysAgo(1), kg:52.8, who:"xiaojia" },
+      { date:daysAgo(3), kg:53.0, who:"xiaojia" },
+      { date:daysAgo(7), kg:53.2, who:"xiaojia" }
+    ],
+    sports: [
+      { id:"s1", date:TODAY, type:"散步", minutes:30, who:"mine" }
+    ],
+    diaries: [
+      { id:"d1", date:TODAY, text:"今天一起做了番茄鸡蛋面，很好吃。", who:"xiaojia" }
+    ],
+    moods: [
+      { id:"mo1", date:TODAY, mood:"love", note:"和小佳一起吃饭很开心", who:"mine" }
+    ],
+    anniversaries: [
+      { id:"a1", name:"在一起的日子", date:"2025-06-01", remindDays:3, who:"mine" }
+    ],
+    photos: [],
+    doneMap: {}   // { "日期": { 待办id: true } }
+  };
+}
+
+function emptyState(){
+  return { version:2, demo:false, theme:"auto", todos:[], meals:[], weights:[], sports:[],
+           diaries:[], moods:[], anniversaries:[], photos:[], doneMap:{} };
+}
+
+/* ---------- 读取 / 保存 ---------- */
+let S = null;
+function normalizeState(data){
+  const next = data && typeof data === "object" ? data : emptyState();
+  next.version = 2;
+  ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].forEach(k=>{
+    if(!Array.isArray(next[k])) next[k] = [];
+  });
+  if(!next.doneMap || typeof next.doneMap !== "object") next.doneMap = {};
+  if(!next.theme) next.theme = "auto";
+  if(typeof next.demo !== "boolean") next.demo = false;
+  ["meals","sports","diaries"].forEach(k=>{
+    next[k].forEach(item=>{
+      if(!Array.isArray(item.photoIds)) item.photoIds = [];
+    });
+  });
+  return next;
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(!data || ![1,2].includes(data.version)) throw new Error("版本不对");
+      S = normalizeState(data);
+    }
+  }catch(e){
+    S = null;
+  }
+  if(!S){ S = seedDemo(); localSaveOnly(); }
+  else { localSaveOnly(); }
+}
+function localSaveOnly(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }
+  catch(e){ toast("保存失败：浏览器存储不可用"); }
+}
+function save(options={}){
+  localSaveOnly();
+  if(options.cloud !== false) queueCloudSync();
+}
+function uid(){ return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------- Supabase 账号 / 小屋 / 同步 ---------- */
+let supabaseClient = null;
+let cloudSession = null;
+let currentHouse = null;
+let cloudChannel = null;
+let cloudSyncEnabled = false;
+let cloudSyncTimer = null;
+let cloudSyncBusy = false;
+let cloudSyncDirty = false;
+let cloudLibraryPromise = null;
+
+function hasCloudConfig(){
+  return typeof SUPABASE_CONFIG.url === "string"
+    && /^https:\/\//i.test(SUPABASE_CONFIG.url)
+    && typeof SUPABASE_CONFIG.anonKey === "string"
+    && SUPABASE_CONFIG.anonKey.length > 20;
+}
+function cloudReady(){ return !!(supabaseClient && cloudSession && cloudSession.user && currentHouse); }
+function cloudLink(){
+  try{
+    const data = JSON.parse(localStorage.getItem(CLOUD_LINK_KEY) || "null");
+    return data && data.houseId ? data : null;
+  }catch(e){ return null; }
+}
+function setCloudLink(enabled){
+  cloudSyncEnabled = !!enabled;
+  if(currentHouse && cloudSyncEnabled){
+    localStorage.setItem(CLOUD_LINK_KEY, JSON.stringify({ houseId:currentHouse.id, enabled:true }));
+  }else if(!currentHouse || !cloudSyncEnabled){
+    localStorage.removeItem(CLOUD_LINK_KEY);
+  }
+  updateCloudUI();
+  updatePhotoControls();
+}
+function cloudErrorText(error){
+  return String(error && (error.message || error.error_description) || "云端请求失败").replace(/\s+/g," ");
+}
+function setCloudStatus(text, kind="off"){
+  const el = $("cloudStatus");
+  if(!el) return;
+  el.textContent = text;
+  el.className = "cloud-status "+kind;
+}
+function updatePhotoControls(){
+  const enabled = cloudReady() && cloudSyncEnabled;
+  ["wallPhotoInput","wallPhotoBtn","mealPhotoInput","sportPhotoInput","diaryPhotoInput"].forEach(id=>{
+    const el = $(id);
+    if(el) el.disabled = !enabled;
+  });
+  if($("wallPhotoNote")){
+    $("wallPhotoNote").textContent = enabled
+      ? "原图不会被压缩；单张照片最大 20MB。"
+      : "连接云端并选择同步方向后，才可以上传照片。";
+  }
+  if($("wallPhotoHint")) $("wallPhotoHint").textContent = S.photos.length ? S.photos.length+" 张" : "还没有照片";
+}
+function updateCloudUI(){
+  const missing = $("cloudConfigMissing"), guest = $("cloudGuestBox"), user = $("cloudUserBox");
+  if(!missing || !guest || !user) return;
+  if(!hasCloudConfig()){
+    missing.style.display = "block";
+    missing.textContent = "还没有填写 Supabase 配置。当前继续使用本地模式；先完成照片和页面体验，不会上传任何数据。";
+    guest.style.display = "none";
+    user.style.display = "none";
+    setCloudStatus("本地模式","off");
+    updatePhotoControls();
+    return;
+  }
+  missing.style.display = "none";
+  if(!supabaseClient){
+    guest.style.display = "none";
+    user.style.display = "none";
+    setCloudStatus("连接中…","warn");
+    updatePhotoControls();
+    return;
+  }
+  if(!cloudSession){
+    guest.style.display = "block";
+    user.style.display = "none";
+    setCloudStatus("未登录","warn");
+    updatePhotoControls();
+    return;
+  }
+  guest.style.display = "none";
+  user.style.display = "block";
+  $("cloudUserText").textContent = "已登录：" + (cloudSession.user.email || "这个账号");
+  if(!currentHouse){
+    $("cloudHouseSetup").style.display = "block";
+    $("cloudHouseConnected").style.display = "none";
+    setCloudStatus("已登录","warn");
+  }else{
+    $("cloudHouseSetup").style.display = "none";
+    $("cloudHouseConnected").style.display = "block";
+    $("cloudHouseText").innerHTML = "小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
+      + (cloudSyncEnabled ? "<br><span style='color:var(--ok)'>已开启自动同步</span>" : "<br><span style='color:var(--warn)'>还没有选择上传或拉取</span>");
+    setCloudStatus(cloudSyncEnabled ? "云端已连接" : "待选择同步","ok");
+  }
+  updatePhotoControls();
+}
+function loadSupabaseLibrary(){
+  if(window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
+  if(cloudLibraryPromise) return cloudLibraryPromise;
+  cloudLibraryPromise = new Promise((resolve,reject)=>{
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.onload = ()=> window.supabase && window.supabase.createClient
+      ? resolve(window.supabase)
+      : reject(new Error("Supabase 网页库没有正确加载"));
+    script.onerror = ()=>reject(new Error("无法加载 Supabase 网页库，请检查网络"));
+    document.head.appendChild(script);
+  });
+  return cloudLibraryPromise;
+}
+function rpcRow(data){ return Array.isArray(data) ? data[0] : data; }
+async function loadCurrentHouse(){
+  currentHouse = null;
+  if(!cloudSession || !supabaseClient) return;
+  const userId = cloudSession.user.id;
+  const memberResult = await supabaseClient.from("xj_house_members")
+    .select("house_id,display_name,role").eq("user_id",userId).limit(1).maybeSingle();
+  if(memberResult.error) throw memberResult.error;
+  if(!memberResult.data) return;
+  const houseResult = await supabaseClient.from("xj_houses")
+    .select("id,name,invite_code").eq("id",memberResult.data.house_id).maybeSingle();
+  if(houseResult.error) throw houseResult.error;
+  if(houseResult.data){
+    currentHouse = {
+      id:houseResult.data.id,
+      name:houseResult.data.name,
+      inviteCode:houseResult.data.invite_code,
+      displayName:memberResult.data.display_name || ""
+    };
+  }
+}
+function subscribeHouse(){
+  if(!cloudReady()) return;
+  if(cloudChannel){ supabaseClient.removeChannel(cloudChannel); cloudChannel = null; }
+  cloudChannel = supabaseClient.channel("xj-house-state-"+currentHouse.id)
+    .on("postgres_changes", {
+      event:"UPDATE", schema:"public", table:"xj_house_state",
+      filter:"house_id=eq."+currentHouse.id
+    }, payload=>{
+      if(!cloudSyncEnabled || payload.new.updated_by === cloudSession.user.id) return;
+      setTimeout(()=>pullCloudState(false,true),0);
+    })
+    .subscribe();
+}
+async function handleCloudSession(session){
+  cloudSession = session || null;
+  if(!cloudSession){
+    currentHouse = null;
+    cloudSyncEnabled = false;
+    localStorage.removeItem(CLOUD_LINK_KEY);
+    if(cloudChannel && supabaseClient){ supabaseClient.removeChannel(cloudChannel); }
+    cloudChannel = null;
+    updateCloudUI();
+    return;
+  }
+  try{
+    await loadCurrentHouse();
+    const link = cloudLink();
+    cloudSyncEnabled = !!(currentHouse && link && link.houseId === currentHouse.id && link.enabled);
+    updateCloudUI();
+    if(cloudReady() && cloudSyncEnabled){
+      subscribeHouse();
+      await hydratePhotoUrls(false);
+      renderAll();
+    }
+  }catch(error){
+    setCloudStatus("连接异常","warn");
+    $("cloudAuthHint").textContent = "云端表还没有准备好，或权限规则没有运行成功："+cloudErrorText(error);
+  }
+  updatePhotoControls();
+}
+async function initCloud(){
+  updateCloudUI();
+  if(!hasCloudConfig()) return;
+  try{
+    await loadSupabaseLibrary();
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    supabaseClient.auth.onAuthStateChange((event, session)=>{
+      cloudSession = session || null;
+      /* 官方文档提醒不要在这个回调里直接 await 数据库请求，避免请求互相等待。 */
+      setTimeout(()=>handleCloudSession(session),0);
+    });
+    const result = await supabaseClient.auth.getSession();
+    if(result.error) throw result.error;
+    await handleCloudSession(result.data.session);
+  }catch(error){
+    setCloudStatus("连接失败","warn");
+    $("cloudConfigMissing").style.display = "block";
+    $("cloudConfigMissing").textContent = "配置已填写，但云端库加载失败："+cloudErrorText(error);
+    updatePhotoControls();
+  }
+}
+function checkCloudPassword(){
+  const password = $("cloudPassword").value;
+  if(password.length < 8){ toast("密码至少需要 8 位"); return false; }
+  return true;
+}
+async function cloudSignUp(){
+  if(!supabaseClient || !checkCloudPassword()) return;
+  const email = $("cloudEmail").value.trim();
+  if(!email){ toast("先填邮箱地址"); return; }
+  const protocol = window.location.protocol;
+  const emailRedirectTo = (protocol === "http:" || protocol === "https:")
+    ? window.location.origin + window.location.pathname
+    : null;
+  if(!emailRedirectTo){
+    $("cloudAuthHint").textContent = "请先用 http://127.0.0.1:8000/index.html 打开小屋，再注册账号；双击 file:// 文件无法正确回到小屋。";
+    return;
+  }
+  const {data,error} = await supabaseClient.auth.signUp({
+    email,
+    password:$("cloudPassword").value,
+    options:{ emailRedirectTo }
+  });
+  if(error){ $("cloudAuthHint").textContent = cloudErrorText(error); return; }
+  $("cloudAuthHint").textContent = data.session ? "注册成功，已经登录。" : "注册成功，请先去邮箱点确认链接，再回来登录。";
+}
+async function cloudSignIn(){
+  if(!supabaseClient || !checkCloudPassword()) return;
+  const email = $("cloudEmail").value.trim();
+  if(!email){ toast("先填邮箱地址"); return; }
+  const {error} = await supabaseClient.auth.signInWithPassword({ email, password:$("cloudPassword").value });
+  if(error) $("cloudAuthHint").textContent = "登录失败："+cloudErrorText(error);
+}
+async function createCloudHouse(){
+  if(!cloudSession) return;
+  const name = $("cloudHouseName").value.trim() || "小佳专属小屋";
+  const displayName = $("cloudDisplayName").value.trim() || "我";
+  const {data,error} = await supabaseClient.rpc("xj_create_house", { p_name:name, p_display_name:displayName });
+  if(error){ toast("创建失败："+cloudErrorText(error)); return; }
+  await loadCurrentHouse();
+  cloudSyncEnabled = false;
+  updateCloudUI();
+  toast("小屋创建好了，请把邀请码发给另一位");
+}
+async function joinCloudHouse(){
+  if(!cloudSession) return;
+  const code = $("cloudInviteCode").value.trim();
+  const displayName = $("cloudDisplayName").value.trim() || "小佳";
+  if(!code){ toast("先填邀请码"); return; }
+  const {data,error} = await supabaseClient.rpc("xj_join_house", { p_invite_code:code, p_display_name:displayName });
+  if(error){ toast("加入失败："+cloudErrorText(error)); return; }
+  await loadCurrentHouse();
+  cloudSyncEnabled = false;
+  updateCloudUI();
+  toast("加入成功，请选择从云端拉取");
+}
+function cloudStateData(){
+  const data = JSON.parse(JSON.stringify(S));
+  data.photos = (data.photos || []).map(photo=>{
+    const clean = Object.assign({}, photo);
+    delete clean.url;
+    return clean;
+  });
+  return data;
+}
+async function writeStateToCloud(){
+  if(!cloudReady()) throw new Error("还没有加入小屋");
+  const {error} = await supabaseClient.from("xj_house_state").upsert({
+    house_id:currentHouse.id,
+    data:cloudStateData(),
+    updated_by:cloudSession.user.id,
+    updated_at:new Date().toISOString()
+  }, { onConflict:"house_id" });
+  if(error) throw error;
+}
+function queueCloudSync(){
+  if(!cloudSyncEnabled || !cloudReady()) return;
+  cloudSyncDirty = true;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(()=>syncStateToCloud(),700);
+}
+async function syncStateToCloud(){
+  if(!cloudSyncEnabled || !cloudReady() || cloudSyncBusy) return;
+  cloudSyncBusy = true;
+  cloudSyncDirty = false;
+  try{ await writeStateToCloud(); }
+  catch(error){ toast("云端同步失败："+cloudErrorText(error)); }
+  finally{
+    cloudSyncBusy = false;
+    if(cloudSyncDirty) queueCloudSync();
+  }
+}
+async function uploadLocalState(){
+  if(!cloudReady()) return;
+  const {data,error} = await supabaseClient.from("xj_house_state").select("house_id,updated_at").eq("house_id",currentHouse.id).maybeSingle();
+  if(error){ toast("读取云端状态失败："+cloudErrorText(error)); return; }
+  if(data && !confirm("云端已经有一份数据，上传本机数据会覆盖云端这一份。确定继续吗？")) return;
+  try{
+    await writeStateToCloud();
+    setCloudLink(true);
+    subscribeHouse();
+    toast("本机数据已上传，之后会自动同步 ☁️");
+  }catch(error){ toast("上传失败："+cloudErrorText(error)); }
+}
+async function pullCloudState(ask=true, silent=false){
+  if(!cloudReady()) return false;
+  const {data,error} = await supabaseClient.from("xj_house_state").select("data,updated_at").eq("house_id",currentHouse.id).maybeSingle();
+  if(error){ if(!silent) toast("读取云端失败："+cloudErrorText(error)); return false; }
+  if(!data){ if(!silent) toast("云端还没有数据，请先由一人上传本机数据"); return false; }
+  if(ask && !confirm("从云端拉取会覆盖本机当前数据。确定继续吗？")) return false;
+  S = normalizeState(data.data);
+  localSaveOnly();
+  setCloudLink(true);
+  await hydratePhotoUrls(false);
+  applyTheme(S.theme);
+  renderAll();
+  if(!silent) toast("已从云端拉取最新数据");
+  return true;
+}
+
+/* ---------- 云端原图照片 ---------- */
+function selectedFiles(inputId){
+  const input = $(inputId);
+  return input && input.files ? Array.from(input.files) : [];
+}
+function photoExtension(file){
+  const ext = String(file.name || "").split(".").pop().toLowerCase();
+  if(["jpg","jpeg","png","webp","gif"].includes(ext)) return ext === "jpeg" ? "jpg" : ext;
+  if(file.type === "image/png") return "png";
+  if(file.type === "image/webp") return "webp";
+  if(file.type === "image/gif") return "gif";
+  return "jpg";
+}
+async function uploadPhotoFiles(kind, recordId, files){
+  if(!cloudReady() || !cloudSyncEnabled) throw new Error("请先连接云端并选择同步方向");
+  const valid = [];
+  for(const file of files){
+    if(!file.type || !file.type.startsWith("image/")) throw new Error("只能上传图片文件");
+    if(file.size > PHOTO_MAX_BYTES) throw new Error("单张图片不能超过 20MB："+file.name);
+    if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){
+      throw new Error("暂时支持 JPG、PNG、WEBP、GIF 图片："+file.name);
+    }
+    valid.push(file);
+  }
+  const refs = [];
+  for(const file of valid){
+    const id = uid();
+    const path = currentHouse.id + "/" + id + "." + photoExtension(file);
+    const uploadResult = await supabaseClient.storage.from(PHOTO_BUCKET).upload(path, file, {
+      cacheControl:"3600", upsert:false, contentType:file.type
+    });
+    if(uploadResult.error) throw uploadResult.error;
+    const insertResult = await supabaseClient.from("xj_photos").insert({
+      house_id:currentHouse.id,
+      owner_id:cloudSession.user.id,
+      record_kind:kind,
+      record_id:String(recordId),
+      storage_path:path,
+      original_name:file.name,
+      mime_type:file.type,
+      byte_size:file.size
+    }).select("id,house_id,owner_id,record_kind,record_id,storage_path,original_name,mime_type,byte_size,created_at").single();
+    if(insertResult.error){
+      await supabaseClient.storage.from(PHOTO_BUCKET).remove([path]);
+      throw insertResult.error;
+    }
+    const signedResult = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400);
+    refs.push(Object.assign({}, insertResult.data, { url:signedResult.data?.signedUrl || "" }));
+  }
+  return refs;
+}
+async function uploadPhotosForRecord(kind, record, inputId){
+  const files = selectedFiles(inputId);
+  if(!files.length) return true;
+  try{
+    const refs = await uploadPhotoFiles(kind, record.id, files);
+    S.photos.push(...refs);
+    record.photoIds = refs.map(photo=>photo.id);
+    $(inputId).value = "";
+    return true;
+  }catch(error){
+    toast("照片上传失败："+cloudErrorText(error));
+    return false;
+  }
+}
+async function uploadWallPhotos(){
+  const files = selectedFiles("wallPhotoInput");
+  if(!files.length){ toast("先选择一张或多张照片"); return; }
+  try{
+    const refs = await uploadPhotoFiles("wall", "wall_"+uid(), files);
+    S.photos.push(...refs);
+    $("wallPhotoInput").value = "";
+    save(); renderAll(); toast("照片墙已更新 📷");
+  }catch(error){ toast("照片上传失败："+cloudErrorText(error)); }
+}
+async function hydratePhotoUrls(shouldRender=true){
+  if(!cloudReady()) return;
+  const result = await supabaseClient.from("xj_photos")
+    .select("id,house_id,owner_id,record_kind,record_id,storage_path,original_name,mime_type,byte_size,created_at")
+    .eq("house_id",currentHouse.id).order("created_at",{ascending:false});
+  if(result.error) throw result.error;
+  const refs = await Promise.all((result.data || []).map(async photo=>{
+    const signed = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(photo.storage_path, 86400);
+    return Object.assign({}, photo, { url:signed.data?.signedUrl || "" });
+  }));
+  S.photos = refs;
+  localSaveOnly();
+  if(shouldRender) renderAll();
+}
+function photosForRecord(record){
+  const ids = Array.isArray(record?.photoIds) ? record.photoIds : [];
+  return ids.map(id=>S.photos.find(photo=>photo.id===id)).filter(photo=>photo && photo.url);
+}
+function photoStrip(record){
+  const refs = photosForRecord(record);
+  if(!refs.length) return "";
+  return '<div class="photo-strip">'+refs.map(photo=>'<img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'">').join("")+'</div>';
+}
+function renderPhotoWall(){
+  const wall = $("homePhotoWall");
+  if(!wall) return;
+  const refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photo.url).slice(0,12);
+  if(!refs.length){
+    wall.innerHTML = '<div class="photo-empty">连接云端后，把你们喜欢的照片放进这里吧 ✨</div>';
+    updatePhotoControls();
+    return;
+  }
+  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'">'
+    + delBtn(photo.id,"photo") + '</div>').join("");
+  updatePhotoControls();
+}
+async function deletePhotoRefs(ids){
+  const refs = (S.photos || []).filter(photo=>ids.includes(photo.id));
+  S.photos = (S.photos || []).filter(photo=>!ids.includes(photo.id));
+  localSaveOnly();
+  if(!refs.length || !cloudReady() || !cloudSyncEnabled) return;
+  const paths = refs.map(photo=>photo.storage_path).filter(Boolean);
+  if(paths.length){
+    const removed = await supabaseClient.storage.from(PHOTO_BUCKET).remove(paths);
+    if(removed.error) throw removed.error;
+  }
+  const removedRows = await supabaseClient.from("xj_photos").delete().in("id",ids);
+  if(removedRows.error) throw removedRows.error;
+}
+
+/* ---------- 工具 ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._timer); t._timer = setTimeout(()=>t.classList.remove("show"), 1800);
+}
+function dateText(dateStr){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  return y + "年" + m + "月" + d + "日 星期" + WEEK[dt.getDay()];
+}
+function diffDays(dateStr){
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const t = new Date(y, m-1, d).getTime();
+  const n = new Date(); n.setHours(0,0,0,0);
+  return Math.round((t - n.getTime()) / 86400000);
+}
+function whoTag(who){
+  return who === "xiaojia"
+    ? '<span class="chip who who-xiaojia">💗 小佳</span>'
+    : '<span class="chip who who-mine">💜 我</span>';
+}
+function delBtn(id, kind){
+  return '<button class="del-btn" data-del="'+kind+'" data-id="'+id+'">✕</button>';
+}
+function applyPhotos(){
+  document.querySelectorAll("img[data-photo]").forEach(img=>{
+    const src = PHOTOS[img.dataset.photo];
+    if(src) img.src = src;
+  });
+}
+function emptyArt(){
+  return '<img class="empty-art" src="'+PHOTOS.empty+'" alt="" aria-hidden="true">';
+}
+function markDemoGone(){
+  if(S.demo){ S.demo = false; save(); $("demoBanner").style.display = "none"; }
+}
+function confirmDel(msg){ return confirm(msg); }
+
+/* ---------- 页面切换 ---------- */
+function goPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  $("page-"+name).classList.add("active");
+  document.querySelectorAll(".bottom-nav button").forEach(b=>{
+    b.classList.toggle("active", b.dataset.page === name);
+  });
+  renderAll();
+  window.scrollTo(0,0);
+}
+
+/* ---------- 待办 ---------- */
+let todoBucket = "today", todoWho = "mine";
+function todayTodoList(){
+  const done = (S.doneMap[TODAY] || {});
+  return S.todos.filter(t => t.bucket === "today" && (t.repeat || !t.done));
+}
+function renderTodo(){
+  const groups = [
+    { key:"today",    title:"📌 今天" },
+    { key:"tomorrow", title:"🌤️ 明天" },
+    { key:"later",    title:"🗓️ 以后" }
+  ];
+  const done = S.doneMap[TODAY] || {};
+  const doneOnce = S.todos.filter(t => t.bucket === "today" && !t.repeat && t.done);
+  let html = "";
+  groups.forEach(g=>{
+    const items = S.todos.filter(t => t.bucket === g.key && (g.key !== "today" || t.repeat || !t.done));
+    html += '<div class="card"><div class="card-title">'+g.title+'</div>';
+    if(!items.length){ html += '<div class="empty">'+emptyArt()+'这里还没有安排</div>'; }
+    items.forEach(t=>{
+      const isDone = !!done[t.id];
+      html += '<div class="list-item">'
+        + '<input type="checkbox" class="chk" data-check="'+t.id+'"'+(isDone?" checked":"")+'>'
+        + '<div class="txt'+(isDone?" done":"")+'">'+esc(t.text)
+        + '<div class="meta">'+whoTag(t.who)+(t.repeat?'<span>🔁 每天</span>':'')+'</div></div>'
+        + delBtn(t.id,"todo") + '</div>';
+    });
+    if(g.key === "today" && doneOnce.length){
+      html += '<div style="font-size:12px; color:var(--text2); padding:8px 4px 0">已完成（点勾可撤销）：</div>';
+      doneOnce.forEach(t=>{
+        html += '<div class="list-item"><input type="checkbox" class="chk" data-check="'+t.id+'" checked>'
+          + '<div class="txt done">'+esc(t.text)+'<div class="meta">'+whoTag(t.who)+'</div></div></div>';
+      });
+    }
+    html += '</div>';
+  });
+  $("todoGroups").innerHTML = html;
+  const todayAll = todayTodoList().length;
+  const todayDone = S.todos.filter(t=>t.bucket==="today" && !t.repeat && t.done).length + Object.keys(done).filter(id=>{
+    const t = S.todos.find(x=>x.id===id); return t && (t.repeat || t.bucket==="today");
+  }).length;
+  $("todoStatText").textContent = "";
+}
+function renderHome(){
+  /* 问候语按时间 */
+  const h = new Date().getHours();
+  const greet = h<6 ? "夜深了，早点休息 🌙" : h<11 ? "早上好呀 ☀️" : h<14 ? "中午好 🍚" : h<18 ? "下午好 🍵" : "晚上好 🌙";
+  $("greetText").textContent = greet;
+  $("todayLine").textContent = dateText(TODAY);
+
+  /* 今日待办 */
+  const done = S.doneMap[TODAY] || {};
+  const items = todayTodoList();
+  const doneCount = S.todos.filter(t=>t.bucket==="today" && !t.repeat && t.done).length
+                  + items.filter(t=>done[t.id]).length;
+  $("todoStatText").textContent = doneCount + " / " + (doneCount + items.filter(t=>!done[t.id]).length) + " 已完成";
+  let hh = "";
+  if(!items.length){ hh = '<div class="empty" style="padding:14px 0 6px">今天没有待办，轻松的一天 ✨</div>'; }
+  items.slice(0,5).forEach(t=>{
+    const isDone = !!done[t.id];
+    hh += '<div class="list-item"><input type="checkbox" class="chk" data-check="'+t.id+'"'+(isDone?" checked":"")+'>'
+      + '<div class="txt'+(isDone?" done":"")+'">'+esc(t.text)+'<div class="meta">'+whoTag(t.who)+'</div></div></div>';
+  });
+  $("homeTodoList").innerHTML = hh;
+
+  /* 今日三餐 */
+  const meals = S.meals.filter(m=>m.date===TODAY).sort((a,b)=>Object.keys(MEALS).indexOf(a.meal)-Object.keys(MEALS).indexOf(b.meal));
+  let mh = "";
+  if(!meals.length){ mh = '<div class="empty" style="padding:10px 0 4px">今天还没记，点上面按钮记一笔吧</div>'; }
+  meals.forEach(m=>{
+    mh += '<div class="list-item"><span style="flex-shrink:0; font-size:12px; color:var(--lav-deep)">'+MEALS[m.meal]+'</span>'
+      + '<div class="txt">'+esc(m.text)+'<div class="meta">'+whoTag(m.who)+'</div>'+photoStrip(m)+'</div>'
+      + delBtn(m.id,"meal") + '</div>';
+  });
+  $("homeMealList").innerHTML = mh;
+  renderPhotoWall();
+
+  /* 今日体重 */
+  const todayWeights = S.weights.filter(w=>w.date===TODAY);
+  $("weightTodayText").textContent = todayWeights.length ? "今日已记录 "+todayWeights.length+" 条" : "今天还没记录";
+  let wh = "";
+  S.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).forEach(w=>{
+    wh += '<div class="list-item"><div class="txt"><b>'+w.kg+' kg</b><div class="meta">'+dateText(w.date)+' · '+whoTag(w.who)+'</div></div></div>';
+  });
+  $("homeWeightHistory").innerHTML = wh || '<div class="empty" style="padding:10px 0 4px">还没有体重记录</div>';
+
+  /* 今日运动 */
+  const sports = S.sports.filter(s=>s.date===TODAY);
+  let sh = "";
+  if(!sports.length){ sh = '<div class="empty" style="padding:10px 0 4px">今天还没运动记录 🐾</div>'; }
+  sports.forEach(s=>{
+    sh += '<div class="list-item"><div class="txt"><b>'+esc(s.type)+'</b> '+s.minutes+' 分钟<div class="meta">'+whoTag(s.who)+'</div>'+photoStrip(s)+'</div>'
+      + delBtn(s.id,"sport") + '</div>';
+  });
+  $("homeSportList").innerHTML = sh;
+
+  /* 今日心情 */
+  renderMoodRow($("homeMoodRow"));
+
+  /* 纪念日 */
+  let ah = "";
+  if(!S.anniversaries.length){ ah = '<div class="empty" style="padding:10px 0 4px">还没有纪念日</div>'; }
+  S.anniversaries.forEach(a=>{
+    const d = diffDays(a.date);
+    const txt = d===0 ? "就是今天！🎉" : d>0 ? "还有 <b class=\"count-num\">"+d+"</b> 天" : "已过去 <b class=\"count-num\">"+(-d)+"</b> 天";
+    ah += '<div class="list-item"><div class="txt"><b>'+esc(a.name)+'</b> <span style="font-size:12px">'+txt+'</span>'
+      + '<div class="meta">'+dateText(a.date)+' · '+whoTag(a.who)+'</div></div></div>';
+  });
+  $("homeAnnivList").innerHTML = ah;
+}
+
+/* ---------- 心情 ---------- */
+let moodWho = "mine";
+function renderMoodRow(el){
+  const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho) || S.moods.find(m=>m.date===TODAY);
+  let h = "";
+  MOODS.forEach(m=>{
+    const on = todayMood && todayMood.mood === m.id;
+    h += '<button class="mood'+(on?" on":"")+'" data-mood="'+m.id+'" title="'+m.t+'">'+m.e+'</button>';
+  });
+  el.innerHTML = h;
+}
+function renderMoodList(){
+  let h = "";
+  S.moods.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(m=>{
+    const em = (MOODS.find(x=>x.id===m.mood)||{}).e || "😊";
+    h += '<div class="list-item"><span style="font-size:20px">'+em+'</span>'
+      + '<div class="txt">'+(m.note?esc(m.note):"（没有写原因）")+'<div class="meta">'+dateText(m.date)+' · '+whoTag(m.who)+'</div></div>'
+      + delBtn(m.id,"mood") + '</div>';
+  });
+  $("moodList").innerHTML = h || '<div class="empty">'+emptyArt()+'还没有心情记录</div>';
+}
+
+/* ---------- 记录页 ---------- */
+let recordSub = "diet", mealSel = "breakfast", weightWho = "mine", sportWho = "mine";
+let dietWho = "mine";
+function renderRecord(){
+  const subs = { diet:$("sub-diet"), weight:$("sub-weight"), sport:$("sub-sport") };
+  Object.keys(subs).forEach(k=>{ subs[k].style.display = k===recordSub ? "block" : "none"; });
+  document.querySelectorAll("#page-record .sub-tabs .chip").forEach(c=>{
+    c.classList.toggle("on", c.dataset.sub === recordSub);
+  });
+
+  /* 饮食 */
+  $("mealListTitle").textContent = "今天的三餐（"+S.meals.filter(m=>m.date===TODAY && m.meal===mealSel).length+" 条）";
+  const meals = S.meals.filter(m=>m.date===TODAY && m.meal===mealSel);
+  let h = "";
+  if(!meals.length){ h = '<div class="empty">'+emptyArt()+'这一餐还没记录</div>'; }
+  meals.forEach(m=>{
+    h += '<div class="list-item"><div class="txt">'+esc(m.text)+'<div class="meta">'+whoTag(m.who)+'</div>'+photoStrip(m)+'</div>'
+      + delBtn(m.id,"meal") + '</div>';
+  });
+  $("mealList").innerHTML = h;
+
+  /* 体重 */
+  let wh = "";
+  S.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(w=>{
+    wh += '<div class="list-item"><div class="txt"><b>'+w.kg+' kg</b><div class="meta">'+dateText(w.date)+' · '+whoTag(w.who)+'</div></div>'
+      + delBtn(w.date+"|"+w.who,"weight") + '</div>';
+  });
+  $("weightList").innerHTML = wh || '<div class="empty">'+emptyArt()+'还没有体重记录</div>';
+
+  /* 运动 */
+  let sh = "";
+  S.sports.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(s=>{
+    sh += '<div class="list-item"><div class="txt"><b>'+esc(s.type)+'</b> '+s.minutes+' 分钟<div class="meta">'+dateText(s.date)+' · '+whoTag(s.who)+'</div>'+photoStrip(s)+'</div>'
+      + delBtn(s.id,"sport") + '</div>';
+  });
+  $("sportList").innerHTML = sh || '<div class="empty">'+emptyArt()+'还没有运动记录</div>';
+}
+
+/* ---------- 日记页 ---------- */
+let diarySub = "diary", diaryWho = "mine";
+function renderDiary(){
+  const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
+  Object.keys(subs).forEach(k=>{ subs[k].style.display = k===diarySub ? "block" : "none"; });
+  document.querySelectorAll("#page-diary .sub-tabs .chip").forEach(c=>{
+    c.classList.toggle("on", c.dataset.sub === diarySub);
+  });
+
+  /* 日记 */
+  let h = "";
+  S.diaries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(d=>{
+    h += '<div class="list-item"><div class="txt"><div class="meta">'+dateText(d.date)+' · '+whoTag(d.who)+'</div>'
+      + esc(d.text).replace(/\n/g,"<br>") + photoStrip(d) + '</div>' + delBtn(d.id,"diary") + '</div>';
+  });
+  $("diaryList").innerHTML = h || '<div class="empty">'+emptyArt()+'还没有日记，写第一篇吧</div>';
+
+  /* 心情 */
+  renderMoodRow($("moodRow"));
+  renderMoodList();
+
+  /* 纪念日 */
+  let ah = "";
+  if(!S.anniversaries.length){ ah = '<div class="empty">'+emptyArt()+'还没有纪念日</div>'; }
+  S.anniversaries.forEach(a=>{
+    const d = diffDays(a.date);
+    const txt = d===0 ? "就是今天！🎉" : d>0 ? "还有 <b class=\"count-num\">"+d+"</b> 天" : "已过去 <b class=\"count-num\">"+(-d)+"</b> 天";
+    ah += '<div class="list-item"><div class="txt"><b>'+esc(a.name)+'</b><div class="meta">'+dateText(a.date)
+      + ' · 提前'+a.remindDays+'天提醒 · '+whoTag(a.who)+'</div>'
+      + '<div style="font-size:13px">'+txt+'</div></div>'
+      + delBtn(a.id,"anniv") + '</div>';
+  });
+  $("annivList").innerHTML = ah;
+}
+
+/* ---------- 统一渲染 ---------- */
+function renderAll(){
+  $("demoBanner").style.display = S.demo ? "flex" : "none";
+  renderTodo(); renderHome(); renderRecord(); renderDiary();
+}
+
+/* ---------- 主题 ---------- */
+function applyTheme(theme){
+  const t = theme === "auto"
+    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    : theme;
+  document.documentElement.setAttribute("data-theme", t);
+  $("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
+  document.querySelectorAll("[data-theme-opt]").forEach(b=>{
+    b.classList.toggle("on", b.dataset.themeOpt === S.theme);
+  });
+}
+
+/* ================================================================
+   事件绑定
+   ================================================================ */
+function bindEvents(){
+  /* 底部导航 */
+  document.querySelectorAll(".bottom-nav button").forEach(b=>{
+    b.addEventListener("click", ()=>goPage(b.dataset.page));
+  });
+
+  /* 主题 */
+  $("themeBtn").addEventListener("click", ()=>{
+    S.theme = S.theme === "dark" ? "light" : "dark";
+    save(); applyTheme(S.theme);
+  });
+  document.querySelectorAll("[data-theme-opt]").forEach(b=>{
+    b.addEventListener("click", ()=>{ S.theme = b.dataset.themeOpt; save(); applyTheme(S.theme); });
+  });
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
+    if(S.theme === "auto") applyTheme("auto");
+  });
+
+ /* 设置弹窗 */
+ $("settingsBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
+ $("settingsClose").addEventListener("click", ()=>$("settingsModal").classList.remove("show"));
+ $("settingsModal").addEventListener("click", e=>{ if(e.target === $("settingsModal")) $("settingsModal").classList.remove("show"); });
+
+  /* 云端账号 / 小屋 */
+  $("cloudLoginBtn").addEventListener("click", cloudSignIn);
+  $("cloudSignupBtn").addEventListener("click", cloudSignUp);
+  $("createHouseBtn").addEventListener("click", createCloudHouse);
+  $("joinHouseBtn").addEventListener("click", joinCloudHouse);
+  $("cloudUploadBtn").addEventListener("click", uploadLocalState);
+  $("cloudDownloadBtn").addEventListener("click", ()=>pullCloudState(true,false));
+  $("cloudSignoutBtn").addEventListener("click", async ()=>{
+    if(!supabaseClient) return;
+    const {error} = await supabaseClient.auth.signOut();
+    if(error) toast("退出失败："+cloudErrorText(error));
+    else toast("已退出云端账号");
+  });
+
+ /* 导出 / 导入 */
+  $("exportBtn").addEventListener("click", ()=>{
+    const blob = new Blob([JSON.stringify(S, null, 2)], { type:"application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "小佳专属小屋-备份-"+TODAY+".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+    toast("备份文件已导出 📦");
+  });
+  $("importBtn").addEventListener("click", ()=>$("importFile").click());
+  $("importFile").addEventListener("change", e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    if(!confirm("导入会【覆盖】当前所有数据，确定继续吗？")){ e.target.value=""; return; }
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        if(!data || ![1,2].includes(data.version) || !Array.isArray(data.todos)) throw new Error("格式不对");
+        S = normalizeState(data); save(); applyTheme(S.theme); renderAll();
+        toast("导入成功 ✅");
+      }catch(err){ toast("导入失败：文件格式不对"); }
+    };
+    reader.readAsText(f);
+    e.target.value = "";
+  });
+
+  /* 清空演示数据 / 清空所有 */
+  $("clearDemoBtn").addEventListener("click", ()=>{
+    if(!confirm("确定清空演示数据，从空白开始吗？")) return;
+    S = emptyState(); save(); applyTheme(S.theme); renderAll();
+    toast("已清空，从现在开始记录吧 ✨");
+  });
+  $("clearAllBtn").addEventListener("click", async ()=>{
+    if(!confirm("确定要清空【所有】数据吗？")) return;
+    if(!confirm("再确认一次：所有记录都会被删除，且无法恢复。确定吗？")) return;
+    const photoIds = (S.photos || []).map(photo=>photo.id);
+    if(photoIds.length && cloudReady() && cloudSyncEnabled){
+      try{ await deletePhotoRefs(photoIds); }catch(error){ toast("照片清理失败，数据仍会清空："+cloudErrorText(error)); }
+    }
+    S = emptyState(); save(); applyTheme(S.theme); renderAll();
+    $("settingsModal").classList.remove("show");
+    toast("已清空所有数据");
+  });
+
+  /* 全局委托：勾选待办 / 删除 / 心情 / 快捷入口 / 谁记的 / 子页签 */
+  document.addEventListener("click", e=>{
+    const t = e.target;
+
+    /* 待办勾选 */
+    if(t.classList && t.classList.contains("chk") && t.dataset.check){
+      const id = t.dataset.check;
+      const todo = S.todos.find(x=>x.id===id);
+      if(!todo) return;
+      S.doneMap[TODAY] = S.doneMap[TODAY] || {};
+      if(t.checked){
+        if(todo.repeat){ S.doneMap[TODAY][id] = true; }
+        else { todo.done = true; }
+      }else{
+        if(todo.repeat){ delete S.doneMap[TODAY][id]; }
+        else { todo.done = false; }
+      }
+      markDemoGone(); save(); renderAll();
+      return;
+    }
+
+    /* 删除（都带确认） */
+    if(t.classList && t.classList.contains("del-btn")){
+      const id = t.dataset.id, kind = t.dataset.del;
+      if(!confirmDel(kind === "photo" ? "确定删除这张照片吗？" : "确定删除这条记录吗？")) return;
+      let photoIds = [];
+      if(kind === "photo"){
+        deletePhotoRefs([id]).then(()=>{ save(); renderAll(); toast("照片已删除"); })
+          .catch(error=>{ save(); renderAll(); toast("照片已从页面移除，但云端清理失败："+cloudErrorText(error)); });
+        return;
+      }
+      if(kind === "todo") S.todos = S.todos.filter(x=>x.id!==id);
+      else if(kind === "meal"){
+        const item = S.meals.find(x=>x.id===id); photoIds = item?.photoIds || [];
+        S.meals = S.meals.filter(x=>x.id!==id);
+      }
+      else if(kind === "weight"){ const [d,w] = id.split("|"); S.weights = S.weights.filter(x=>!(x.date===d && x.who===w)); }
+      else if(kind === "sport"){
+        const item = S.sports.find(x=>x.id===id); photoIds = item?.photoIds || [];
+        S.sports = S.sports.filter(x=>x.id!==id);
+      }
+      else if(kind === "diary"){
+        const item = S.diaries.find(x=>x.id===id); photoIds = item?.photoIds || [];
+        S.diaries = S.diaries.filter(x=>x.id!==id);
+      }
+      else if(kind === "mood") S.moods = S.moods.filter(x=>x.id!==id);
+      else if(kind === "anniv") S.anniversaries = S.anniversaries.filter(x=>x.id!==id);
+      const finishDelete = ()=>{ save(); renderAll(); toast("已删除"); };
+      if(photoIds.length){
+        deletePhotoRefs(photoIds).then(finishDelete).catch(error=>{
+          save(); renderAll(); toast("记录已删除，但照片清理失败："+cloudErrorText(error));
+        });
+      }else finishDelete();
+      return;
+    }
+
+    /* 心情选择 */
+    if(t.classList && t.classList.contains("mood")){
+      const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho);
+      if(t.classList.contains("on")){
+        S.moods = S.moods.filter(m=>m!==todayMood);
+      }else{
+        if(todayMood){ todayMood.mood = t.dataset.mood; }
+        else { S.moods.push({ id:uid(), date:TODAY, mood:t.dataset.mood, note:"", who:moodWho }); }
+      }
+      markDemoGone(); save(); renderAll(); toast("心情已记录");
+      return;
+    }
+
+    /* 谁记的（通用） */
+    if(t.classList && t.classList.contains("who")){
+      const who = t.dataset.who;
+      document.querySelectorAll(".who").forEach(w=>w.classList.remove("on"));
+      t.classList.add("on");
+      /* 根据所在页面设置当前 who */
+      if(document.querySelector("#page-home.active")) weightWho = who;
+      if(document.querySelector("#page-todo.active")) todoWho = who;
+      if(document.querySelector("#page-record.active")){
+        if(recordSub === "diet") dietWho = who;
+        else if(recordSub === "weight") weightWho = who;
+        else sportWho = who;
+      }
+      if(document.querySelector("#page-diary.active")){
+        if(diarySub === "diary") diaryWho = who;
+        else moodWho = who;
+      }
+      return;
+    }
+
+    /* 首页快捷记餐 */
+    if(t.classList && t.classList.contains("quick")){
+      mealSel = t.dataset.quick;
+      const text = prompt("吃了什么？（如：豆浆、包子）");
+      if(text && text.trim()){
+        S.meals.push({ id:uid(), date:TODAY, meal:mealSel, text:text.trim(), who:"mine", photoIds:[] });
+        markDemoGone(); save(); renderAll(); toast(MEALS[mealSel]+"已记录 🍚");
+      }
+      return;
+    }
+
+    /* 子页签 */
+    if(t.classList && t.classList.contains("sub-tabs")) return;
+    const subChip = t.closest(".sub-tabs .chip");
+    if(subChip){
+      const page = subChip.closest(".page").id;
+      if(page === "page-record"){ recordSub = subChip.dataset.sub; renderRecord(); }
+      else { diarySub = subChip.dataset.sub; renderDiary(); }
+      return;
+    }
+
+    /* 待办页 bucket / repeat 附近 chips */
+    const bucketChip = t.closest("#page-todo .card .chip[data-bucket]");
+    if(bucketChip){ todoBucket = bucketChip.dataset.bucket; syncChips(); return; }
+
+    /* 记录页 餐别 */
+    const mealChip = t.closest("#page-record .chip[data-meal]");
+    if(mealChip){ mealSel = mealChip.dataset.meal; syncChips(); renderRecord(); return; }
+
+    /* 纪念日提醒天数 */
+    const remindChip = t.closest("#page-diary .chip[data-remind]");
+    if(remindChip){ annivRemind = Number(remindChip.dataset.remind); syncChips(); return; }
+  });
+}
+let annivRemind = 3;
+function syncChips(){
+  document.querySelectorAll("[data-bucket]").forEach(c=>c.classList.toggle("on", c.dataset.bucket===todoBucket));
+  document.querySelectorAll("[data-meal]").forEach(c=>c.classList.toggle("on", c.dataset.meal===mealSel));
+  document.querySelectorAll("[data-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.remind)===annivRemind));
+}
+
+/* ---------- 添加类按钮 ---------- */
+function bindAddButtons(){
+  $("todoAddBtn").addEventListener("click", ()=>{
+    const v = $("todoInput").value.trim();
+    if(!v){ toast("先写要做什么哦"); return; }
+    S.todos.push({ id:uid(), text:v, bucket:todoBucket, repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY });
+    $("todoInput").value = ""; $("todoRepeat").checked = false;
+    markDemoGone(); save(); renderAll(); toast("已添加待办 ✅");
+  });
+  $("todoInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("todoAddBtn").click(); });
+
+  $("mealAddBtn").addEventListener("click", async ()=>{
+    const v = $("mealInput").value.trim();
+    if(!v){ toast("写一下吃了什么"); return; }
+    const item = { id:uid(), date:TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[] };
+    if(!await uploadPhotosForRecord("meal", item, "mealPhotoInput")) return;
+    S.meals.push(item);
+    $("mealInput").value = "";
+    markDemoGone(); save(); renderAll(); toast(MEALS[mealSel]+"已记录 🍚");
+  });
+
+  $("weightAddBtn").addEventListener("click", ()=>addWeight($("weightInput").value));
+  $("homeWeightBtn").addEventListener("click", ()=>{
+    addWeight($("homeWeightInput").value); $("homeWeightInput").value = "";
+  });
+  function addWeight(v){
+    const kg = parseFloat(v);
+    if(!kg || kg < 20 || kg > 200){ toast("填一个合理的体重数字（公斤）"); return; }
+    const idx = S.weights.findIndex(w=>w.date===TODAY && w.who===weightWho);
+    if(idx >= 0){
+      if(!confirmDel("今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return;
+      S.weights[idx].kg = kg;
+    }else{
+      S.weights.push({ date:TODAY, kg, who:weightWho });
+    }
+    markDemoGone(); save(); renderAll(); toast("体重已记录 ⚖️");
+  }
+
+  $("sportAddBtn").addEventListener("click", async ()=>{
+    const type = $("sportType").value;
+    const min = parseInt($("sportMinutes").value, 10);
+    if(!min || min < 1){ toast("填一下运动了多久（分钟）"); return; }
+    const item = { id:uid(), date:TODAY, type, minutes:min, who:sportWho, photoIds:[] };
+    if(!await uploadPhotosForRecord("sport", item, "sportPhotoInput")) return;
+    S.sports.push(item);
+    $("sportMinutes").value = "";
+    markDemoGone(); save(); renderAll(); toast("运动已记录 💪");
+  });
+
+  $("diaryDate").value = TODAY;
+  $("diaryAddBtn").addEventListener("click", async ()=>{
+    const text = $("diaryText").value.trim();
+    if(!text){ toast("写点内容再保存哦"); return; }
+    const date = $("diaryDate").value || TODAY;
+    const item = { id:uid(), date, text, who:diaryWho, photoIds:[] };
+    if(!await uploadPhotosForRecord("diary", item, "diaryPhotoInput")) return;
+    S.diaries.push(item);
+    $("diaryText").value = "";
+    markDemoGone(); save(); renderAll(); toast("日记已保存 📖");
+  });
+
+  $("moodSaveBtn").addEventListener("click", ()=>{
+    const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho);
+    if(!todayMood){ toast("先点一个心情表情哦"); return; }
+    todayMood.note = $("moodNote").value.trim();
+    markDemoGone(); save(); renderAll(); toast("已保存");
+  });
+
+  $("annivAddBtn").addEventListener("click", ()=>{
+    const name = $("annivName").value.trim();
+    const date = $("annivDate").value;
+    if(!name){ toast("写一下纪念日的名称"); return; }
+    if(!date){ toast("选一下日期"); return; }
+    S.anniversaries.push({ id:uid(), name, date, remindDays:annivRemind, who:diaryWho });
+    $("annivName").value = ""; $("annivDate").value = "";
+    markDemoGone(); save(); renderAll(); toast("纪念日已添加 ❤️");
+  });
+
+  $("wallPhotoBtn").addEventListener("click", uploadWallPhotos);
+}
+
+/* ---------- 启动 ---------- */
+load();
+applyPhotos();
+applyTheme(S.theme);
+bindEvents();
+bindAddButtons();
+syncChips();
+renderAll();
+initCloud();
+</script>
+</body>
+</html>
