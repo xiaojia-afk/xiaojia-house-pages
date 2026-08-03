@@ -521,14 +521,28 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
         <div class="cloud-box" id="cloudUserText"></div>
         <div id="cloudHouseSetup" style="margin-top:8px">
           <div class="row"><input class="input" id="cloudDisplayName" placeholder="你在小屋里的称呼，如：我 / 小佳"></div>
-          <div class="row"><input class="input" id="cloudHouseName" placeholder="第一个人：给小屋起个名字"><button class="btn small" id="createHouseBtn">创建小屋</button></div>
-          <div class="row"><input class="input" id="cloudInviteCode" placeholder="第二个人：输入邀请码"><button class="btn small" id="joinHouseBtn">加入小屋</button></div>
+          <div class="cloud-box" style="margin-top:8px">
+            <b>如果你已经收到邀请码</b><br>
+            <span class="photo-note">这是第二个人加入已有小屋时使用的入口。先填邀请码，再点击“加入已有小屋”。</span>
+            <div class="row" style="margin-top:7px"><input class="input" id="cloudInviteCode" placeholder="输入另一位发来的邀请码"><button class="btn small" id="joinHouseBtn">加入已有小屋</button></div>
+          </div>
+          <div class="cloud-box" style="margin-top:8px">
+            <b>如果你还没有小屋</b><br>
+            <span class="photo-note">只有第一个人才需要创建。已经收到邀请码时，请不要点这里。</span>
+            <div class="row" style="margin-top:7px"><input class="input" id="cloudHouseName" placeholder="给新小屋起个名字"><button class="btn small ghost" id="createHouseBtn">创建新小屋</button></div>
+          </div>
         </div>
         <div id="cloudHouseConnected" style="display:none; margin-top:8px">
           <div class="cloud-box" id="cloudHouseText"></div>
           <div class="cloud-actions">
             <button class="btn small" id="cloudUploadBtn">把本机数据上传</button>
             <button class="btn small ghost" id="cloudDownloadBtn">从云端拉取</button>
+          </div>
+          <div class="cloud-box" id="cloudSwitchBox" style="margin-top:8px">
+            <b>刚才选错小屋了？</b><br>
+            <span class="photo-note">输入正确的邀请码即可切换。只有当前小屋没有其他成员、没有云端记录和照片时，系统才会自动清理这间空小屋。</span>
+            <div class="row" style="margin-top:7px"><input class="input" id="cloudSwitchDisplayName" placeholder="切换后显示的称呼，如：小佳"></div>
+            <div class="row" style="margin-top:7px"><input class="input" id="cloudSwitchInviteCode" placeholder="输入正确的小屋邀请码"><button class="btn small ghost" id="switchHouseBtn">切换并加入</button></div>
           </div>
         </div>
         <div class="cloud-actions">
@@ -580,15 +594,29 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
    - 谁记的：mine=我，xiaojia=小佳
    ================================================================ */
 
-/* ---------- 已从桌面图片文件夹筛选并匹配；素材仅限两人本地自用 ---------- */
+/* ---------- GitHub Pages 公共版使用原创内嵌占位插图，不发布私人/版权图片 ---------- */
+function safeSvg(inner, bg="#fff8ff"){
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
+      <rect width="320" height="220" rx="28" fill="${bg}"/>
+      ${inner}
+    </svg>`
+  );
+}
+const genericFriend = `
+  <path d="M93 111C47 84 39 33 71 28c25-4 38 24 53 43 19-11 53-11 72 0 15-19 28-47 53-43 32 5 24 56-22 83l-12 38c-27 22-78 22-105 0z" fill="#fff" stroke="#a38bd5" stroke-width="6"/>
+  <circle cx="125" cy="111" r="9" fill="#8eb8ec"/><circle cx="195" cy="111" r="9" fill="#8eb8ec"/>
+  <path d="M151 128q9 8 18 0" fill="none" stroke="#a38bd5" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="112" cy="128" r="8" fill="#ffd8e8" opacity=".8"/><circle cx="208" cy="128" r="8" fill="#ffd8e8" opacity=".8"/>
+`;
 const PHOTOS = {
-  mascot: "assets/mascot-watercolor.jpg",
-  logo: "assets/logo-chef-bread.jpg",
-  empty: "assets/empty-roll-cake.jpg",
-  navHome: "assets/nav-home.jpg",
-  navTodo: "assets/nav-todo.jpg",
-  navRecord: "assets/nav-record.jpg",
-  navDiary: "assets/nav-diary.jpg"
+  mascot: safeSvg(genericFriend + `<path d="M140 64q20-28 40 0" fill="none" stroke="#ffd38b" stroke-width="8" stroke-linecap="round"/>`, "#f2f2ff"),
+  logo: safeSvg(`<path d="M92 104 160 52l68 52v61H92z" fill="#d9c9ff" stroke="#866eb4" stroke-width="6"/><path d="M132 165v-38h56v38" fill="#fff" stroke="#866eb4" stroke-width="6"/><path d="m148 88 12-12 12 12" fill="none" stroke="#ff9fc7" stroke-width="7" stroke-linecap="round"/>`, "#f6f0ff"),
+  empty: safeSvg(`<rect x="82" y="72" width="156" height="100" rx="16" fill="#fff" stroke="#b8a4dd" stroke-width="6"/><path d="M110 105h100M110 130h70" stroke="#d4c9eb" stroke-width="8" stroke-linecap="round"/><path d="M57 54l5 13 13 5-13 5-5 13-5-13-13-5 13-5zM258 62l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#ffd38b"/>`, "#fffaf1"),
+  navHome: safeSvg(`<path d="M84 111 160 52l76 59" fill="none" stroke="#7caee6" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M103 103v70h114v-70" fill="#e9f3ff" stroke="#7caee6" stroke-width="12" stroke-linejoin="round"/><path d="M145 173v-43h30v43" fill="#fff" stroke="#7caee6" stroke-width="10"/>`, "#f3f9ff"),
+  navTodo: safeSvg(`<rect x="84" y="62" width="152" height="112" rx="18" fill="#eaf5ff" stroke="#7caee6" stroke-width="8"/><path d="m111 99 13 13 25-28M111 143l13 13 25-28" fill="none" stroke="#7caee6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M171 98h40M171 143h40" stroke="#a6c7ed" stroke-width="9" stroke-linecap="round"/>`, "#f5fbff"),
+  navRecord: safeSvg(`<circle cx="160" cy="116" r="64" fill="#fff0f7" stroke="#e9a5c8" stroke-width="8"/><path d="M160 116V77M160 116l31 19" stroke="#d982b2" stroke-width="9" stroke-linecap="round"/><circle cx="160" cy="116" r="8" fill="#d982b2"/>`, "#fff7fb"),
+  navDiary: safeSvg(`<path d="M76 82q0-22 22-22h124q22 0 22 22v66q0 22-22 22h-73l-39 28 8-28H98q-22 0-22-22z" fill="#ecfff8" stroke="#86c9b2" stroke-width="8"/><path d="M112 103h96M112 132h72" stroke="#86c9b2" stroke-width="9" stroke-linecap="round"/>`, "#f5fffb")
 };
 
 const SUPABASE_CONFIG = window.XIAOJIA_SUPABASE_CONFIG || { url:"", anonKey:"" };
@@ -929,6 +957,7 @@ async function cloudSignIn(){
 }
 async function createCloudHouse(){
   if(!cloudSession) return;
+  if(!confirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
   const name = $("cloudHouseName").value.trim() || "小佳专属小屋";
   const displayName = $("cloudDisplayName").value.trim() || "我";
   const {data,error} = await supabaseClient.rpc("xj_create_house", { p_name:name, p_display_name:displayName });
@@ -949,6 +978,20 @@ async function joinCloudHouse(){
   cloudSyncEnabled = false;
   updateCloudUI();
   toast("加入成功，请选择从云端拉取");
+}
+async function switchCloudHouse(){
+  if(!cloudSession) return;
+  const code = $("cloudSwitchInviteCode").value.trim();
+  const displayName = $("cloudSwitchDisplayName").value.trim() || "小佳";
+  if(!code){ toast("先填正确的小屋邀请码"); return; }
+  if(!confirm("这会把当前账号切换到新邀请码对应的小屋。只有当前小屋为空且只有你一个成员时，系统才会清理当前小屋。确定继续吗？")) return;
+  const {error} = await supabaseClient.rpc("xj_switch_house", { p_invite_code:code, p_display_name:displayName });
+  if(error){ toast("切换失败："+cloudErrorText(error)); return; }
+  await loadCurrentHouse();
+  cloudSyncEnabled = false;
+  updateCloudUI();
+  $("cloudSwitchInviteCode").value = "";
+  toast("已切换到正确的小屋，请选择从云端拉取");
 }
 function cloudStateData(){
   const data = JSON.parse(JSON.stringify(S));
@@ -1447,6 +1490,7 @@ function bindEvents(){
   $("cloudSignupBtn").addEventListener("click", cloudSignUp);
   $("createHouseBtn").addEventListener("click", createCloudHouse);
   $("joinHouseBtn").addEventListener("click", joinCloudHouse);
+  $("switchHouseBtn").addEventListener("click", switchCloudHouse);
   $("cloudUploadBtn").addEventListener("click", uploadLocalState);
   $("cloudDownloadBtn").addEventListener("click", ()=>pullCloudState(true,false));
   $("cloudSignoutBtn").addEventListener("click", async ()=>{
