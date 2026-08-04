@@ -378,7 +378,6 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 <main>
   <!-- ================= 首页 ================= -->
   <section class="page active" id="page-home">
-    <div class="page-banner"><div class="banner-ico">🏠</div><div><b>首页</b><span>今天的一切，都在这里</span></div></div>
     <div class="demo-banner" id="demoBanner">
       <span>👀 你现在看到的是<b>演示数据</b>，用来展示界面效果，不是真实记录。</span>
       <button id="clearDemoBtn">清空，从空白开始</button>
@@ -457,7 +456,6 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <!-- ================= 待办 ================= -->
     <!-- ================= 生活（待办/日记/心情/纪念日） ================= -->
   <section class="page" id="page-life">
-    <div class="page-banner"><img class="banner-ico" src="assets/nav-life.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>生活</b><span>待办、日记、心情、纪念日，记录每天的小日子</span></div></div>
     <div class="sub-tabs">
       <button class="chip on" data-sub="todo">📋 待办</button>
       <button class="chip" data-sub="diary">📖 日记</button>
@@ -546,7 +544,6 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 
   <!-- ================= 记录 ================= -->
   <section class="page" id="page-health">
-    <div class="page-banner"><img class="banner-ico" src="assets/nav-health.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>健康</b><span>饮食、体重、运动、睡眠、生理期</span></div></div>
     <div class="sub-tabs">
       <button class="chip on" data-sub="diet">🍚 饮食</button>
       <button class="chip" data-sub="weight">⚖️ 体重</button>
@@ -678,7 +675,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <!-- ================= 我的（设置） ================= -->
   
 <section class="page" id="page-me">
-    <div class="page-banner"><img class="banner-ico" src="assets/nav-me.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>我的</b><span>外观、成员资料、云端同步、备份与恢复</span></div></div>
+    <div class="page-banner"><img class="banner-ico" src="assets/nav-me.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>设置</b><span>外观、成员资料、云端同步、备份与恢复</span></div></div>
     <h3>⚙️ 设置</h3>
 
     <div class="card" style="box-shadow:none">
@@ -791,7 +788,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <button data-page="life"><span class="nav-ico"><img src="assets/nav-life.png" alt=""></span>生活</button>
   <button data-page="health"><span class="nav-ico"><img src="assets/nav-health.png" alt=""></span>健康</button>
   <button data-page="chat"><span class="nav-ico" style="font-size:20px; line-height:1">💬</span>聊天</button>
-  <button data-page="me"><span class="nav-ico"><img src="assets/nav-me.png" alt=""></span>我的</button>
+  <button data-page="me"><span class="nav-ico"><img src="assets/nav-me.png" alt=""></span>设置</button>
 </nav>
 
 <!-- ================= 设置弹窗 ================= -->
@@ -2110,7 +2107,7 @@ function asstReply(text){
     }
     case "period": {
       const f = ["mine","xiaojia"].filter(w=>genderOf(w)==="female");
-      if(!f.length) return "先到「我的」页给女生选一下性别，我才能帮忙算生理期哦～";
+      if(!f.length) return "先到「设置」页给女生选一下性别，我才能帮忙算生理期哦～";
       const pred = predictNextPeriod(f[0]);
       return pred ? "根据记录推算，"+(f[0]==="xiaojia"?"小佳":"你")+"的下次生理期预计："+pred.date+"（按最近 "+pred.avg+" 天周期）" : "生理期记录还太少，再记一次开始日期，我就能预测下次啦～";
     }
