@@ -193,6 +193,9 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .stat .lab{font-size:11.5px; color:var(--text2); margin-top:2px}
 
 /* ============ 弹窗 ============ */
+/* 新手引导弹窗：强制流程，不能点外面关闭，位置居中偏上 */
+#welcomeModal{align-items:center}
+#welcomeModal .modal{margin-bottom:7vh}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -406,12 +409,11 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   </div>
 </div>
 
-<!-- 新手引导弹窗（登录后还没有小屋时弹出） -->
+<!-- 新手引导弹窗（登录后还没有小屋时弹出，必须完成创建或加入） -->
 <div class="modal-mask" id="welcomeModal">
   <div class="modal">
-    <div class="close-row"><button class="icon-btn" id="welcomeClose">✕</button></div>
     <div class="card-title">🏡 欢迎来到情侣小屋</div>
-    <div class="photo-note" style="margin:6px 0 10px">先创建或加入一个小屋，才能开始记录两个人的生活。随时可以点右上角 ✕ 跳过，以后在「设置」页也能创建/加入。</div>
+    <div class="photo-note" style="margin:6px 0 10px">先创建或加入一个小屋，才能开始记录两个人的生活。</div>
     <input class="input" id="welcomeDisplayName" placeholder="你的称呼，如：小佳 / 我" style="margin-bottom:10px">
     <div class="cloud-box" style="margin-bottom:10px">
       <b>🆕 我们俩还没有小屋</b>
@@ -1404,8 +1406,7 @@ function showWelcomeModal(){
 function bindWelcomeModal(){
   const m = $("welcomeModal");
   if(!m) return;
-  $("welcomeClose").addEventListener("click", ()=>m.classList.remove("show"));
-  m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); });
+  /* 强制流程：不提供关闭按钮，点遮罩也不关 */
   $("welcomeCreateBtn").addEventListener("click", async ()=>{
     const hint = $("welcomeHint");
     if(!cloudSession){ hint.textContent = "请先登录。"; return; }
