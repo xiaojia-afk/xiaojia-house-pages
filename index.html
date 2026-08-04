@@ -1345,6 +1345,12 @@ async function createCloudHouse(){
   if(error){ toast("创建失败："+cloudErrorText(error)); return; }
   await loadCurrentHouse();
   cloudSyncEnabled = false;
+  /* 创建成功：如果是演示数据，自动清空，直接进入空白小屋 */
+  if(S.demo){
+    S = emptyState();
+    save();
+    renderAll();
+  }
   updateCloudUI();
   toast("小屋创建好了，请把邀请码发给另一位");
 }
