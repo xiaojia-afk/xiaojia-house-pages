@@ -200,6 +200,37 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .gate-box{text-align:center; padding:26px 24px; background:var(--card); border:1px solid var(--border); border-radius:18px; max-width:320px; width:100%}
 .gate-box h3{margin:8px 0 6px}
 .gate-box p{color:var(--text2); font-size:13px; margin:0 0 14px}
+.page-banner{display:flex; align-items:center; gap:10px; padding:14px 16px; border-radius:18px; background:linear-gradient(120deg,#f291c3,#e879b0 55%,#f0a8d0); color:#fff; margin-bottom:12px; box-shadow:0 6px 16px rgba(232,121,176,.25); position:relative; overflow:hidden}
+.page-banner::after{content:"✦"; position:absolute; right:14px; top:8px; font-size:18px; opacity:.35}
+.page-banner .banner-ico{font-size:26px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.15))}
+.page-banner b{font-size:16px; display:block}
+.page-banner span{font-size:12px; opacity:.9}
+/* ============ 大耳狗小助手 ============ */
+#asstFloat{position:fixed; right:14px; bottom:92px; width:56px; height:56px; border-radius:50%; background:#fff; border:2px solid var(--pink-deep); box-shadow:0 4px 14px rgba(232,121,176,.4); z-index:96; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; transition:transform .18s}
+#asstFloat img{width:100%; height:100%; object-fit:cover}
+#asstFloat:active{transform:scale(.88)}
+#asstFloat.bounce{animation:ico-bounce .45s ease}
+.asst-panel{position:fixed; right:12px; bottom:92px; width:min(330px, calc(100vw - 24px)); height:min(520px, calc(100vh - 180px)); background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:0 10px 30px rgba(120,60,110,.25); z-index:97; display:flex; flex-direction:column; overflow:hidden}
+.asst-head{display:flex; align-items:center; gap:8px; padding:10px 12px; background:linear-gradient(120deg,#f291c3,#e879b0); color:#fff; flex-shrink:0}
+.asst-head img{width:30px; height:30px; border-radius:50%; border:2px solid #fff}
+.asst-head b{flex:1; font-size:14px}
+.asst-tts{font-size:16px; cursor:pointer; opacity:.9}
+.asst-msgs{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:var(--bg)}
+.asst-msgs .msg{max-width:85%; padding:8px 11px; border-radius:14px; font-size:13.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
+.asst-msgs .msg-user{align-self:flex-end; background:var(--pink-deep); color:#fff; border-bottom-right-radius:4px}
+.asst-msgs .msg-bot{align-self:flex-start; background:var(--card); color:var(--text); border:1px solid var(--border); border-bottom-left-radius:4px}
+.asst-input-row{display:flex; gap:8px; padding:10px; background:var(--card); flex-shrink:0}
+.card{transition:transform .18s ease, box-shadow .18s ease}
+.card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(232,121,176,.12)}
+.bottom-nav button.active .nav-ico{transform:scale(1.14) translateY(-1px)}
+/* ============ 图标动效 ============ */
+.icon-btn, .btn, .chip, .bottom-nav button .nav-ico, .quick, .mood{transition:transform .15s ease}
+.icon-btn:hover, .btn:hover, .chip:hover{transform:scale(1.08)}
+.icon-btn:active, .btn:active, .chip:active{transform:scale(.93)}
+.bottom-nav button:hover .nav-ico{transform:scale(1.18)}
+.bottom-nav button:active .nav-ico{transform:scale(.85)}
+.bottom-nav button .nav-ico.bounce{animation:ico-bounce .45s ease}
+@keyframes ico-bounce{0%{transform:scale(1)}35%{transform:scale(1.32) rotate(14deg)}70%{transform:scale(.94) rotate(-4deg)}100%{transform:scale(1)}}
 .modal{
   background:var(--card); width:100%; max-width:560px;
   border-radius:24px 24px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
@@ -245,7 +276,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
     <h3>情侣小屋</h3>
     <p>这是你们的私密小屋，登录后进入</p>
     <div class="row" style="margin-bottom:8px"><input class="input" id="gateEmail" type="email" placeholder="邮箱地址" autocomplete="username"></div>
-    <div class="row" style="margin-bottom:8px"><input class="input" id="gatePassword" type="password" placeholder="密码" autocomplete="current-password"></div>
+    <div class="row" style="margin-bottom:8px"><input class="input" id="gatePassword" type="password" placeholder="密码" autocomplete="current-password" style="flex:1"><button class="icon-btn" id="gatePwToggle" title="显示/隐藏密码">👁</button></div>
     <button class="btn" id="gateLoginBtn" style="width:100%">登 录</button>
     <div class="photo-note" style="margin:12px 0 8px; text-align:center">— 没有账号？先填通行码再注册 —</div>
     <div class="row" style="margin-bottom:8px"><input class="input" id="gateSignupCode" type="text" placeholder="注册通行码（找屋主要）" autocomplete="off"></div>
@@ -255,6 +286,22 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 </div>
 
 <!-- ================= 顶部栏 ================= -->
+<!-- 大耳狗小助手：悬浮球 + 对话面板 -->
+<div id="asstFloat" title="大耳狗小助手"><img src="assets/nav-life.png" alt=""></div>
+<div id="asstPanel" class="asst-panel" style="display:none">
+  <div class="asst-head">
+    <img src="assets/nav-life.png" alt="">
+    <b>大耳狗小助手</b>
+    <span class="asst-tts" id="asstTtsBtn" title="语音播报开关">🔊</span>
+    <button class="icon-btn" id="asstClose">✕</button>
+  </div>
+  <div id="asstMsgs" class="asst-msgs"></div>
+  <div class="asst-input-row">
+    <input class="input" id="asstInput" placeholder="问我点什么…（试试：加待办：明早跑步）" maxlength="200">
+    <button class="btn small" id="asstSend">发送</button>
+  </div>
+</div>
+
 <header class="topbar">
   <div class="brand">
     <!-- 已匹配：厨师拿面包近景图，适合作为顶部圆形小标识 -->
@@ -270,6 +317,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 <main>
   <!-- ================= 首页 ================= -->
   <section class="page active" id="page-home">
+    <div class="page-banner"><div class="banner-ico">🏠</div><div><b>首页</b><span>今天的一切，都在这里</span></div></div>
     <div class="demo-banner" id="demoBanner">
       <span>👀 你现在看到的是<b>演示数据</b>，用来展示界面效果，不是真实记录。</span>
       <button id="clearDemoBtn">清空，从空白开始</button>
@@ -340,13 +388,23 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
     </div>
 
     <div class="card">
-      <div class="card-title">❤️ 纪念日 <span class="more"><button onclick="goPage('diary')">去日记 →</button></span></div>
+      <div class="card-title">❤️ 纪念日 <span class="more"><button onclick="goPage('life'); setTimeout(()=>{ lifeSub='anniv'; renderLife(); },0)">去看 →</button></span></div>
       <div id="homeAnnivList"></div>
     </div>
   </section>
 
   <!-- ================= 待办 ================= -->
-  <section class="page" id="page-todo">
+    <!-- ================= 生活（待办/日记/心情/纪念日） ================= -->
+  <section class="page" id="page-life">
+    <div class="page-banner"><img class="banner-ico" src="assets/nav-life.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>生活</b><span>待办、日记、心情、纪念日，记录每天的小日子</span></div></div>
+    <div class="sub-tabs">
+      <button class="chip on" data-sub="todo">📋 待办</button>
+      <button class="chip" data-sub="diary">📖 日记</button>
+      <button class="chip" data-sub="mood">😊 心情</button>
+      <button class="chip" data-sub="anniv">❤️ 纪念日</button>
+    </div>
+    <div id="sub-life-todo">
+
     <div class="card">
       <div class="card-title">➕ 添加待办</div>
       <div class="row"><input class="input" id="todoInput" placeholder="要做什么？比如：一起去买菜"></div>
@@ -365,10 +423,69 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
     </div>
 
     <div id="todoGroups"></div>
+  
+    </div>
+
+    <div id="sub-diary">
+      <div class="card">
+        <div class="card-title">✏️ 写日记</div>
+        <div class="row"><input class="input" id="diaryDate" type="date"></div>
+        <div class="row"><textarea class="input" id="diaryText" rows="3" placeholder="今天发生了什么？想写什么写什么…" style="resize:none"></textarea></div>
+        <div class="row">
+          <input class="photo-input" id="diaryPhotoInput" type="file" accept="image/*" multiple>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁写的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+          <button class="btn small" id="diaryAddBtn" style="margin-left:auto">保存</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">📖 日记本（最近 30 篇）</div><div id="diaryList"></div></div>
+    </div>
+
+    <div id="sub-mood" style="display:none">
+      <div class="card">
+        <div class="card-title">😊 今天的心情</div>
+        <div class="mood-row" id="moodRow"></div>
+        <div class="row" style="margin-top:10px">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+        <div class="row"><input class="input" id="moodNote" placeholder="为什么？（选填）"></div>
+        <div class="row"><button class="btn small" id="moodSaveBtn" style="margin-left:auto">保存心情</button></div>
+      </div>
+      <div class="card"><div class="card-title">📋 心情记录（最近 30 条）</div><div id="moodList"></div></div>
+    </div>
+
+    <div id="sub-anniv" style="display:none">
+      <div class="card">
+        <div class="card-title">❤️ 添加纪念日</div>
+        <div class="row"><input class="input" id="annivName" placeholder="名称，如：在一起的日子"></div>
+        <div class="row"><input class="input" id="annivDate" type="date"></div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">提前提醒：</span>
+          <button class="chip" data-remind="0">当天</button>
+          <button class="chip" data-remind="3">提前3天</button>
+          <button class="chip" data-remind="7">提前7天</button>
+        </div>
+        <div class="row">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+          <button class="btn small" id="annivAddBtn" style="margin-left:auto">添加</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">❤️ 纪念日列表</div><div id="annivList"></div></div>
+    </div>
+  
   </section>
 
+
   <!-- ================= 记录 ================= -->
-  <section class="page" id="page-record">
+  <section class="page" id="page-health">
+    <div class="page-banner"><img class="banner-ico" src="assets/nav-health.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>健康</b><span>饮食、体重、运动、睡眠、生理期</span></div></div>
     <div class="sub-tabs">
       <button class="chip on" data-sub="diet">🍚 饮食</button>
       <button class="chip" data-sub="weight">⚖️ 体重</button>
@@ -482,81 +599,30 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
   </section>
 
   <!-- ================= 日记 ================= -->
-  <section class="page" id="page-diary">
-    <div class="sub-tabs">
-      <button class="chip on" data-sub="diary">📖 日记</button>
-      <button class="chip" data-sub="mood">😊 心情</button>
-      <button class="chip" data-sub="anniv">❤️ 纪念日</button>
-    </div>
+  
 
-    <div id="sub-diary">
-      <div class="card">
-        <div class="card-title">✏️ 写日记</div>
-        <div class="row"><input class="input" id="diaryDate" type="date"></div>
-        <div class="row"><textarea class="input" id="diaryText" rows="3" placeholder="今天发生了什么？想写什么写什么…" style="resize:none"></textarea></div>
-        <div class="row">
-          <input class="photo-input" id="diaryPhotoInput" type="file" accept="image/*" multiple>
-        </div>
-        <div class="row">
-          <span style="font-size:12px; color:var(--text2)">谁写的：</span>
-          <button class="chip who who-mine" data-who="mine">我</button>
-          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
-          <button class="btn small" id="diaryAddBtn" style="margin-left:auto">保存</button>
-        </div>
+  <!-- ================= 聊天 ================= -->
+  <section class="page" id="page-chat">
+    <div class="page-banner"><div class="banner-ico">💬</div><div><b>聊天</b><span>和小屋的人说说话</span></div></div>
+    <div class="card" style="display:flex; flex-direction:column; height:calc(100vh - 270px); min-height:340px">
+      <div class="card-title">💬 小屋聊天 <span class="photo-note">页面开着时对方消息 1 秒内到达；锁屏/后台时收不到，打开后才看到</span></div>
+      <div class="row" id="chatNickRow" style="margin-bottom:8px">
+        <span style="font-size:12px; color:var(--text2)">对方备注：</span>
+        <input class="input" id="chatNickInput" placeholder="比如：宝贝 / 老婆" maxlength="12" style="flex:1">
+        <button class="btn small" id="chatNickBtn">保存</button>
       </div>
-      <div class="card"><div class="card-title">📖 日记本（最近 30 篇）</div><div id="diaryList"></div></div>
-    </div>
-
-    <div id="sub-mood" style="display:none">
-      <div class="card">
-        <div class="card-title">😊 今天的心情</div>
-        <div class="mood-row" id="moodRow"></div>
-        <div class="row" style="margin-top:10px">
-          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
-          <button class="chip who who-mine" data-who="mine">我</button>
-          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
-        </div>
-        <div class="row"><input class="input" id="moodNote" placeholder="为什么？（选填）"></div>
-        <div class="row"><button class="btn small" id="moodSaveBtn" style="margin-left:auto">保存心情</button></div>
+      <div id="chatList" style="flex:1; overflow-y:auto; padding:6px 2px; display:flex; flex-direction:column; gap:8px"></div>
+      <div class="row" style="margin-top:8px">
+        <input class="input" id="chatInput" placeholder="说点什么…" maxlength="500" style="flex:1">
+        <button class="btn small" id="chatSendBtn">发送</button>
       </div>
-      <div class="card"><div class="card-title">📋 心情记录（最近 30 条）</div><div id="moodList"></div></div>
-    </div>
-
-    <div id="sub-anniv" style="display:none">
-      <div class="card">
-        <div class="card-title">❤️ 添加纪念日</div>
-        <div class="row"><input class="input" id="annivName" placeholder="名称，如：在一起的日子"></div>
-        <div class="row"><input class="input" id="annivDate" type="date"></div>
-        <div class="row">
-          <span style="font-size:12px; color:var(--text2)">提前提醒：</span>
-          <button class="chip" data-remind="0">当天</button>
-          <button class="chip" data-remind="3">提前3天</button>
-          <button class="chip" data-remind="7">提前7天</button>
-        </div>
-        <div class="row">
-          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
-          <button class="chip who who-mine" data-who="mine">我</button>
-          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
-          <button class="btn small" id="annivAddBtn" style="margin-left:auto">添加</button>
-        </div>
-      </div>
-      <div class="card"><div class="card-title">❤️ 纪念日列表</div><div id="annivList"></div></div>
     </div>
   </section>
-</main>
 
-<!-- ================= 底部导航 ================= -->
-<nav class="bottom-nav">
-  <button data-page="home" class="active"><span class="nav-ico"><img data-photo="navHome" alt="" aria-hidden="true"></span>首页</button>
-  <button data-page="todo"><span class="nav-ico"><img data-photo="navTodo" alt="" aria-hidden="true"></span>待办</button>
-  <button data-page="record"><span class="nav-ico"><img data-photo="navRecord" alt="" aria-hidden="true"></span>记录</button>
-  <button data-page="diary"><span class="nav-ico"><img data-photo="navDiary" alt="" aria-hidden="true"></span>日记</button>
-</nav>
-
-<!-- ================= 设置弹窗 ================= -->
-<div class="modal-mask" id="settingsModal">
-  <div class="modal">
-    <div class="close-row"><button class="icon-btn" id="settingsClose">✕</button></div>
+  <!-- ================= 我的（设置） ================= -->
+  
+<section class="page" id="page-me">
+    <div class="page-banner"><img class="banner-ico" src="assets/nav-me.png" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover"><div><b>我的</b><span>外观、成员资料、云端同步、备份与恢复</span></div></div>
     <h3>⚙️ 设置</h3>
 
     <div class="card" style="box-shadow:none">
@@ -575,7 +641,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
       </div>
       <div id="cloudGuestBox" style="display:none">
         <div class="row"><input class="input" id="cloudEmail" type="email" placeholder="邮箱地址"></div>
-        <div class="row"><input class="input" id="cloudPassword" type="password" placeholder="密码（至少 8 位）"></div>
+        <div class="row"><input class="input" id="cloudPassword" type="password" placeholder="密码（至少 8 位）" style="flex:1"><button class="icon-btn" id="cloudPwToggle" title="显示/隐藏密码">👁</button></div>
         <div class="row"><input class="input" id="cloudSignupCode" type="text" placeholder="注册通行码（老用户登录不用填）" autocomplete="off"></div>
         <div class="cloud-actions">
           <button class="btn small" id="cloudLoginBtn">登录</button>
@@ -659,9 +725,20 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
         提醒：网页的「提醒」在手机锁屏时可能不准时，打开工作台就能看到今天的事。
       </div>
     </div>
-  </div>
-</div>
+  </section>
 
+</main>
+
+<!-- ================= 底部导航 ================= -->
+<nav class="bottom-nav">
+  <button data-page="home" class="active"><span class="nav-ico"><img data-photo="navHome" alt="" aria-hidden="true"></span>首页</button>
+  <button data-page="life"><span class="nav-ico"><img src="assets/nav-life.png" alt=""></span>生活</button>
+  <button data-page="health"><span class="nav-ico"><img src="assets/nav-health.png" alt=""></span>健康</button>
+  <button data-page="chat"><span class="nav-ico" style="font-size:20px; line-height:1">💬</span>聊天</button>
+  <button data-page="me"><span class="nav-ico"><img src="assets/nav-me.png" alt=""></span>我的</button>
+</nav>
+
+<!-- ================= 设置弹窗 ================= -->
 <div class="toast" id="toast"></div>
 
 <script src="supabase-config.js"></script>
@@ -1389,15 +1466,34 @@ function markDemoGone(){
 function confirmDel(msg){ return confirm(msg); }
 
 /* ---------- 页面切换 ---------- */
+const PAGES = ["home","life","health","chat","me"];
+let pageIndex = 0;
 function goPage(name){
+  const idx = PAGES.indexOf(name);
+  if(idx >= 0) pageIndex = idx;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   $("page-"+name).classList.add("active");
   document.querySelectorAll(".bottom-nav button").forEach(b=>{
     b.classList.toggle("active", b.dataset.page === name);
   });
   renderAll();
+  if(name === "chat"){ loadChatHistory(); subscribeChat(); }
   window.scrollTo(0,0);
 }
+/* 左右滑切换板块 */
+let touchX = null, touchY = null;
+document.addEventListener("touchstart", e=>{
+  touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+}, {passive:true});
+document.addEventListener("touchend", e=>{
+  if(touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  const dy = e.changedTouches[0].clientY - touchY;
+  touchX = null; touchY = null;
+  if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)*1.2) return;
+  const next = dx < 0 ? pageIndex+1 : pageIndex-1;
+  if(next >= 0 && next < PAGES.length) goPage(PAGES[next]);
+}, {passive:true});
 
 /* ---------- 待办 ---------- */
 let todoBucket = "today", todoWho = "mine";
@@ -1538,7 +1634,7 @@ let dietWho = "mine", sleepWho = "mine", periodWho = "mine";
 function renderRecord(){
   const subs = { diet:$("sub-diet"), weight:$("sub-weight"), sport:$("sub-sport"), sleep:$("sub-sleep"), period:$("sub-period") };
   Object.keys(subs).forEach(k=>{ subs[k].style.display = k===recordSub ? "block" : "none"; });
-  document.querySelectorAll("#page-record .sub-tabs .chip").forEach(c=>{
+  document.querySelectorAll("#page-health .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub === recordSub);
   });
 
@@ -1697,13 +1793,23 @@ function addPeriod(){
   toast(pred ? "已记录，下次预计 "+pred.date : "已记录");
 }
 
-/* ---------- 日记页 ---------- */
-let diarySub = "diary", diaryWho = "mine";
+/* ---------- 生活页 ---------- */
+let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
+function renderLife(){
+  document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
+    c.classList.toggle("on", c.dataset.sub===lifeSub);
+  });
+  const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
+  Object.keys(map).forEach(k=>{ if(map[k]) map[k].style.display = k===lifeSub ? "block" : "none"; });
+  if(lifeSub !== "todo") diarySub = lifeSub;
+  renderTodo();
+  renderDiary();
+}
 function renderDiary(){
   const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
-  Object.keys(subs).forEach(k=>{ subs[k].style.display = k===diarySub ? "block" : "none"; });
-  document.querySelectorAll("#page-diary .sub-tabs .chip").forEach(c=>{
-    c.classList.toggle("on", c.dataset.sub === diarySub);
+  Object.keys(subs).forEach(k=>{ if(subs[k]) subs[k].style.display = k===diarySub ? "block" : "none"; });
+  document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
+    if(["diary","mood","anniv"].includes(c.dataset.sub)) c.classList.toggle("on", c.dataset.sub===diarySub);
   });
 
   /* 日记 */
@@ -1735,12 +1841,334 @@ function renderDiary(){
 /* ---------- 统一渲染 ---------- */
 function renderAll(){
   updateHouseTitle();
+  renderChat();
   document.querySelectorAll(".gender-chip").forEach(c=>{
     c.classList.toggle("on", (S.memberGenders||{})[c.dataset.gender]===c.dataset.val);
   });
   $("demoBanner").style.display = S.demo ? "flex" : "none";
-  renderTodo(); renderHome(); renderRecord(); renderDiary();
+  renderHome(); renderLife(); renderRecord(); renderChat();
 }
+
+/* ---------- 聊天 ---------- */
+let chatMessages = [], chatChannel = null;
+function chatNickKey(){ return "xiaojia-nick-v1"; }
+function chatNickGet(uid){
+  try{
+    const map = JSON.parse(localStorage.getItem(chatNickKey()) || "{}");
+    return map[uid] || "";
+  }catch(e){ return ""; }
+}
+function chatNickSet(uid, nick){
+  try{
+    const map = JSON.parse(localStorage.getItem(chatNickKey()) || "{}");
+    if(nick) map[uid] = nick; else delete map[uid];
+    localStorage.setItem(chatNickKey(), JSON.stringify(map));
+  }catch(e){}
+}
+async function chatOtherId(){
+  if(!cloudReady() || !currentHouse) return null;
+  const me = cloudSession.user.id;
+  const fromMsg = chatMessages.find(m=>m.sender_id && m.sender_id !== me);
+  if(fromMsg) return fromMsg.sender_id;
+  try{
+    const {data,error} = await supabaseClient.from("xj_house_members")
+      .select("user_id").eq("house_id", currentHouse.id).neq("user_id", me).limit(1).maybeSingle();
+    if(!error && data) return data.user_id;
+  }catch(e){}
+  return null;
+}
+function fmtChatTime(iso){
+  const d = new Date(iso);
+  const p = n=>n.toString().padStart(2,"0");
+  const hm = p(d.getHours())+":"+p(d.getMinutes());
+  const today = new Date();
+  if(d.toDateString() === today.toDateString()) return hm;
+  return p(d.getMonth()+1)+"-"+p(d.getDate())+" "+hm;
+}
+function renderChat(){
+  const list = $("chatList");
+  if(!list) return;
+  if(!cloudReady() || !currentHouse){
+    list.innerHTML = '<div class="empty">'+emptyArt()+'登录并加入小屋后，才能和小屋的人聊天。</div>';
+    return;
+  }
+  const me = cloudSession.user.id;
+  let h = "";
+  chatMessages.forEach(m=>{
+    const mine = m.sender_id === me;
+    const showName = mine ? "" : (chatNickGet(m.sender_id) || m.sender_name || "对方");
+    h += '<div style="display:flex; justify-content:'+(mine?"flex-end":"flex-start")+'">'
+      + '<div style="max-width:78%; background:'+(mine?"var(--pink-deep)":"var(--bg2)")+'; color:'+(mine?"#fff":"var(--text)")+'; border-radius:14px; padding:8px 12px; font-size:14px">'
+      + (mine?"":'<div style="font-size:11px; opacity:.7; margin-bottom:2px">'+esc(showName)+'</div>')
+      + esc(m.content)
+      + '<div style="font-size:10px; opacity:.6; margin-top:3px; text-align:right">'+fmtChatTime(m.created_at)+'</div>'
+      + '</div></div>';
+  });
+  /* 备注行显示控制 */
+  const nickRow = $("chatNickRow");
+  if(nickRow) nickRow.style.display = (cloudReady() && currentHouse) ? "" : "none";
+  chatOtherId().then(oid=>{
+    if(oid && $("chatNickInput") && document.activeElement !== $("chatNickInput")){
+      $("chatNickInput").value = chatNickGet(oid);
+    }
+  });
+  list.innerHTML = h || '<div class="empty">'+emptyArt()+'还没有消息，说点什么吧</div>';
+  list.scrollTop = list.scrollHeight;
+}
+async function loadChatHistory(){
+  if(!cloudReady() || !currentHouse) return;
+  try{
+    const {data,error} = await supabaseClient.from("xj_messages")
+      .select("*").eq("house_id", currentHouse.id)
+      .order("created_at", { ascending:true }).limit(50);
+    if(error) throw error;
+    chatMessages = data || [];
+    renderChat();
+  }catch(e){ /* 静默失败，下次进入再试 */ }
+}
+function subscribeChat(){
+  if(!cloudReady() || !currentHouse) return;
+  if(chatChannel){ supabaseClient.removeChannel(chatChannel); chatChannel = null; }
+  chatChannel = supabaseClient.channel("xj-chat-"+currentHouse.id)
+    .on("postgres_changes", {
+      event:"INSERT", schema:"public", table:"xj_messages",
+      filter:"house_id=eq."+currentHouse.id
+    }, payload=>{
+      const m = payload.new;
+      if(m && !chatMessages.some(x=>x.id===m.id)){
+        chatMessages.push(m);
+        renderChat();
+      }
+    })
+    .subscribe();
+}
+async function sendChatMessage(){
+  if(!cloudReady() || !currentHouse){ toast("登录并加入小屋后才能聊天"); return; }
+  const v = $("chatInput").value.trim();
+  if(!v) return;
+  try{
+    const {error} = await supabaseClient.from("xj_messages").insert({
+      house_id: currentHouse.id,
+      sender_id: cloudSession.user.id,
+      sender_name: currentHouse.displayName || "我",
+      content: v
+    });
+    if(error) throw error;
+    $("chatInput").value = "";
+  }catch(error){
+    toast("发送失败："+cloudErrorText(error));
+  }
+}
+
+/* ---------- 大耳狗小助手 ---------- */
+const ASST_KB = {
+  greetings: ["你好呀～我是大耳狗 ☁️ 今天也要开开心心！", "嗨～有什么想跟我说的吗？", "来啦来啦！大耳狗在线，随时陪你～"],
+  comfort: ["别难过啦，抱抱你～我在这里陪着你 💕", "不开心的时候，看看我的大耳朵，是不是很治愈？", "没关系，慢慢来，你已经很棒了。"],
+  cheer: ["加油加油！大耳狗给你打气 🎉", "你是最棒的！我们一起冲！", "累了就歇一歇，明天继续～"],
+  stories: ["从前有只大耳狗，它的耳朵大到能当被子盖……结果它总是睡过头！", "小云朵掉进了奶茶杯，大耳狗用耳朵把它捞出来，喝了一口——是棉花糖味的！", "大耳狗和它的朋友玩捉迷藏，因为它耳朵太大，永远第一个被发现……"],
+  jokes: ["为什么大耳狗不喜欢打伞？因为它的耳朵就是天然雨伞！", "大耳狗去餐厅点餐，老板问要什么，它说：要耳朵……哦不，要点耳（耳）朵（朵）！", "大耳狗秤体重，秤说：你太重啦！大耳狗：不可能，我明明很轻！秤：我说的是耳朵！"],
+  thanks: ["不客气～能帮到你我很开心 💕", "嘿嘿，小事一桩！", "随时找我玩哦～"],
+  bye: ["拜拜～早点休息哦 🌙", "下次见！我会想你的～", "晚安，做个好梦～"],
+  default: ["嗯嗯，我在听～（可以试试问我：今天吃了什么 / 加待办 / 讲故事）", "这个话题我不太懂，但我会努力学习的！", "嘻嘻，要不要让我给你讲个笑话？"]
+};
+let asstTtsOn = true, asstOpen = false;
+function asstPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function asstIntent(text){
+  if(/你好|嗨|哈喽|hello|hi|早上好|晚上好/.test(text)) return "greeting";
+  if(/你是谁|你叫|你.*名字/.test(text)) return "whoami";
+  if(/加.*待办|提醒我|记.*待办|加个待办/.test(text)) return "addTodo";
+  if(/吃了什么|饮食|吃.*饭|今天吃/.test(text)) return "todayFood";
+  if(/体重/.test(text)) return "weight";
+  if(/睡眠|睡.*多久|睡得好|睡得怎么样|睡.*怎么样/.test(text)) return "sleep";
+  if(/姨妈|生理期|经期/.test(text)) return "period";
+  if(/纪念日|生日|倒计时/.test(text)) return "anniv";
+  if(/故事/.test(text)) return "story";
+  if(/笑话/.test(text)) return "joke";
+  if(/加油|鼓励|难过|不开心|累/.test(text)) return "cheer";
+  if(/天气/.test(text)) return "weather";
+  if(/谢谢|感谢/.test(text)) return "thanks";
+  if(/再见|拜拜|晚安/.test(text)) return "bye";
+  if(/帮我|怎么|能做什么|帮助|会什么/.test(text)) return "help";
+  return "default";
+}
+function asstReply(text){
+  const intent = asstIntent(text);
+  switch(intent){
+    case "greeting": return asstPick(ASST_KB.greetings);
+    case "whoami": return "我是大耳狗，你们小屋的贴心小管家 ☁️ 我能帮你们记待办、查记录、讲故事，随时找我玩～";
+    case "help": return "我能做这些：① 说「加待办：明早跑步」直接记待办 ② 问「今天吃了什么」查饮食 ③ 问「体重/睡眠/生理期/纪念日」查记录 ④ 说「讲故事/讲笑话」逗你开心～";
+    case "addTodo": {
+      const todo = text.replace(/^(加|添加|记|帮我)?(个|一条|一个)?(待办|提醒|记事)?[:：]?/,"").replace(/提醒我/,"").trim();
+      if(todo){
+        S.todos.push({ id:uid(), text:todo, bucket:"today", repeat:false, done:false, who:todoWho, date:TODAY });
+        markDemoGone(); save(); renderAll();
+        return "已帮你记下待办：「"+todo+"」✅ 记得完成哦～";
+      }
+      return "好的，告诉我具体要做啥，比如「加待办：明早 7 点跑步」～";
+    }
+    case "todayFood": {
+      const meals = S.meals.filter(m=>m.date===TODAY);
+      if(!meals.length) return "今天还没记录饮食哦～要不要现在去健康页记一笔？";
+      return "今天吃了 "+meals.length+" 项：\n"+meals.slice(0,6).map(m=>"• "+({breakfast:"早餐",lunch:"午餐",dinner:"晚餐",snack:"加餐"}[m.meal]||m.meal)+"："+m.text).join("\n");
+    }
+    case "weight": {
+      const w = S.weights.slice().sort((a,b)=>b.date.localeCompare(a.date))[0];
+      return w ? "最近一次体重："+w.kg+" kg（"+w.date+"，"+(w.who==="xiaojia"?"小佳":"我")+"记的）" : "还没有体重记录哦，去健康页记一个吧～";
+    }
+    case "sleep": {
+      const s = S.sleeps.filter(x=>x.end).sort((a,b)=>b.end.localeCompare(a.end))[0];
+      return s ? "最近睡眠："+fmtDuration(s.minutes)+"，"+sleepEval(s.minutes)+"（"+(s.who==="xiaojia"?"小佳":"我")+"）" : "还没有睡眠记录，今晚睡前记得点「开始睡觉」哦～";
+    }
+    case "period": {
+      const f = ["mine","xiaojia"].filter(w=>genderOf(w)==="female");
+      if(!f.length) return "先到「我的」页给女生选一下性别，我才能帮忙算生理期哦～";
+      const pred = predictNextPeriod(f[0]);
+      return pred ? "根据记录推算，"+(f[0]==="xiaojia"?"小佳":"你")+"的下次生理期预计："+pred.date+"（按最近 "+pred.avg+" 天周期）" : "生理期记录还太少，再记一次开始日期，我就能预测下次啦～";
+    }
+    case "anniv": {
+      const a = S.anniversaries[0];
+      if(!a) return "还没有纪念日记录，去生活页加一个吧～";
+      const days = Math.max(0, Math.ceil((new Date(a.date)-new Date())/86400000));
+      return "「"+a.name+"」是 "+a.date+(days>0?"，还有 "+days+" 天就到了 🎉":"，已经过去啦～");
+    }
+    case "story": return "✨ "+asstPick(ASST_KB.stories);
+    case "joke": return "😆 "+asstPick(ASST_KB.jokes);
+    case "cheer": return asstPick(ASST_KB.cheer);
+    case "weather": return "今天"+(Math.random()<0.5?"晴☀️":"多云⛅")+"，适合出去走走，也适合在家窝着～";
+    case "thanks": return asstPick(ASST_KB.thanks);
+    case "bye": return asstPick(ASST_KB.bye);
+    default: return asstPick(ASST_KB.default);
+  }
+}
+function asstSpeak(text){
+  if(!asstTtsOn) return;
+  try{
+    if(!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\n/g,"，").slice(0,120));
+    u.lang = "zh-CN"; u.rate = 1.05;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* 语音失败不影响对话 */ }
+}
+function asstAddMsg(text, who){
+  const box = $("asstMsgs");
+  if(!box) return;
+  const div = document.createElement("div");
+  div.className = "msg msg-"+(who==="user"?"user":"bot");
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+function asstSend(){
+  const input = $("asstInput");
+  const v = input.value.trim();
+  if(!v) return;
+  asstAddMsg(v, "user");
+  input.value = "";
+  setTimeout(()=>{
+    const r = asstReply(v);
+    asstAddMsg(r, "bot");
+    asstSpeak(r);
+  }, 350);
+}
+function asstToggle(open){
+  asstOpen = open !== undefined ? open : !asstOpen;
+  $("asstPanel").style.display = asstOpen ? "flex" : "none";
+  if(asstOpen && !$("asstMsgs").children.length){
+    asstAddMsg("你好呀～我是大耳狗 ☁️ 欢迎回到小屋！可以问我「今天吃了什么」「加待办：明早跑步」或者「讲个故事」～", "bot");
+  }
+}
+/* 悬浮球拖拽 + 贴边吸附 */
+let asstDock = null; // "left" | "right"：贴边隐藏状态
+function asstDockTo(side, y){
+  const btn = $("asstFloat");
+  if(!btn) return;
+  asstDock = side;
+  btn.style.transition = "transform .28s ease, left .28s ease, right .28s ease";
+  if(y !== undefined && y !== null){
+    btn.style.top = Math.max(70, Math.min(window.innerHeight - btn.offsetHeight - 90, y)) + "px";
+    btn.style.bottom = "auto";
+  }
+  if(side === "left"){
+    btn.style.left = "14px"; btn.style.right = "auto";
+    btn.style.transform = "translateX(calc(-100% + 18px))";
+  }else{
+    btn.style.right = "14px"; btn.style.left = "auto";
+    btn.style.transform = "translateX(calc(100% - 18px))";
+  }
+}
+function asstUnhide(){
+  const btn = $("asstFloat");
+  if(!btn) return;
+  btn.style.transition = "transform .28s ease";
+  btn.style.transform = "translateX(0)";
+}
+(function(){
+  const btn = $("asstFloat");
+  if(!btn) return;
+  let sx=0, sy=0, moved=false, pressing=false, justDragged=false;
+  btn.addEventListener("pointerdown", e=>{
+    pressing=true; moved=false;
+    sx=e.clientX; sy=e.clientY;
+    if(btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
+    if(e.cancelable) e.preventDefault();
+  });
+  btn.addEventListener("pointermove", e=>{
+    if(!pressing) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy;
+    if(Math.abs(dx)>8 || Math.abs(dy)>8){
+      moved=true;
+      btn.style.transition="none";
+      const x=Math.max(0,Math.min(window.innerWidth-btn.offsetWidth, btn.offsetLeft+dx));
+      const y=Math.max(70,Math.min(window.innerHeight-btn.offsetHeight-60, btn.offsetTop+dy));
+      btn.style.left=x+"px"; btn.style.top=y+"px";
+      btn.style.right="auto"; btn.style.bottom="auto";
+      btn.style.transform="";
+      sx=e.clientX; sy=e.clientY;
+    }
+  }, {passive:false});
+  btn.addEventListener("pointerup", ()=>{
+    if(!pressing) return;
+    pressing=false;
+    if(moved){
+      moved=false;
+      justDragged=true;
+      setTimeout(()=>{ justDragged=false; }, 80);
+      const rect = btn.getBoundingClientRect();
+      const nearLeft = rect.left < 30;
+      const nearRight = (window.innerWidth - (rect.left + rect.width)) < 30;
+      if(nearLeft){
+        asstDockTo("left", rect.top);
+      }else if(nearRight){
+        asstDockTo("right", rect.top);
+      }
+      return;
+    }
+    btn.classList.remove("bounce"); void btn.offsetWidth; btn.classList.add("bounce");
+    if(asstDock){ asstUnhide(); asstDock = null; }
+    asstToggle(true);
+  });
+  btn.addEventListener("click", ()=>{
+    if(moved || justDragged){ moved=false; return; }
+    btn.classList.remove("bounce"); void btn.offsetWidth; btn.classList.add("bounce");
+    if(asstDock){ asstUnhide(); asstDock = null; }
+    asstToggle(true);
+  });
+})();
+(function(){
+  const close = $("asstClose");
+  if(close) close.addEventListener("click", ()=>asstToggle(false));
+  const send = $("asstSend");
+  if(send) send.addEventListener("click", asstSend);
+  const input = $("asstInput");
+  if(input) input.addEventListener("keydown", e=>{ if(e.key==="Enter") asstSend(); });
+  const tts = $("asstTtsBtn");
+  if(tts) tts.addEventListener("click", ()=>{
+    asstTtsOn = !asstTtsOn;
+    tts.textContent = asstTtsOn ? "🔊" : "🔇";
+    if(!asstTtsOn && window.speechSynthesis) window.speechSynthesis.cancel();
+  });
+})();
 
 /* ---------- 主题 ---------- */
 function applyTheme(theme){
@@ -1760,7 +2188,15 @@ function applyTheme(theme){
 function bindEvents(){
   /* 底部导航 */
   document.querySelectorAll(".bottom-nav button").forEach(b=>{
-    b.addEventListener("click", ()=>goPage(b.dataset.page));
+    b.addEventListener("click", ()=>{
+      const ico = b.querySelector(".nav-ico");
+      if(ico){
+        ico.classList.remove("bounce");
+        void ico.offsetWidth;
+        ico.classList.add("bounce");
+      }
+      goPage(b.dataset.page);
+    });
   });
 
   /* 主题 */
@@ -1776,12 +2212,23 @@ function bindEvents(){
   });
 
  /* 设置弹窗 */
- $("settingsBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
+ $("settingsBtn").addEventListener("click", ()=>goPage("me"));
  $("gateLoginBtn").addEventListener("click", gateSignIn);
  $("gateSignupBtn").addEventListener("click", gateSignUp);
  $("gatePassword").addEventListener("keydown", e=>{ if(e.key === "Enter") gateSignIn(); });
- $("settingsClose").addEventListener("click", ()=>$("settingsModal").classList.remove("show"));
- $("settingsModal").addEventListener("click", e=>{ if(e.target === $("settingsModal")) $("settingsModal").classList.remove("show"); });
+
+  /* 密码显示/隐藏 */
+  function bindPwToggle(inputId, btnId){
+    const input = $(inputId), btn = $(btnId);
+    if(!input || !btn) return;
+    btn.addEventListener("click", ()=>{
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "🙈" : "👁";
+    });
+  }
+  bindPwToggle("gatePassword","gatePwToggle");
+  bindPwToggle("cloudPassword","cloudPwToggle");
 
   /* 云端账号 / 小屋 */
   $("cloudLoginBtn").addEventListener("click", cloudSignIn);
@@ -1839,7 +2286,7 @@ function bindEvents(){
       try{ await deletePhotoRefs(photoIds); }catch(error){ toast("照片清理失败，数据仍会清空："+cloudErrorText(error)); }
     }
     S = emptyState(); save(); applyTheme(S.theme); renderAll();
-    $("settingsModal").classList.remove("show");
+    goPage("home");
     toast("已清空所有数据");
   });
 
@@ -1936,17 +2383,18 @@ function bindEvents(){
       t.classList.add("on");
       /* 根据所在页面设置当前 who */
       if(document.querySelector("#page-home.active")) weightWho = who;
-      if(document.querySelector("#page-todo.active")) todoWho = who;
-      if(document.querySelector("#page-record.active")){
+      if(document.querySelector("#page-life.active")){
+        if(lifeSub === "todo") todoWho = who;
+        else if(lifeSub === "diary") diaryWho = who;
+        else if(lifeSub === "anniv") annivWho = who;
+        else moodWho = who;
+      }
+      if(document.querySelector("#page-health.active")){
         if(recordSub === "diet") dietWho = who;
         else if(recordSub === "weight") weightWho = who;
         else if(recordSub === "sleep"){ sleepWho = who; renderRecord(); }
         else if(recordSub === "period"){ periodWho = who; renderPeriod(); }
         else sportWho = who;
-      }
-      if(document.querySelector("#page-diary.active")){
-        if(diarySub === "diary") diaryWho = who;
-        else moodWho = who;
       }
       return;
     }
@@ -1967,21 +2415,22 @@ function bindEvents(){
     const subChip = t.closest(".sub-tabs .chip");
     if(subChip){
       const page = subChip.closest(".page").id;
-      if(page === "page-record"){ recordSub = subChip.dataset.sub; renderRecord(); }
+      if(page === "page-health"){ recordSub = subChip.dataset.sub; renderRecord(); }
+      else if(page === "page-life"){ lifeSub = subChip.dataset.sub; renderLife(); }
       else { diarySub = subChip.dataset.sub; renderDiary(); }
       return;
     }
 
     /* 待办页 bucket / repeat 附近 chips */
-    const bucketChip = t.closest("#page-todo .card .chip[data-bucket]");
+    const bucketChip = t.closest("#sub-life-todo .card .chip[data-bucket]");
     if(bucketChip){ todoBucket = bucketChip.dataset.bucket; syncChips(); return; }
 
     /* 记录页 餐别 */
-    const mealChip = t.closest("#page-record .chip[data-meal]");
+    const mealChip = t.closest("#page-health .chip[data-meal]");
     if(mealChip){ mealSel = mealChip.dataset.meal; syncChips(); renderRecord(); return; }
 
     /* 纪念日提醒天数 */
-    const remindChip = t.closest("#page-diary .chip[data-remind]");
+    const remindChip = t.closest("#page-life .chip[data-remind]");
     if(remindChip){ annivRemind = Number(remindChip.dataset.remind); syncChips(); return; }
   });
 }
@@ -2075,6 +2524,18 @@ function bindAddButtons(){
   /* 睡眠 / 生理期 */
   $("sleepToggleBtn").addEventListener("click", toggleSleep);
   $("periodAddBtn").addEventListener("click", addPeriod);
+
+  /* 聊天 */
+  $("chatSendBtn").addEventListener("click", sendChatMessage);
+  $("chatInput").addEventListener("keydown", e=>{ if(e.key === "Enter") sendChatMessage(); });
+  $("chatNickBtn").addEventListener("click", async ()=>{
+    const v = $("chatNickInput").value.trim();
+    const oid = await chatOtherId();
+    if(!oid){ toast("还没找到对方，等收到消息后就能备注了"); return; }
+    chatNickSet(oid, v);
+    renderChat();
+    toast(v ? "备注已保存 ✅" : "备注已清除");
+  });
 
   /* 饮食日期回看 */
   if($("mealDate")) $("mealDate").addEventListener("change", ()=>renderRecord());
