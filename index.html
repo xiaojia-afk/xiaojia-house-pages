@@ -217,6 +217,19 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .photo-strip img{cursor:zoom-in}
 .photo-tile img{cursor:zoom-in}
 .link-btn{border:none; background:none; color:var(--lav-deep); font-size:12.5px; text-decoration:underline; padding:2px 4px}
+/* 时间轴样式 */
+.hist-cal{border:1px solid var(--border); border-radius:14px; padding:8px; background:var(--bg)}
+.hist-week{display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:4px}
+.hist-week span{text-align:center; font-size:11px; color:var(--text2); padding:3px 0}
+.hist-row{display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:3px}
+.hist-cell{text-align:center; padding:7px 0; border-radius:10px; font-size:12.5px; color:var(--text); position:relative; cursor:pointer; background:var(--card); border:1px solid transparent}
+.hist-cell.dim{background:transparent; cursor:default}
+.hist-cell.sel{background:var(--pink-deep); color:#fff; font-weight:700}
+.hist-cell.today{border-color:var(--pink-deep)}
+.hist-cell .dot{position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--pink-deep)}
+.hist-cell.sel .dot{background:#fff}
+.hist-sec{margin-top:8px}
+.hist-sec-title{font-size:13px; font-weight:600; margin-bottom:4px}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -660,6 +673,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <button class="chip" data-sub="mood">😊 心情</button>
       <button class="chip" data-sub="anniv">❤️ 纪念日</button>
       <button class="chip" data-sub="money">💰 记账</button>
+      <button class="chip" data-sub="timeline">📅 时间轴</button>
     </div>
     <div id="sub-life-todo">
 
@@ -748,6 +762,24 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <span class="photo-note" style="margin-left:8px">支出 - / 收入 +</span>
         </div>
         <div id="moneyList"></div>
+      </div>
+    </div>
+
+    <div id="sub-life-timeline" style="display:none">
+      <div class="card">
+        <div class="card-title">📅 时间轴 <span class="more">翻日历，看那天我们一起做了什么</span></div>
+        <div class="row" style="margin-bottom:8px">
+          <button class="btn small ghost" id="histPrevBtn">‹ 前一天</button>
+          <input class="input" id="histDateInput" type="date" style="flex:1">
+          <button class="btn small ghost" id="histNextBtn">后一天 ›</button>
+        </div>
+        <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px">
+          <button class="btn small ghost" id="histMonthPrev">‹ 上月</button>
+          <span id="histMonthLabel" style="font-size:14px; font-weight:600"></span>
+          <button class="btn small ghost" id="histMonthNext">下月 ›</button>
+        </div>
+        <div class="hist-cal" id="histCal"></div>
+        <div id="histDayBody" style="margin-top:10px"></div>
       </div>
     </div>
   </section>
@@ -2516,6 +2548,111 @@ function runSearch(){
     });
   });
 }
+/* ---------- 时间轴 ---------- */
+let histDate = TODAY;
+function fmtLocal(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function histShift(days){
+  const d = new Date(histDate+"T00:00:00");
+  d.setDate(d.getDate()+days);
+  if(d > new Date(TODAY+"T00:00:00")) d = new Date(TODAY+"T00:00:00");
+  histDate = fmtLocal(d);
+  renderTimeline();
+}
+function recordedDates(){
+  const set = {};
+  const add = v => { const s = String(v||"").slice(0,10); if(/^\d{4}-\d{2}-\d{2}$/.test(s)) set[s] = 1; };
+  (S.todos||[]).forEach(t=>add(t.date));
+  (S.meals||[]).forEach(m=>add(m.date));
+  (S.diaries||[]).forEach(d=>add(d.date));
+  (S.moods||[]).forEach(m=>add(m.date));
+  (S.expenses||[]).forEach(e=>add(e.date));
+  (S.sports||[]).forEach(s=>add(s.date));
+  (S.weights||[]).forEach(w=>add(w.date));
+  (S.sleeps||[]).forEach(s=>add(s.start));
+  (S.photos||[]).forEach(p=>add(p.created_at));
+  return set;
+}
+function monthMatrix(year, month){
+  const first = new Date(year, month, 1);
+  const startDow = (first.getDay() + 6) % 7;
+  const days = new Date(year, month+1, 0).getDate();
+  const cells = [];
+  for(let i=0;i<startDow;i++) cells.push(null);
+  for(let d=1;d<=days;d++) cells.push(new Date(year, month, d));
+  while(cells.length % 7) cells.push(null);
+  const rows = [];
+  for(let i=0;i<cells.length;i+=7) rows.push(cells.slice(i,i+7));
+  return rows;
+}
+function renderTimeline(){
+  const cal = $("histCal"), body = $("histDayBody");
+  if(!cal || !body) return;
+  const dt = new Date(histDate+"T00:00:00");
+  const y = dt.getFullYear(), m = dt.getMonth();
+  $("histMonthLabel").textContent = y+" 年 "+(m+1)+" 月";
+  const di = $("histDateInput");
+  di.value = histDate;
+  di.max = TODAY;
+  const recSet = recordedDates();
+  const todayObj = new Date(TODAY+"T00:00:00");
+  const wd = ["日","一","二","三","四","五","六"];
+  let h = '<div class="hist-week">'+["一","二","三","四","五","六","日"].map(w=>"<span>"+w+"</span>").join("")+'</div>';
+  monthMatrix(y, m).forEach(row=>{
+    h += '<div class="hist-row">' + row.map(cell=>{
+      if(!cell) return '<span class="hist-cell dim"></span>';
+      const iso = fmtLocal(cell);
+      const isSel = iso === histDate;
+      const hasRec = !!recSet[iso];
+      const isToday = iso === TODAY;
+      return '<span class="hist-cell'+(isSel?" sel":"")+(isToday&&!isSel?" today":"")+'" data-tl="'+iso+'">'
+        + cell.getDate() + (hasRec ? '<i class="dot"></i>' : '') + '</span>';
+    }).join("") + '</div>';
+  });
+  cal.innerHTML = h;
+  cal.querySelectorAll("[data-tl]").forEach(c=>{
+    c.addEventListener("click", ()=>{ histDate = c.dataset.tl; renderTimeline(); });
+  });
+
+  /* 当日汇总 */
+  const meals = (S.meals||[]).filter(x=>x.date===histDate);
+  const todos = (S.todos||[]).filter(x=>x.date===histDate);
+  const diaries = (S.diaries||[]).filter(x=>x.date===histDate);
+  const moods = (S.moods||[]).filter(x=>x.date===histDate);
+  const exps = (S.expenses||[]).filter(x=>x.date===histDate);
+  const sports = (S.sports||[]).filter(x=>x.date===histDate);
+  const weights = (S.weights||[]).filter(x=>x.date===histDate);
+  const sleeps = (S.sleeps||[]).filter(x=>String(x.start).slice(0,10)===histDate);
+  const annivs = (S.anniversaries||[]).filter(a=>a.date===histDate);
+  const total = meals.length+todos.length+diaries.length+moods.length+exps.length+sports.length+weights.length+sleeps.length+annivs.length;
+  const item = (icon, text, sub, who) => '<div class="list-item"><div class="txt"><div>'+icon+' '+esc(text)+'</div>'
+    + (sub ? '<div class="meta">'+sub+'</div>' : '') + (who ? '<div class="meta">'+whoTag(who)+'</div>' : '') + '</div></div>';
+  let b = '<div class="photo-note" style="margin:4px 2px 6px">'+histDate+'（周'+wd[dt.getDay()]+'）共 '+total+' 条记录</div>';
+  const sec = (title, html) => html ? '<div class="hist-sec"><div class="hist-sec-title">'+title+'</div>'+html+'</div>' : '';
+  let mealHtml = "";
+  ["breakfast","lunch","dinner","snack"].forEach(meal=>{
+    const rows = meals.filter(x=>x.meal===meal);
+    if(rows.length){
+      mealHtml += rows.map(x=>item(MEAL_ICONS[meal] ? "🍽️":"", x.text || "（照片）", (MEALS[meal]||"")+" · "+dateText(x.date), x.who) + (x.photoIds && x.photoIds.length ? "" : "")).join("") + photoStrip(rows[0]);
+    }
+  });
+  b += sec("🍽️ 饮食", mealHtml || (meals.length ? mealHtml : ""));
+  b += sec("📋 待办", todos.map(t=>item(t.done?"✅":"⬜", t.text, "待办", t.who)).join(""));
+  b += sec("📖 日记", diaries.map(d=>item("📔", d.text.replace(/\n/g," ").slice(0,60), dateText(d.date), d.who)).join(""));
+  b += sec("😊 心情", moods.map(m=>item(m.mood||"😶", m.note||"心情记录", dateText(m.date), m.who)).join(""));
+  b += sec("💰 记账", exps.map(e=>item(e.type==="in"?"📥":"📤", (e.cat||"")+(e.note?" · "+e.note:""), (e.type==="in"?"+":"-")+fmtMoney(e.amount), e.who)).join(""));
+  b += sec("💪 运动", sports.map(s=>item("🏃", s.type||"运动", s.minutes+" 分钟", s.who)).join(""));
+  b += sec("⚖️ 体重", weights.map(w=>item("⚖️", w.kg+" kg", dateText(w.date), w.who)).join(""));
+  b += sec("🌙 睡眠", sleeps.map(s=>item("😴", s.end ? "已睡 "+Math.round(s.minutes/60*10)/10+" 小时" : "睡前打卡", (s.who||"")==="xiaojia"?"小佳":"我", s.who)).join(""));
+  b += sec("❤️ 纪念日", annivs.map(a=>item("🎉", a.name, dateText(a.date))).join(""));
+  b += sec("📷 照片", "");
+  const dayPhotos = (S.photos||[]).filter(p=>String(p.created_at).slice(0,10)===histDate);
+  if(dayPhotos.length){
+    b += '<div class="photo-strip">'+dayPhotos.map(p=>'<img loading="lazy" src="'+esc(p.url)+'" alt="" data-photo-path="'+esc(p.storage_path||"")+'">').join("")+'</div>';
+  }
+  if(!total) b += '<div class="empty">'+emptyArt()+'这一天还没有记录</div>';
+  body.innerHTML = b;
+  refreshVisiblePhotos();
+}
 /* ---------- 生活页 ---------- */
 let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
 /* ---------- 记账 ---------- */
@@ -2622,12 +2759,13 @@ function renderLife(){
   document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub===lifeSub);
   });
-  const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv"), money:$("sub-life-money") };
+  const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv"), money:$("sub-life-money"), timeline:$("sub-life-timeline") };
   Object.keys(map).forEach(k=>{ if(map[k]) map[k].style.display = k===lifeSub ? "block" : "none"; });
   if(lifeSub !== "todo") diarySub = lifeSub;
   renderTodo();
   renderDiary();
   renderMoney();
+  if(lifeSub === "timeline") renderTimeline();
   refreshVisiblePhotos();
   updateTodoBadge();
   updateChatBadge();
@@ -3127,6 +3265,20 @@ function bindConfirmModal(){
   $("confirmNo").addEventListener("click", ()=>settleConfirm(false));
   m.addEventListener("click", e=>{ if(e.target === m) settleConfirm(false); });
 }
+function bindHistControls(){
+  const prev = $("histPrevBtn"), next = $("histNextBtn"), input = $("histDateInput");
+  if(prev) prev.addEventListener("click", ()=>histShift(-1));
+  if(next) next.addEventListener("click", ()=>histShift(1));
+  if(input) input.addEventListener("change", ()=>{ histDate = input.value || TODAY; renderTimeline(); });
+  const mp = $("histMonthPrev"), mn = $("histMonthNext");
+  if(mp) mp.addEventListener("click", ()=>{ const d = new Date(histDate+"T00:00:00"); d.setMonth(d.getMonth()-1); histDate = fmtLocal(d); renderTimeline(); });
+  if(mn) mn.addEventListener("click", ()=>{
+    const d = new Date(histDate+"T00:00:00"); d.setMonth(d.getMonth()+1);
+    const t = new Date(TODAY+"T00:00:00");
+    if(d > t) d.setTime(t.getTime());
+    histDate = fmtLocal(d); renderTimeline();
+  });
+}
 function bindEvents(){
   /* 底部导航 */
   document.querySelectorAll(".bottom-nav button").forEach(b=>{
@@ -3605,6 +3757,7 @@ bindEvents();
 bindMoneyModal();
 bindMealModal();
 bindConfirmModal();
+bindHistControls();
 bindWelcomeModal();
 const nameBtn = $("myNameBtn"), nameModal = $("nameModal");
 if(nameBtn && nameModal){
