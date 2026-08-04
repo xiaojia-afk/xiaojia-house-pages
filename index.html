@@ -406,6 +406,27 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   </div>
 </div>
 
+<!-- 新手引导弹窗（登录后还没有小屋时弹出） -->
+<div class="modal-mask" id="welcomeModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="welcomeClose">✕</button></div>
+    <div class="card-title">🏡 欢迎来到情侣小屋</div>
+    <div class="photo-note" style="margin:6px 0 10px">先创建或加入一个小屋，才能开始记录两个人的生活。随时可以点右上角 ✕ 跳过，以后在「设置」页也能创建/加入。</div>
+    <input class="input" id="welcomeDisplayName" placeholder="你的称呼，如：小佳 / 我" style="margin-bottom:10px">
+    <div class="cloud-box" style="margin-bottom:10px">
+      <b>🆕 我们俩还没有小屋</b>
+      <input class="input" id="welcomeHouseName" placeholder="给小屋起个名字，如：我们的小屋" style="margin:7px 0">
+      <button class="btn small" id="welcomeCreateBtn" style="width:100%">创建我的小屋</button>
+    </div>
+    <div class="cloud-box">
+      <b>🔑 TA 已经建好小屋了</b>
+      <input class="input" id="welcomeInviteCode" placeholder="输入 TA 发来的邀请码" style="margin:7px 0">
+      <button class="btn small ghost" id="welcomeJoinBtn" style="width:100%">加入已有小屋</button>
+    </div>
+    <div class="photo-note" id="welcomeHint" style="margin-top:10px"></div>
+  </div>
+</div>
+
 <header class="topbar">
   <div class="brand">
     <!-- 已匹配：厨师拿面包近景图，适合作为顶部圆形小标识 -->
@@ -1216,6 +1237,7 @@ async function handleCloudSession(session){
     const link = cloudLink();
     cloudSyncEnabled = !!(currentHouse && link && link.houseId === currentHouse.id && link.enabled);
     updateCloudUI();
+    if(!currentHouse) showWelcomeModal();
     setGate(false);
     if(cloudReady() && currentHouse){
       subscribeHouse();
@@ -1336,13 +1358,9 @@ async function cloudSignInWith(email, password, hintEl){
 async function cloudSignIn(){
   cloudSignInWith($("cloudEmail").value.trim(), $("cloudPassword").value, $("cloudAuthHint"));
 }
-async function createCloudHouse(){
-  if(!cloudSession) return;
-  if(!confirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
-  const name = $("cloudHouseName").value.trim() || "我们的小屋";
-  const displayName = $("cloudDisplayName").value.trim() || "我";
+async function rpcCreateHouse(name, displayName){
   const {data,error} = await supabaseClient.rpc("xj_create_house", { p_name:name, p_display_name:displayName });
-  if(error){ toast("创建失败："+cloudErrorText(error)); return; }
+  if(error){ toast("创建失败："+cloudErrorText(error)); return false; }
   await loadCurrentHouse();
   cloudSyncEnabled = false;
   /* 创建成功：如果是演示数据，自动清空，直接进入空白小屋 */
@@ -1352,19 +1370,69 @@ async function createCloudHouse(){
     renderAll();
   }
   updateCloudUI();
-  toast("小屋创建好了，请把邀请码发给另一位");
+  return true;
+}
+async function createCloudHouse(){
+  if(!cloudSession) return;
+  if(!confirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
+  const name = $("cloudHouseName").value.trim() || "我们的小屋";
+  const displayName = $("cloudDisplayName").value.trim() || "我";
+  if(await rpcCreateHouse(name, displayName)) toast("小屋创建好了，请把邀请码发给另一位");
+}
+async function rpcJoinHouse(code, displayName){
+  const {data,error} = await supabaseClient.rpc("xj_join_house", { p_invite_code:code, p_display_name:displayName });
+  if(error){ toast("加入失败："+cloudErrorText(error)); return false; }
+  await loadCurrentHouse();
+  cloudSyncEnabled = false;
+  updateCloudUI();
+  return true;
 }
 async function joinCloudHouse(){
   if(!cloudSession) return;
   const code = $("cloudInviteCode").value.trim();
   const displayName = $("cloudDisplayName").value.trim() || "小佳";
   if(!code){ toast("先填邀请码"); return; }
-  const {data,error} = await supabaseClient.rpc("xj_join_house", { p_invite_code:code, p_display_name:displayName });
-  if(error){ toast("加入失败："+cloudErrorText(error)); return; }
-  await loadCurrentHouse();
-  cloudSyncEnabled = false;
-  updateCloudUI();
-  toast("加入成功，请选择从云端拉取");
+  if(await rpcJoinHouse(code, displayName)) toast("加入成功，请选择从云端拉取");
+}
+/* ---------- 新手引导弹窗（登录后没有小屋时） ---------- */
+function showWelcomeModal(){
+  const m = $("welcomeModal");
+  if(!m) return;
+  $("welcomeHint").textContent = "";
+  m.classList.add("show");
+}
+function bindWelcomeModal(){
+  const m = $("welcomeModal");
+  if(!m) return;
+  $("welcomeClose").addEventListener("click", ()=>m.classList.remove("show"));
+  m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); });
+  $("welcomeCreateBtn").addEventListener("click", async ()=>{
+    const hint = $("welcomeHint");
+    if(!cloudSession){ hint.textContent = "请先登录。"; return; }
+    const name = $("welcomeHouseName").value.trim() || "我们的小屋";
+    const displayName = $("welcomeDisplayName").value.trim() || "我";
+    hint.textContent = "正在创建…";
+    if(await rpcCreateHouse(name, displayName)){
+      m.classList.remove("show");
+      toast("小屋创建好了，请把邀请码发给 TA");
+    }else{
+      hint.textContent = "";
+    }
+  });
+  $("welcomeJoinBtn").addEventListener("click", async ()=>{
+    const hint = $("welcomeHint");
+    if(!cloudSession){ hint.textContent = "请先登录。"; return; }
+    const code = $("welcomeInviteCode").value.trim();
+    const displayName = $("welcomeDisplayName").value.trim() || "我";
+    if(!code){ hint.textContent = "先填邀请码。"; return; }
+    hint.textContent = "正在加入…";
+    if(await rpcJoinHouse(code, displayName)){
+      m.classList.remove("show");
+      toast("加入成功！去「设置」页点“从云端拉取”");
+    }else{
+      hint.textContent = "";
+    }
+  });
 }
 async function switchCloudHouse(){
   if(!cloudSession) return;
@@ -2865,6 +2933,7 @@ applyPhotos();
 applyTheme(S.theme);
 bindEvents();
 bindMoneyModal();
+bindWelcomeModal();
 bindAddButtons();
 syncChips();
 setGate(true);
