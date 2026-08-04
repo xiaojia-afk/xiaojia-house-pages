@@ -1605,11 +1605,20 @@ function renderTodo(){
   }).length;
   $("todoStatText").textContent = "";
 }
+let __lastGreetHour = -1;
 function tickHomeClock(){
   const el = $("homeClock");
   if(!el) return;
   const d = new Date(), p = n => String(n).padStart(2,"0");
   el.textContent = p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+  /* 问候语跨时段自动切换（页面开着也变） */
+  const h = d.getHours();
+  if(h !== __lastGreetHour){
+    __lastGreetHour = h;
+    const greet = h<6 ? "夜深了，早点休息 🌙" : h<11 ? "早上好呀 ☀️" : h<14 ? "中午好 🍚" : h<18 ? "下午好 🍵" : "晚上好 🌙";
+    const g = $("greetText");
+    if(g) g.textContent = greet;
+  }
 }
 if(!window.__homeClockStarted){
   window.__homeClockStarted = true;
