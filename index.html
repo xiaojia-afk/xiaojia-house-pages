@@ -535,7 +535,6 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
         <div id="cloudHouseConnected" style="display:none; margin-top:8px">
           <div class="cloud-box" id="cloudHouseText"></div>
           <div class="cloud-actions">
-            <button class="btn small" id="cloudUploadBtn">把本机数据上传</button>
             <button class="btn small ghost" id="cloudDownloadBtn">从云端拉取</button>
           </div>
           <div class="cloud-box" id="cloudSwitchBox" style="margin-top:8px">
@@ -550,7 +549,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
         </div>
       </div>
       <div class="photo-note" id="cloudGeneralHint" style="margin-top:8px">
-        第一次连接时必须手动选择“上传本机数据”或“从云端拉取”，之后新增和修改会自动同步。两台设备同时修改同一项时，后保存的一方会覆盖前一方。
+        登录后会自动拉取云端最新数据；云端还没有数据时，会自动询问是否把本机数据设为第一份。之后新增和修改自动同步。两台设备同时修改同一项时，后保存的一方会覆盖前一方。
       </div>
     </div>
 
@@ -898,9 +897,17 @@ async function handleCloudSession(session){
     const link = cloudLink();
     cloudSyncEnabled = !!(currentHouse && link && link.houseId === currentHouse.id && link.enabled);
     updateCloudUI();
-    if(cloudReady() && cloudSyncEnabled){
+    if(cloudReady() && currentHouse){
       subscribeHouse();
-      await hydratePhotoUrls(false);
+      const pulled = await pullCloudState(false, true);
+      if(!pulled){
+        const hasReal = !S.demo && ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].some(k=>(S[k] && S[k].length));
+        if(hasReal && confirm("云端还没有数据。要把本机数据设为云端第一份吗？\n\n确定后本机数据会存到云端，以后两台设备都以它为准。")){
+          await uploadLocalState();
+        }else if(!hasReal){
+          setCloudStatus("云端还没有数据：先随便记一条（比如一个待办），下次打开本页会自动设为云端第一份","warn");
+        }
+      }
       renderAll();
     }
   }catch(error){
@@ -1526,7 +1533,6 @@ function bindEvents(){
   $("createHouseBtn").addEventListener("click", createCloudHouse);
   $("joinHouseBtn").addEventListener("click", joinCloudHouse);
   $("switchHouseBtn").addEventListener("click", switchCloudHouse);
-  $("cloudUploadBtn").addEventListener("click", uploadLocalState);
   $("cloudDownloadBtn").addEventListener("click", ()=>pullCloudState(true,false));
   $("cloudSignoutBtn").addEventListener("click", async ()=>{
     if(!supabaseClient) return;
