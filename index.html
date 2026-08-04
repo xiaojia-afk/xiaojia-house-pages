@@ -2881,6 +2881,9 @@ async function sendChatMessage(){
     });
     if(error) throw error;
     $("chatInput").value = "";
+    /* 立即拉取最新消息显示（不依赖云端推送，推送到达时自动去重） */
+    await loadChatHistory();
+    markChatRead();
   }catch(error){
     toast("发送失败："+cloudErrorText(error));
   }
