@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fdf2f7">
-<title>小佳专属小屋</title>
+<title>情侣小屋</title>
 <style>
 /* ============ 颜色（浅色/深色自动切换） ============ */
 :root{
@@ -191,6 +191,11 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
   display:none; align-items:flex-end; justify-content:center;
 }
 .modal-mask.show{display:flex}
+.gate-mask{position:fixed; inset:0; background:var(--bg); z-index:90; display:none; align-items:center; justify-content:center; padding:20px}
+.gate-mask.show{display:flex}
+.gate-box{text-align:center; padding:26px 24px; background:var(--card); border:1px solid var(--border); border-radius:18px; max-width:320px; width:100%}
+.gate-box h3{margin:8px 0 6px}
+.gate-box p{color:var(--text2); font-size:13px; margin:0 0 14px}
 .modal{
   background:var(--card); width:100%; max-width:560px;
   border-radius:24px 24px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom));
@@ -233,8 +238,8 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 <header class="topbar">
   <div class="brand">
     <!-- 已匹配：厨师拿面包近景图，适合作为顶部圆形小标识 -->
-    <img class="logo" data-photo="logo" alt="大耳狗厨师小图标">
-    小佳专属小屋
+    <img class="logo" data-photo="logo" alt="小屋图标">
+    <span id="houseTitle">情侣小屋</span>
   </div>
   <div class="top-actions">
     <button class="icon-btn" id="themeBtn" title="切换深浅色">🌙</button>
@@ -629,7 +634,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
       <div style="font-size:12px; color:var(--text2); line-height:1.7">
         清空所有数据前会连续确认两次，放心。<br>
         没有连接云端时，数据只保存在这台设备的浏览器里；连接后只有你明确选择同步，才会上传。<br>
-        图片放在小屋的 assets 文件夹里，移动时请把整个「小佳专属小屋」文件夹一起移动。<br>
+        图片放在小屋的 assets 文件夹里，移动时请把整个项目文件夹一起移动。<br>
         提醒：网页的「提醒」在手机锁屏时可能不准时，打开工作台就能看到今天的事。
       </div>
     </div>
@@ -642,7 +647,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 <script>
 "use strict";
 /* ================================================================
-   小佳专属小屋 v0.2（第一阶段云端接入版）
+   情侣小屋（账号 + 云端同步版）
    - 没有云端配置时，数据保存在本设备浏览器（localStorage）
    - 连接云端并明确选择后，数据和照片才会同步到 Supabase
    - 谁记的：mine=我，xiaojia=小佳
@@ -941,6 +946,7 @@ function subscribeHouse(){
 async function handleCloudSession(session){
   cloudSession = session || null;
   if(!cloudSession){
+    setGate(true);
     currentHouse = null;
     cloudSyncEnabled = false;
     localStorage.removeItem(CLOUD_LINK_KEY);
@@ -954,6 +960,7 @@ async function handleCloudSession(session){
     const link = cloudLink();
     cloudSyncEnabled = !!(currentHouse && link && link.houseId === currentHouse.id && link.enabled);
     updateCloudUI();
+    setGate(false);
     if(cloudReady() && currentHouse){
       subscribeHouse();
       const pulled = await pullCloudState(false, true);
@@ -989,10 +996,28 @@ async function initCloud(){
     await handleCloudSession(result.data.session);
   }catch(error){
     setCloudStatus("连接失败","warn");
+    setGate(true);
     $("cloudConfigMissing").style.display = "block";
     $("cloudConfigMissing").textContent = "配置已填写，但云端库加载失败："+cloudErrorText(error);
     updatePhotoControls();
   }
+}
+/* ---------- 登录门 ---------- */
+function updateHouseTitle(){
+  const t = (currentHouse && currentHouse.name) ? currentHouse.name : "情侣小屋";
+  const el = $("houseTitle");
+  if(el) el.textContent = t;
+  document.title = t;
+}
+function isPublicHost(){
+  const h = (location.hostname || "").toLowerCase();
+  return location.protocol !== "file:" && h !== "localhost" && h !== "127.0.0.1" && h !== "";
+}
+function setGate(show){
+  const m = $("gateMask");
+  if(!m) return;
+  if(show && !isPublicHost()) return;
+  m.classList.toggle("show", !!show);
 }
 function checkCloudPassword(){
   const password = $("cloudPassword").value;
@@ -1029,7 +1054,7 @@ async function cloudSignIn(){
 async function createCloudHouse(){
   if(!cloudSession) return;
   if(!confirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
-  const name = $("cloudHouseName").value.trim() || "小佳专属小屋";
+  const name = $("cloudHouseName").value.trim() || "我们的小屋";
   const displayName = $("cloudDisplayName").value.trim() || "我";
   const {data,error} = await supabaseClient.rpc("xj_create_house", { p_name:name, p_display_name:displayName });
   if(error){ toast("创建失败："+cloudErrorText(error)); return; }
@@ -1669,6 +1694,7 @@ function renderDiary(){
 
 /* ---------- 统一渲染 ---------- */
 function renderAll(){
+  updateHouseTitle();
   document.querySelectorAll(".gender-chip").forEach(c=>{
     c.classList.toggle("on", (S.memberGenders||{})[c.dataset.gender]===c.dataset.val);
   });
@@ -1711,6 +1737,7 @@ function bindEvents(){
 
  /* 设置弹窗 */
  $("settingsBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
+ $("gateLoginBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
  $("settingsClose").addEventListener("click", ()=>$("settingsModal").classList.remove("show"));
  $("settingsModal").addEventListener("click", e=>{ if(e.target === $("settingsModal")) $("settingsModal").classList.remove("show"); });
 
@@ -1733,7 +1760,7 @@ function bindEvents(){
     const blob = new Blob([JSON.stringify(S, null, 2)], { type:"application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "小佳专属小屋-备份-"+TODAY+".json";
+    a.download = ((currentHouse && currentHouse.name) || "小屋")+"-备份-"+TODAY+".json";
     document.body.appendChild(a); a.click(); a.remove();
     URL.revokeObjectURL(a.href);
     toast("备份文件已导出 📦");
@@ -2018,8 +2045,19 @@ applyTheme(S.theme);
 bindEvents();
 bindAddButtons();
 syncChips();
+setGate(true);
 renderAll();
 initCloud();
 </script>
+<!-- ================= 登录门（公网未登录时遮住页面） ================= -->
+<div class="gate-mask" id="gateMask">
+  <div class="gate-box">
+    <div style="font-size:44px">🏡</div>
+    <h3>情侣小屋</h3>
+    <p>这是你们的私密小屋，登录后才能使用。</p>
+    <button class="btn" id="gateLoginBtn" style="width:100%">去登录</button>
+    <div class="photo-note" style="margin-top:10px">没有账号？登录窗口里有「注册新账号」</div>
+  </div>
+</div>
 </body>
 </html>
