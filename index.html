@@ -348,11 +348,17 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
       <button class="chip on" data-sub="diet">🍚 饮食</button>
       <button class="chip" data-sub="weight">⚖️ 体重</button>
       <button class="chip" data-sub="sport">💪 运动</button>
+      <button class="chip" data-sub="sleep">🌙 睡眠</button>
+      <button class="chip" data-sub="period">🌸 生理期</button>
     </div>
 
     <div id="sub-diet">
       <div class="card">
-        <div class="card-title">🍚 今天吃了什么</div>
+        <div class="card-title">🍚 饮食记录</div>
+        <div class="row" style="margin-bottom:8px">
+          <span style="font-size:12px; color:var(--text2)">查看日期：</span>
+          <input class="input" id="mealDate" type="date" style="flex:1">
+        </div>
         <div class="row" style="margin-bottom:12px">
           <button class="chip on" data-meal="breakfast">早餐</button>
           <button class="chip" data-meal="lunch">午餐</button>
@@ -371,6 +377,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
           <button class="chip who who-mine" data-who="mine">我</button>
           <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
         </div>
+        <div class="photo-note" style="margin-top:8px">选了过去的日期再点「记录」，就是补记那天的饮食。</div>
       </div>
       <div class="card"><div class="card-title" id="mealListTitle">今天的三餐</div><div id="mealList"></div></div>
     </div>
@@ -389,7 +396,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
           <span style="font-size:11px; color:var(--text2); margin-left:auto">同一天同一个人再记会自动覆盖</span>
         </div>
       </div>
-      <div class="card"><div class="card-title">📈 体重记录（最近 7 条）</div><div id="weightList"></div></div>
+      <div class="card"><div class="card-title">📈 体重记录（最近 30 条）</div><div id="weightList"></div></div>
     </div>
 
     <div id="sub-sport" style="display:none">
@@ -412,7 +419,40 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
           <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
         </div>
       </div>
-      <div class="card"><div class="card-title">📝 运动记录（最近 7 条）</div><div id="sportList"></div></div>
+      <div class="card"><div class="card-title">📝 运动记录（最近 30 条）</div><div id="sportList"></div></div>
+    </div>
+
+    <div id="sub-sleep" style="display:none">
+      <div class="card">
+        <div class="card-title">🌙 睡眠记录</div>
+        <div class="row" style="margin-bottom:10px">
+          <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+        <div id="sleepStatus" style="margin-bottom:10px"></div>
+        <button class="btn" id="sleepToggleBtn" style="width:100%">🌙 开始睡觉</button>
+        <div class="photo-note" style="margin-top:8px">睡前点一下「开始睡觉」，醒来再点一下，自动算出睡了多久、睡得好不好。</div>
+      </div>
+      <div class="card"><div class="card-title">🛏️ 睡眠记录（最近 30 次）</div><div id="sleepList"></div></div>
+    </div>
+
+    <div id="sub-period" style="display:none">
+      <div class="card">
+        <div class="card-title">🌸 生理期</div>
+        <div class="row" id="periodWhoRow" style="margin-bottom:10px">
+          <span style="font-size:12px; color:var(--text2)">谁的：</span>
+          <button class="chip who who-mine" data-who="mine">我</button>
+          <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
+        </div>
+        <div id="periodHint" class="photo-note" style="margin-bottom:10px"></div>
+        <div class="row">
+          <input class="input" id="periodDate" type="date">
+          <button class="btn small" id="periodAddBtn">记录开始</button>
+        </div>
+        <div id="periodPredict" class="cloud-box" style="margin-top:10px"></div>
+      </div>
+      <div class="card"><div class="card-title">🌸 生理期记录（最近 30 次）</div><div id="periodList"></div></div>
     </div>
   </section>
 
@@ -439,7 +479,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
           <button class="btn small" id="diaryAddBtn" style="margin-left:auto">保存</button>
         </div>
       </div>
-      <div class="card"><div class="card-title">📖 日记本（最近 7 篇）</div><div id="diaryList"></div></div>
+      <div class="card"><div class="card-title">📖 日记本（最近 30 篇）</div><div id="diaryList"></div></div>
     </div>
 
     <div id="sub-mood" style="display:none">
@@ -454,7 +494,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
         <div class="row"><input class="input" id="moodNote" placeholder="为什么？（选填）"></div>
         <div class="row"><button class="btn small" id="moodSaveBtn" style="margin-left:auto">保存心情</button></div>
       </div>
-      <div class="card"><div class="card-title">📋 心情记录（最近 7 条）</div><div id="moodList"></div></div>
+      <div class="card"><div class="card-title">📋 心情记录（最近 30 条）</div><div id="moodList"></div></div>
     </div>
 
     <div id="sub-anniv" style="display:none">
@@ -551,6 +591,21 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
       <div class="photo-note" id="cloudGeneralHint" style="margin-top:8px">
         登录后会自动拉取云端最新数据；云端还没有数据时，会自动询问是否把本机数据设为第一份。之后新增和修改自动同步。两台设备同时修改同一项时，后保存的一方会覆盖前一方。
       </div>
+    </div>
+
+    <div class="card" style="box-shadow:none">
+      <div class="card-title">👥 成员资料</div>
+      <div class="row" style="margin-bottom:8px">
+        <span style="font-size:13px; width:46px">我：</span>
+        <button class="chip gender-chip" data-gender="mine" data-val="male">👦 男</button>
+        <button class="chip gender-chip" data-gender="mine" data-val="female">👧 女</button>
+      </div>
+      <div class="row">
+        <span style="font-size:13px; width:46px">小佳：</span>
+        <button class="chip gender-chip" data-gender="xiaojia" data-val="male">👦 男</button>
+        <button class="chip gender-chip" data-gender="xiaojia" data-val="female">👧 女</button>
+      </div>
+      <div class="photo-note" style="margin-top:8px">选「女」后记录页会出现生理期功能；男生只有睡眠。随时可以改。</div>
     </div>
 
     <div class="card" style="box-shadow:none">
@@ -668,7 +723,8 @@ function seedDemo(){
 
 function emptyState(){
   return { version:2, demo:false, theme:"auto", todos:[], meals:[], weights:[], sports:[],
-           diaries:[], moods:[], anniversaries:[], photos:[], doneMap:{} };
+           diaries:[], moods:[], anniversaries:[], photos:[], doneMap:{},
+           sleeps:[], periods:[], memberGenders:{} };
 }
 
 /* ---------- 读取 / 保存 ---------- */
@@ -676,9 +732,10 @@ let S = null;
 function normalizeState(data){
   const next = data && typeof data === "object" ? data : emptyState();
   next.version = 2;
-  ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].forEach(k=>{
+  ["todos","meals","weights","sports","diaries","moods","anniversaries","photos","sleeps","periods"].forEach(k=>{
     if(!Array.isArray(next[k])) next[k] = [];
   });
+  if(!next.memberGenders || typeof next.memberGenders !== "object") next.memberGenders = {};
   if(!next.doneMap || typeof next.doneMap !== "object") next.doneMap = {};
   if(!next.theme) next.theme = "auto";
   if(typeof next.demo !== "boolean") next.demo = false;
@@ -1401,7 +1458,7 @@ function renderMoodRow(el){
 }
 function renderMoodList(){
   let h = "";
-  S.moods.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(m=>{
+  S.moods.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(m=>{
     const em = (MOODS.find(x=>x.id===m.mood)||{}).e || "😊";
     h += '<div class="list-item"><span style="font-size:20px">'+em+'</span>'
       + '<div class="txt">'+(m.note?esc(m.note):"（没有写原因）")+'<div class="meta">'+dateText(m.date)+' · '+whoTag(m.who)+'</div></div>'
@@ -1412,17 +1469,19 @@ function renderMoodList(){
 
 /* ---------- 记录页 ---------- */
 let recordSub = "diet", mealSel = "breakfast", weightWho = "mine", sportWho = "mine";
-let dietWho = "mine";
+let dietWho = "mine", sleepWho = "mine", periodWho = "mine";
 function renderRecord(){
-  const subs = { diet:$("sub-diet"), weight:$("sub-weight"), sport:$("sub-sport") };
+  const subs = { diet:$("sub-diet"), weight:$("sub-weight"), sport:$("sub-sport"), sleep:$("sub-sleep"), period:$("sub-period") };
   Object.keys(subs).forEach(k=>{ subs[k].style.display = k===recordSub ? "block" : "none"; });
   document.querySelectorAll("#page-record .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub === recordSub);
   });
 
   /* 饮食 */
-  $("mealListTitle").textContent = "今天的三餐（"+S.meals.filter(m=>m.date===TODAY && m.meal===mealSel).length+" 条）";
-  const meals = S.meals.filter(m=>m.date===TODAY && m.meal===mealSel);
+  if($("mealDate") && !$("mealDate").value) $("mealDate").value = TODAY;
+  const mealDateSel = ($("mealDate") && $("mealDate").value) || TODAY;
+  $("mealListTitle").textContent = dateText(mealDateSel)+" 的三餐（"+S.meals.filter(m=>m.date===mealDateSel && m.meal===mealSel).length+" 条）";
+  const meals = S.meals.filter(m=>m.date===mealDateSel && m.meal===mealSel);
   let h = "";
   if(!meals.length){ h = '<div class="empty">'+emptyArt()+'这一餐还没记录</div>'; }
   meals.forEach(m=>{
@@ -1433,7 +1492,7 @@ function renderRecord(){
 
   /* 体重 */
   let wh = "";
-  S.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(w=>{
+  S.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(w=>{
     wh += '<div class="list-item"><div class="txt"><b>'+w.kg+' kg</b><div class="meta">'+dateText(w.date)+' · '+whoTag(w.who)+'</div></div>'
       + delBtn(w.date+"|"+w.who,"weight") + '</div>';
   });
@@ -1441,11 +1500,136 @@ function renderRecord(){
 
   /* 运动 */
   let sh = "";
-  S.sports.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(s=>{
+  S.sports.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(s=>{
     sh += '<div class="list-item"><div class="txt"><b>'+esc(s.type)+'</b> '+s.minutes+' 分钟<div class="meta">'+dateText(s.date)+' · '+whoTag(s.who)+'</div>'+photoStrip(s)+'</div>'
       + delBtn(s.id,"sport") + '</div>';
   });
   $("sportList").innerHTML = sh || '<div class="empty">'+emptyArt()+'还没有运动记录</div>';
+
+  /* 睡眠 */
+  renderSleep();
+  /* 生理期 */
+  renderPeriod();
+}
+
+/* ---------- 睡眠 ---------- */
+function genderOf(who){ return (S.memberGenders||{})[who] || ""; }
+function localStamp(d){
+  const p = n => n.toString().padStart(2,"0");
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":00";
+}
+function fmtTime(d){ const p=n=>n.toString().padStart(2,"0"); return p(d.getHours())+":"+p(d.getMinutes()); }
+function fmtDuration(mins){
+  const h = Math.floor(mins/60), m = Math.round(mins%60);
+  return h+" 小时 "+m+" 分钟";
+}
+function sleepEval(mins){
+  if(mins < 300) return "太短了，今晚早点睡呀";
+  if(mins < 390) return "有点少，注意休息";
+  if(mins < 480) return "不错，继续保持";
+  if(mins < 600) return "很充足";
+  return "睡得太久啦";
+}
+function renderSleep(){
+  const list = S.sleeps.filter(x=>x.who===sleepWho);
+  const active = list.find(x=>!x.end);
+  const status = $("sleepStatus"), btn = $("sleepToggleBtn");
+  if(active){
+    const st = new Date(active.start);
+    const nowMin = Math.max(0, Math.floor((Date.now()-st.getTime())/60000));
+    status.innerHTML = '<div class="cloud-box">🌙 从 '+fmtTime(st)+' 开始睡，已经睡了 '+fmtDuration(nowMin)+'</div>';
+    btn.textContent = "☀️ 睡醒啦";
+  }else{
+    status.innerHTML = '<div class="photo-note">今晚还没开始。睡前点下面的按钮，醒来再点一次。</div>';
+    btn.textContent = "🌙 开始睡觉";
+  }
+  let h = "";
+  list.filter(x=>x.end).slice().sort((a,b)=>b.end.localeCompare(a.end)).slice(0,30).forEach(x=>{
+    const st = new Date(x.start), en = new Date(x.end);
+    h += '<div class="list-item"><div class="txt"><b>'+fmtDuration(x.minutes)+'</b> · '+sleepEval(x.minutes)
+      +'<div class="meta">'+dateText(x.start.slice(0,10))+' · '+fmtTime(st)+' → '+fmtTime(en)+' · '+whoTag(x.who)+'</div></div>'
+      + delBtn(x.id,"sleep") + '</div>';
+  });
+  $("sleepList").innerHTML = h || '<div class="empty">'+emptyArt()+'还没有睡眠记录</div>';
+}
+function toggleSleep(){
+  const list = S.sleeps.filter(x=>x.who===sleepWho);
+  const active = list.find(x=>!x.end);
+  if(active){
+    const en = new Date();
+    active.end = localStamp(en);
+    active.minutes = Math.max(1, Math.round((en.getTime()-new Date(active.start).getTime())/60000));
+    markDemoGone();
+    save();
+    renderSleep();
+    toast("睡了 "+fmtDuration(active.minutes)+"，"+sleepEval(active.minutes));
+  }else{
+    S.sleeps.push({ id:uid(), who:sleepWho, start:localStamp(new Date()), end:null, minutes:0 });
+    markDemoGone();
+    save();
+    renderSleep();
+    toast("晚安，睡个好觉 🌙");
+  }
+}
+
+/* ---------- 生理期 ---------- */
+function predictNextPeriod(who){
+  const list = S.periods.filter(p=>p.who===who).map(p=>p.start).sort();
+  if(list.length < 2) return null;
+  const gaps = [];
+  for(let i=1;i<list.length;i++){
+    const days = Math.round((new Date(list[i])-new Date(list[i-1]))/86400000);
+    if(days>=15 && days<=60) gaps.push(days);
+  }
+  if(!gaps.length) return null;
+  const avg = Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length);
+  const nx = new Date(list[list.length-1]);
+  nx.setDate(nx.getDate()+avg);
+  const p=n=>n.toString().padStart(2,"0");
+  return { avg, date: nx.getFullYear()+"-"+p(nx.getMonth()+1)+"-"+p(nx.getDate()) };
+}
+function renderPeriod(){
+  const females = ["mine","xiaojia"].filter(w=>genderOf(w)==="female");
+  document.querySelectorAll("#sub-period .who[data-who]").forEach(c=>{
+    c.style.display = females.includes(c.dataset.who) ? "" : "none";
+  });
+  if(females.length && !females.includes(periodWho)) periodWho = females[0];
+  document.querySelectorAll("#sub-period .who[data-who]").forEach(c=>{
+    c.classList.toggle("on", c.dataset.who===periodWho);
+  });
+  const g = genderOf(periodWho);
+  const hint = $("periodHint");
+  if(!g){
+    hint.textContent = "先去 设置 → 成员资料 选择性别（女生），生理期功能就会出现。";
+    $("periodPredict").innerHTML = "";
+  }else if(g!=="female"){
+    hint.textContent = "男生不需要记生理期哦。";
+    $("periodPredict").innerHTML = "";
+  }else{
+    hint.textContent = "";
+    const pred = predictNextPeriod(periodWho);
+    $("periodPredict").innerHTML = pred
+      ? "📅 下次预计：<b>"+pred.date+"</b>（按最近 "+pred.avg+" 天周期）"
+      : "📅 再记一次开始日期，就能预测下次时间了";
+  }
+  if($("periodDate") && !$("periodDate").value) $("periodDate").value = TODAY;
+  let h = "";
+  S.periods.filter(p=>p.who===periodWho).slice().sort((a,b)=>b.start.localeCompare(a.start)).slice(0,30).forEach(p=>{
+    h += '<div class="list-item"><div class="txt"><b>'+p.start+'</b> 开始<div class="meta">'+whoTag(p.who)+'</div></div>'
+      + delBtn(p.id,"period") + '</div>';
+  });
+  $("periodList").innerHTML = h || '<div class="empty">'+emptyArt()+'还没有生理期记录</div>';
+}
+function addPeriod(){
+  if(genderOf(periodWho)!=="female"){ toast("先给女生设置性别"); return; }
+  const d = $("periodDate").value || TODAY;
+  if(S.periods.some(p=>p.who===periodWho && p.start===d)){ toast("这一天已经记过了"); return; }
+  S.periods.push({ id:uid(), who:periodWho, start:d });
+  markDemoGone();
+  save();
+  renderPeriod();
+  const pred = predictNextPeriod(periodWho);
+  toast(pred ? "已记录，下次预计 "+pred.date : "已记录");
 }
 
 /* ---------- 日记页 ---------- */
@@ -1459,7 +1643,7 @@ function renderDiary(){
 
   /* 日记 */
   let h = "";
-  S.diaries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7).forEach(d=>{
+  S.diaries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(d=>{
     h += '<div class="list-item"><div class="txt"><div class="meta">'+dateText(d.date)+' · '+whoTag(d.who)+'</div>'
       + esc(d.text).replace(/\n/g,"<br>") + photoStrip(d) + '</div>' + delBtn(d.id,"diary") + '</div>';
   });
@@ -1485,6 +1669,9 @@ function renderDiary(){
 
 /* ---------- 统一渲染 ---------- */
 function renderAll(){
+  document.querySelectorAll(".gender-chip").forEach(c=>{
+    c.classList.toggle("on", (S.memberGenders||{})[c.dataset.gender]===c.dataset.val);
+  });
   $("demoBanner").style.display = S.demo ? "flex" : "none";
   renderTodo(); renderHome(); renderRecord(); renderDiary();
 }
@@ -1634,6 +1821,8 @@ function bindEvents(){
       }
       else if(kind === "mood") S.moods = S.moods.filter(x=>x.id!==id);
       else if(kind === "anniv") S.anniversaries = S.anniversaries.filter(x=>x.id!==id);
+      else if(kind === "sleep") S.sleeps = S.sleeps.filter(x=>x.id!==id);
+      else if(kind === "period") S.periods = S.periods.filter(x=>x.id!==id);
       const finishDelete = ()=>{ save(); renderAll(); toast("已删除"); };
       if(photoIds.length){
         deletePhotoRefs(photoIds).then(finishDelete).catch(error=>{
@@ -1656,6 +1845,21 @@ function bindEvents(){
       return;
     }
 
+    /* 性别选择（成员资料） */
+    const genderChip = t.closest(".gender-chip");
+    if(genderChip){
+      const who = genderChip.dataset.gender, val = genderChip.dataset.val;
+      if(!S.memberGenders) S.memberGenders = {};
+      S.memberGenders[who] = val;
+      markDemoGone();
+      save();
+      document.querySelectorAll(".gender-chip").forEach(c=>{
+        c.classList.toggle("on", c.dataset.gender===who && c.dataset.val===val);
+      });
+      toast("已保存性别");
+      return;
+    }
+
     /* 谁记的（通用） */
     if(t.classList && t.classList.contains("who")){
       const who = t.dataset.who;
@@ -1667,6 +1871,8 @@ function bindEvents(){
       if(document.querySelector("#page-record.active")){
         if(recordSub === "diet") dietWho = who;
         else if(recordSub === "weight") weightWho = who;
+        else if(recordSub === "sleep"){ sleepWho = who; renderRecord(); }
+        else if(recordSub === "period"){ periodWho = who; renderPeriod(); }
         else sportWho = who;
       }
       if(document.querySelector("#page-diary.active")){
@@ -1731,7 +1937,7 @@ function bindAddButtons(){
   $("mealAddBtn").addEventListener("click", async ()=>{
     const v = $("mealInput").value.trim();
     if(!v){ toast("写一下吃了什么"); return; }
-    const item = { id:uid(), date:TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[] };
+    const item = { id:uid(), date:($("mealDate") && $("mealDate").value) || TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[] };
     if(!await uploadPhotosForRecord("meal", item, "mealPhotoInput")) return;
     S.meals.push(item);
     $("mealInput").value = "";
@@ -1796,6 +2002,13 @@ function bindAddButtons(){
   });
 
   $("wallPhotoBtn").addEventListener("click", uploadWallPhotos);
+
+  /* 睡眠 / 生理期 */
+  $("sleepToggleBtn").addEventListener("click", toggleSleep);
+  $("periodAddBtn").addEventListener("click", addPeriod);
+
+  /* 饮食日期回看 */
+  if($("mealDate")) $("mealDate").addEventListener("change", ()=>renderRecord());
 }
 
 /* ---------- 启动 ---------- */
