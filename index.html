@@ -299,6 +299,10 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   width:94px; height:94px; flex-shrink:0; display:block; object-fit:cover; object-position:center;
   border-radius:28px; border:2px solid var(--border); background:#fff; box-shadow:var(--shadow);
 }
+.mascot-btn{position:relative; border:none; background:none; padding:0; cursor:pointer; flex-shrink:0; line-height:0}
+.mascot-btn:active{transform:scale(.94)}
+.mascot-emoji{display:block; width:94px; height:94px; line-height:94px; text-align:center; font-size:56px;
+  border-radius:28px; border:2px solid var(--border); background:var(--card); box-shadow:var(--shadow)}
 .greet{display:flex; align-items:center; gap:14px; margin:6px 0 16px}
 .greet h1{font-size:20px; margin:0 0 4px}
 .greet .date{font-size:12.5px; color:var(--text2)}
@@ -331,8 +335,8 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 <!-- ================= 顶部栏 ================= -->
 <!-- 启动封面（打开时闪一下，像 App） -->
 <div class="splash-screen" id="splashScreen">
-  <img class="splash-logo" src="assets/nav-life.png" alt="">
-  <div class="splash-title">情侣小屋</div>
+  <img class="splash-logo" id="splashLogo" src="assets/nav-life.png" alt="">
+  <div class="splash-title" id="splashTitle">情侣小屋</div>
   <div class="splash-sub">两个人的私密小天地</div>
 </div>
 
@@ -349,6 +353,16 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <button class="btn small ghost" id="chatNickClear">清除备注</button>
       <button class="btn small" id="chatNickSave">保存</button>
     </div>
+  </div>
+</div>
+
+<!-- 小屋图标选择弹窗（点首页问候左边图标打开） -->
+<div class="modal-mask" id="houseIconModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="houseIconClose">✕</button></div>
+    <div class="card-title">选一个小屋图标 🏷</div>
+    <div class="photo-note" style="margin:6px 0 10px">你和 TA 都看得到，选择后自动保存。选完后首页左上角、启动封面都会用它。</div>
+    <div id="houseIconPicker" style="display:flex; flex-wrap:wrap; gap:8px"></div>
   </div>
 </div>
 
@@ -389,8 +403,11 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
     </div>
 
     <div class="greet">
-      <!-- 已匹配：蓝粉水彩烘焙图，作为首页主视觉 -->
-      <img class="mascot" data-photo="mascot" alt="大耳狗和蓝色蛋糕水彩图">
+      <!-- 左边图标 = 小屋图标，点它可换（没选过时显示大耳狗水彩图） -->
+      <button class="mascot-btn" id="mascotBtn" title="点我换小屋图标">
+        <img class="mascot" data-photo="mascot" alt="大耳狗和蓝色蛋糕水彩图">
+        <span class="mascot-emoji" id="mascotEmoji" style="display:none"></span>
+      </button>
       <div>
         <h1 id="greetText">你好呀 👋</h1>
         <div class="date" id="todayLine"></div>
@@ -1049,11 +1066,50 @@ function updateCloudUI(){
   }else{
     $("cloudHouseSetup").style.display = "none";
     $("cloudHouseConnected").style.display = "block";
-    $("cloudHouseText").innerHTML = "小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
+    $("cloudHouseText").innerHTML = (currentHouse.icon || "🏡")+" 小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
       + (cloudSyncEnabled ? "<br><span style='color:var(--ok)'>已开启自动同步</span>" : "<br><span style='color:var(--warn)'>还没有选择上传或拉取</span>");
     setCloudStatus(cloudSyncEnabled ? "云端已连接" : "待选择同步","ok");
+    renderHouseIconPicker();
   }
   updatePhotoControls();
+}
+const HOUSE_ICONS = ["🏡","💕","🐰","🐻","🐱","🐶","🦊","🐼","🌸","🌙","⭐","🍑","🐥","🦄","🌈","🍓","🍀","🐧"];
+function updateMascotIcon(){
+  const btn = $("mascotBtn");
+  if(!btn) return;
+  const img = btn.querySelector("img"), em = $("mascotEmoji");
+  const ic = currentHouse && currentHouse.icon && currentHouse.icon !== "🏡" ? currentHouse.icon : "";
+  if(ic){
+    img.style.display = "none";
+    em.style.display = "block";
+    em.textContent = ic;
+  }else{
+    img.style.display = "block";
+    em.style.display = "none";
+  }
+}
+function renderHouseIconPicker(){
+  const box = $("houseIconPicker");
+  if(!box) return;
+  const cur = currentHouse ? (currentHouse.icon || "🏡") : "🏡";
+  box.innerHTML = HOUSE_ICONS.map(ic=>
+    '<button class="chip'+(ic===cur?" on":"")+'" data-ic="'+ic+'" style="font-size:20px; padding:6px 10px">'+ic+'</button>'
+  ).join("");
+  box.querySelectorAll("[data-ic]").forEach(b=>{
+    b.addEventListener("click", async ()=>{
+      if(!currentHouse || !supabaseClient) return;
+      const ic = b.getAttribute("data-ic");
+      const r = await supabaseClient.from("xj_houses").update({icon:ic}).eq("id",currentHouse.id);
+      if(r.error){ toast("保存图标失败："+cloudErrorText(r.error)); return; }
+      currentHouse.icon = ic;
+      renderHouseIconPicker();
+      updateMascotIcon();
+      updateHouseTitle();
+      const m = $("houseIconModal");
+      if(m) m.classList.remove("show");
+      toast("小屋图标已更新 "+ic);
+    });
+  });
 }
 function loadSupabaseLibrary(){
   if(window.supabase && window.supabase.createClient) return Promise.resolve(window.supabase);
@@ -1079,13 +1135,14 @@ async function loadCurrentHouse(){
   if(memberResult.error) throw memberResult.error;
   if(!memberResult.data) return;
   const houseResult = await supabaseClient.from("xj_houses")
-    .select("id,name,invite_code").eq("id",memberResult.data.house_id).maybeSingle();
+    .select("id,name,invite_code,icon").eq("id",memberResult.data.house_id).maybeSingle();
   if(houseResult.error) throw houseResult.error;
   if(houseResult.data){
     currentHouse = {
       id:houseResult.data.id,
       name:houseResult.data.name,
       inviteCode:houseResult.data.invite_code,
+      icon:houseResult.data.icon || "🏡",
       displayName:memberResult.data.display_name || ""
     };
   }
@@ -1178,6 +1235,8 @@ function updateHouseTitle(){
   const el = $("houseTitle");
   if(el) el.textContent = t;
   document.title = t;
+  const st = $("splashTitle");
+  if(st) st.textContent = (currentHouse && currentHouse.icon && currentHouse.icon !== "🏡" ? currentHouse.icon+" " : "") + t;
 }
 function isPublicHost(){
   const h = (location.hostname || "").toLowerCase();
@@ -1634,6 +1693,7 @@ function renderHome(){
   $("greetText").textContent = greet;
   $("todayLine").textContent = dateText(TODAY);
   tickHomeClock();
+  updateMascotIcon();
 
   /* 今日待办 */
   const done = S.doneMap[TODAY] || {};
@@ -2655,6 +2715,15 @@ function bindAddButtons(){
   });
   $("chatNickClose").addEventListener("click", ()=>nickModal.classList.remove("show"));
   nickModal.addEventListener("click", e=>{ if(e.target === nickModal) nickModal.classList.remove("show"); });
+  const iconBtn = $("mascotBtn"), iconModal = $("houseIconModal");
+  if(iconBtn && iconModal){
+    iconBtn.addEventListener("click", ()=>{
+      renderHouseIconPicker();
+      iconModal.classList.add("show");
+    });
+    $("houseIconClose").addEventListener("click", ()=>iconModal.classList.remove("show"));
+    iconModal.addEventListener("click", e=>{ if(e.target === iconModal) iconModal.classList.remove("show"); });
+  }
   $("chatNickSave").addEventListener("click", ()=>{
     if(!chatOtherUid){ toast("还没找到对方，稍后再试"); return; }
     const v = nickInput.value.trim();
