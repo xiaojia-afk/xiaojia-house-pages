@@ -380,6 +380,30 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   </div>
 </div>
 
+<!-- 记餐弹窗（点健康页早餐/午餐/晚餐/加餐打开） -->
+<div class="modal-mask" id="mealModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="mealModalClose">✕</button></div>
+    <div class="card-title" id="mealModalTitle">记早餐</div>
+    <div class="row" style="margin-bottom:8px">
+      <span style="font-size:12px; color:var(--text2)">日期：</span>
+      <input class="input" id="mealModalDate" type="date" style="flex:1">
+    </div>
+    <input class="input" id="mealInput" placeholder="吃了什么？如：豆浆、包子" style="margin-bottom:8px">
+    <div class="row" style="margin-bottom:8px">
+      <input class="photo-input" id="mealPhotoInput" type="file" accept="image/*" multiple style="display:none">
+      <button class="btn small ghost" id="mealPhotoBtn">📷 传照片</button>
+      <span class="photo-note" id="mealPhotoHint"></span>
+    </div>
+    <div class="row" style="margin-bottom:12px">
+      <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+      <button class="chip who who-mine" data-who="mine">💜 我</button>
+      <button class="chip who who-xiaojia" data-who="xiaojia">💗 小佳</button>
+    </div>
+    <button class="btn" id="mealModalSend" style="width:100%">发 送</button>
+  </div>
+</div>
+
 <!-- 记账弹窗 -->
 <div class="modal-mask" id="moneyModal">
   <div class="modal">
@@ -659,21 +683,12 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <button class="chip" data-meal="dinner">晚餐</button>
           <button class="chip" data-meal="snack">加餐</button>
         </div>
-        <div class="row">
-          <input class="input" id="mealInput" placeholder="吃了什么？如：豆浆、包子">
-          <button class="btn small" id="mealAddBtn">记录</button>
-        </div>
-        <div class="row">
-          <input class="photo-input" id="mealPhotoInput" type="file" accept="image/*" multiple style="display:none">
-          <button class="btn small ghost" id="mealPhotoBtn">📷 传照片</button>
-          <span class="photo-note" id="mealPhotoHint"></span>
-        </div>
+        <div class="photo-note">点上面的餐次，弹窗里记录：可以打字、传照片，也可以图文一起发。</div>
         <div class="row">
           <span style="font-size:12px; color:var(--text2)">谁记的：</span>
           <button class="chip who who-mine" data-who="mine">我</button>
           <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
         </div>
-        <div class="photo-note" style="margin-top:8px">选了过去的日期再点「记录」，就是补记那天的饮食。</div>
       </div>
       <div class="card"><div class="card-title" id="mealListTitle">今天的三餐</div><div id="mealList"></div></div>
     </div>
@@ -843,12 +858,12 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
         <button class="btn small ghost" id="myNameBtn" style="flex:1; text-align:left">👤 <span id="myNameText">…</span> <span class="photo-note">✏️ 点我修改</span></button>
       </div>
       <div class="row" style="margin-bottom:8px">
-        <span style="font-size:13px; width:46px">我：</span>
+        <span style="font-size:13px; width:46px" id="myGenderLabel">我：</span>
         <button class="chip gender-chip" data-gender="mine" data-val="male">👦 男</button>
         <button class="chip gender-chip" data-gender="mine" data-val="female">👧 女</button>
       </div>
       <div class="row">
-        <span style="font-size:13px; width:46px">小佳：</span>
+        <span style="font-size:13px; width:46px" id="xiaojiaGenderLabel">小佳：</span>
         <button class="chip gender-chip" data-gender="xiaojia" data-val="male">👦 男</button>
         <button class="chip gender-chip" data-gender="xiaojia" data-val="female">👧 女</button>
       </div>
@@ -1229,6 +1244,28 @@ async function loadCurrentHouse(){
       icon:houseResult.data.icon || "🏡",
       displayName:memberResult.data.display_name || ""
     };
+    await loadHouseMembers();
+  }
+}
+/* 小屋成员列表（用于成员资料显示称呼） */
+let currentMembers = [];
+async function loadHouseMembers(){
+  currentMembers = [];
+  if(!cloudSession || !supabaseClient || !currentHouse) return;
+  const r = await supabaseClient.from("xj_house_members")
+    .select("user_id,display_name").eq("house_id", currentHouse.id);
+  if(r.error){ console.warn("加载成员失败", r.error.message); return; }
+  currentMembers = r.data || [];
+  renderMemberProfiles();
+}
+/* 成员资料：性别行的称呼跟随每个人的名字 */
+function renderMemberProfiles(){
+  const mineLabel = $("myGenderLabel"), xjLabel = $("xiaojiaGenderLabel");
+  if(mineLabel) mineLabel.textContent = (currentHouse && currentHouse.displayName) || "我";
+  if(xjLabel){
+    const myId = cloudSession ? cloudSession.user.id : null;
+    const other = currentMembers.find(m=>m.user_id !== myId);
+    xjLabel.textContent = (other && other.display_name) || "小佳";
   }
 }
 function subscribeHouse(){
@@ -2146,6 +2183,36 @@ function saveMoney(){
   $("moneyModal").classList.remove("show");
   toast("记好了 💰");
 }
+/* ---------- 记餐弹窗 ---------- */
+function openMealModal(meal){
+  mealSel = meal;
+  $("mealModalTitle").textContent = "记"+MEALS[meal];
+  $("mealModalDate").value = TODAY;
+  $("mealInput").value = "";
+  const pi = $("mealPhotoInput");
+  if(pi) pi.value = "";
+  const hint = $("mealPhotoHint");
+  if(hint) hint.textContent = "";
+  $("mealModal").classList.add("show");
+}
+function bindMealModal(){
+  const m = $("mealModal");
+  if(!m) return;
+  $("mealModalClose").addEventListener("click", ()=>m.classList.remove("show"));
+  m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); });
+  $("mealModalSend").addEventListener("click", async ()=>{
+    const v = $("mealInput").value.trim();
+    const pi = $("mealPhotoInput");
+    const hasPhoto = pi && pi.files && pi.files.length > 0;
+    if(!v && !hasPhoto){ toast("写一下吃了什么，或传张照片"); return; }
+    const item = { id:uid(), date:$("mealModalDate").value || TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[], recorder:MY_UID() };
+    if(!await uploadPhotosForRecord("meal", item, "mealPhotoInput")) return;
+    S.meals.push(item);
+    markDemoGone(); save(); renderAll();
+    m.classList.remove("show");
+    toast(MEALS[mealSel]+"已记录 🍚");
+  });
+}
 function renderLife(){
   document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub===lifeSub);
@@ -2807,7 +2874,7 @@ function bindEvents(){
 
     /* 记录页 餐别 */
     const mealChip = t.closest("#page-health .chip[data-meal]");
-    if(mealChip){ mealSel = mealChip.dataset.meal; syncChips(); renderRecord(); return; }
+    if(mealChip){ openMealModal(mealChip.dataset.meal); return; }
 
     /* 纪念日提醒天数 */
     const remindChip = t.closest("#page-life .chip[data-remind]");
@@ -2863,15 +2930,7 @@ function bindAddButtons(){
   });
   $("todoInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("todoAddBtn").click(); });
 
-  $("mealAddBtn").addEventListener("click", async ()=>{
-    const v = $("mealInput").value.trim();
-    if(!v){ toast("写一下吃了什么"); return; }
-    const item = { id:uid(), date:($("mealDate") && $("mealDate").value) || TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[], recorder:MY_UID() };
-    if(!await uploadPhotosForRecord("meal", item, "mealPhotoInput")) return;
-    S.meals.push(item);
-    $("mealInput").value = "";
-    markDemoGone(); save(); renderAll(); toast(MEALS[mealSel]+"已记录 🍚");
-  });
+  $("mealModalDate") && $("mealModalDate").addEventListener("change", ()=>{});
 
   $("weightAddBtn").addEventListener("click", ()=>addWeight($("weightInput").value));
   $("homeWeightBtn").addEventListener("click", ()=>{
@@ -2984,6 +3043,7 @@ applyPhotos();
 applyTheme(S.theme);
 bindEvents();
 bindMoneyModal();
+bindMealModal();
 bindWelcomeModal();
 const nameBtn = $("myNameBtn"), nameModal = $("nameModal");
 if(nameBtn && nameModal){
@@ -3001,6 +3061,7 @@ if(nameBtn && nameModal){
       .update({display_name:v}).eq("user_id", cloudSession.user.id);
     if(r.error){ toast("保存失败："+cloudErrorText(r.error)); return; }
     await loadCurrentHouse();
+    await loadHouseMembers();
     if($("myNameText")) $("myNameText").textContent = currentHouse.displayName || "未设置";
     nameModal.classList.remove("show");
     toast("称呼已更新："+v);
