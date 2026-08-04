@@ -366,6 +366,30 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   </div>
 </div>
 
+<!-- 记账弹窗 -->
+<div class="modal-mask" id="moneyModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="moneyClose">✕</button></div>
+    <div class="card-title">记一笔</div>
+    <div class="row" style="gap:8px; margin-bottom:8px">
+      <input class="input" id="moneyAmount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="金额，如 35.5" style="flex:1">
+      <input class="input" id="moneyDate" type="date" style="width:150px">
+    </div>
+    <div class="row" style="gap:6px; margin-bottom:8px">
+      <button class="chip on" id="moneyTypeOut">💸 支出</button>
+      <button class="chip" id="moneyTypeIn">💰 收入</button>
+    </div>
+    <div id="moneyCats" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px"></div>
+    <div class="row" style="gap:6px; margin-bottom:8px">
+      <span style="font-size:12px; color:var(--text2)">谁记的：</span>
+      <button class="chip who who-mine" data-mwho="mine">💜 我</button>
+      <button class="chip who who-xiaojia" data-mwho="xiaojia">💗 小佳</button>
+    </div>
+    <input class="input" id="moneyNote" placeholder="备注（可选），如：超市买菜" style="margin-bottom:12px">
+    <button class="btn" id="moneySave" style="width:100%">保存</button>
+  </div>
+</div>
+
 <!-- 大耳狗小助手：悬浮球 + 对话面板 -->
 <div id="asstFloat" title="大耳狗小助手"><img src="assets/nav-life.png" alt=""></div>
 <div id="asstPanel" class="asst-panel" style="display:none">
@@ -484,6 +508,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <button class="chip" data-sub="diary">📖 日记</button>
       <button class="chip" data-sub="mood">😊 心情</button>
       <button class="chip" data-sub="anniv">❤️ 纪念日</button>
+      <button class="chip" data-sub="money">💰 记账</button>
     </div>
     <div id="sub-life-todo">
 
@@ -561,7 +586,17 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       </div>
       <div class="card"><div class="card-title">❤️ 纪念日列表</div><div id="annivList"></div></div>
     </div>
-  
+
+    <div id="sub-life-money" style="display:none">
+      <div class="card">
+        <div class="card-title">💰 记账 <span class="more" id="moneyStatText"></span></div>
+        <div class="row" style="margin-bottom:8px">
+          <button class="btn small" id="addMoneyBtn">＋ 记一笔</button>
+          <span class="photo-note" style="margin-left:8px">支出 - / 收入 +</span>
+        </div>
+        <div id="moneyList"></div>
+      </div>
+    </div>
   </section>
 
 
@@ -896,6 +931,10 @@ function seedDemo(){
       { id:"a1", name:"在一起的日子", date:"2025-06-01", remindDays:3, who:"mine" }
     ],
     photos: [],
+    expenses: [
+      { id:"e1", date:TODAY, type:"out", cat:"餐饮", amount:45.5, note:"晚上火锅", who:"mine" },
+      { id:"e2", date:TODAY, type:"in", cat:"红包", amount:200, note:"小佳发的大红包", who:"xiaojia" }
+    ],
     doneMap: {},   // { "日期": { 待办id: true } }
     sleeps: [],
     periods: [],
@@ -905,7 +944,7 @@ function seedDemo(){
 
 function emptyState(){
   return { version:2, demo:false, theme:"auto", todos:[], meals:[], weights:[], sports:[],
-           diaries:[], moods:[], anniversaries:[], photos:[], doneMap:{},
+           diaries:[], moods:[], anniversaries:[], photos:[], expenses:[], doneMap:{},
            sleeps:[], periods:[], memberGenders:{} };
 }
 
@@ -914,7 +953,7 @@ let S = null;
 function normalizeState(data){
   const next = data && typeof data === "object" ? data : emptyState();
   next.version = 2;
-  ["todos","meals","weights","sports","diaries","moods","anniversaries","photos","sleeps","periods"].forEach(k=>{
+  ["todos","meals","weights","sports","diaries","moods","anniversaries","photos","sleeps","periods","expenses"].forEach(k=>{
     if(!Array.isArray(next[k])) next[k] = [];
   });
   if(!next.memberGenders || typeof next.memberGenders !== "object") next.memberGenders = {};
@@ -1182,7 +1221,7 @@ async function handleCloudSession(session){
       subscribeHouse();
       const pulled = await pullCloudState(false, true);
       if(!pulled){
-        const hasReal = !S.demo && ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].some(k=>(S[k] && S[k].length));
+        const hasReal = !S.demo && ["todos","meals","weights","sports","diaries","moods","anniversaries","photos","expenses"].some(k=>(S[k] && S[k].length));
         if(hasReal && confirm("云端还没有数据。要把本机数据设为云端第一份吗？\n\n确定后本机数据会存到云端，以后两台设备都以它为准。")){
           await uploadLocalState();
         }else if(!hasReal){
@@ -1945,15 +1984,64 @@ function addPeriod(){
 
 /* ---------- 生活页 ---------- */
 let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
+/* ---------- 记账 ---------- */
+const MONEY_CATS = {
+  out: [["餐饮","🍜"],["购物","🛍️"],["交通","🚌"],["娱乐","🎬"],["房租水电","🏠"],["日用","🧻"],["医疗","💊"],["其他","📦"]],
+  in: [["工资","💼"],["红包","🧧"],["其他","💵"]]
+};
+let moneyType = "out", moneyWho = "mine", moneyCat = "餐饮";
+function fmtMoney(n){ return "¥"+(Math.round(Number(n)*100)/100).toFixed(2); }
+function renderMoney(){
+  const stat = $("moneyStatText"), list = $("moneyList");
+  if(!stat || !list) return;
+  const month = TODAY.slice(0,7);
+  const ms = S.expenses.filter(e=>String(e.date).slice(0,7)===month);
+  const out = ms.filter(e=>e.type==="out").reduce((s,e)=>s+Number(e.amount||0),0);
+  const inn = ms.filter(e=>e.type==="in").reduce((s,e)=>s+Number(e.amount||0),0);
+  stat.textContent = "支出 "+fmtMoney(out)+" · 收入 "+fmtMoney(inn);
+  const rows = ms.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  list.innerHTML = rows.length ? rows.map(e=>{
+    const ic = (MONEY_CATS[e.type]||[]).find(c=>c[0]===e.cat);
+    const sign = e.type==="in" ? "+" : "-";
+    const color = e.type==="in" ? "var(--ok)" : "var(--warn)";
+    return '<div class="list-item"><div class="txt"><div class="meta">'+dateText(e.date)+' · '+whoTag(e.who)+'</div>'
+      + (ic?ic[1]+" ":"")+esc(e.cat||"")+(e.note?' <span class="photo-note">'+esc(e.note)+'</span>':"")
+      + '</div><b style="color:'+color+'">'+sign+fmtMoney(e.amount)+'</b>'+delBtn(e.id,"expense")+'</div>';
+  }).join("") : '<div class="empty">'+emptyArt()+'这个月还没有记账，记第一笔吧～</div>';
+}
+function renderMoneyCats(){
+  const box = $("moneyCats");
+  if(!box) return;
+  box.innerHTML = MONEY_CATS[moneyType].map(c=>'<button class="chip'+(c[0]===moneyCat?" on":"")+'" data-mcat="'+c[0]+'">'+c[1]+' '+c[0]+'</button>').join("");
+  box.querySelectorAll("[data-mcat]").forEach(b=>{ b.addEventListener("click", ()=>{ moneyCat = b.dataset.mcat; renderMoneyCats(); }); });
+}
+function openMoneyModal(){
+  moneyType = "out"; moneyCat = "餐饮";
+  $("moneyAmount").value = ""; $("moneyNote").value = "";
+  $("moneyDate").value = TODAY;
+  $("moneyTypeOut").classList.add("on"); $("moneyTypeIn").classList.remove("on");
+  renderMoneyCats();
+  $("moneyModal").classList.add("show");
+}
+function saveMoney(){
+  const amount = parseFloat($("moneyAmount").value);
+  if(!(amount > 0)){ toast("先填个金额，比如 35.5"); return; }
+  const date = $("moneyDate").value || TODAY;
+  S.expenses.push({ id:uid(), date:date, type:moneyType, cat:moneyCat, amount:Math.round(amount*100)/100, note:$("moneyNote").value.trim(), who:moneyWho });
+  save(); renderAll();
+  $("moneyModal").classList.remove("show");
+  toast("记好了 💰");
+}
 function renderLife(){
   document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub===lifeSub);
   });
-  const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
+  const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv"), money:$("sub-life-money") };
   Object.keys(map).forEach(k=>{ if(map[k]) map[k].style.display = k===lifeSub ? "block" : "none"; });
   if(lifeSub !== "todo") diarySub = lifeSub;
   renderTodo();
   renderDiary();
+  renderMoney();
 }
 function renderDiary(){
   const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
@@ -2610,6 +2698,14 @@ function bindEvents(){
     /* 纪念日提醒天数 */
     const remindChip = t.closest("#page-life .chip[data-remind]");
     if(remindChip){ annivRemind = Number(remindChip.dataset.remind); syncChips(); return; }
+
+    /* 记账：谁记的 */
+    const mwhoChip = t.closest("#moneyModal .chip[data-mwho]");
+    if(mwhoChip){
+      moneyWho = mwhoChip.dataset.mwho;
+      document.querySelectorAll("#moneyModal .chip[data-mwho]").forEach(c=>c.classList.toggle("on", c===mwhoChip));
+      return;
+    }
   });
 }
 let annivRemind = 3;
@@ -2617,6 +2713,18 @@ function syncChips(){
   document.querySelectorAll("[data-bucket]").forEach(c=>c.classList.toggle("on", c.dataset.bucket===todoBucket));
   document.querySelectorAll("[data-meal]").forEach(c=>c.classList.toggle("on", c.dataset.meal===mealSel));
   document.querySelectorAll("[data-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.remind)===annivRemind));
+}
+
+/* ---------- 记账弹窗绑定 ---------- */
+function bindMoneyModal(){
+  const addBtn = $("addMoneyBtn");
+  if(!addBtn) return;
+  addBtn.addEventListener("click", openMoneyModal);
+  $("moneyClose").addEventListener("click", ()=>$("moneyModal").classList.remove("show"));
+  $("moneyModal").addEventListener("click", e=>{ if(e.target === $("moneyModal")) $("moneyModal").classList.remove("show"); });
+  $("moneyTypeOut").addEventListener("click", ()=>{ moneyType="out"; moneyCat="餐饮"; $("moneyTypeOut").classList.add("on"); $("moneyTypeIn").classList.remove("on"); renderMoneyCats(); });
+  $("moneyTypeIn").addEventListener("click", ()=>{ moneyType="in"; moneyCat="工资"; $("moneyTypeIn").classList.add("on"); $("moneyTypeOut").classList.remove("on"); renderMoneyCats(); });
+  $("moneySave").addEventListener("click", saveMoney);
 }
 
 /* ---------- 添加类按钮 ---------- */
@@ -2750,6 +2858,7 @@ load();
 applyPhotos();
 applyTheme(S.theme);
 bindEvents();
+bindMoneyModal();
 bindAddButtons();
 syncChips();
 setGate(true);
