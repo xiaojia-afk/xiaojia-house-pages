@@ -200,6 +200,15 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 #confirmModal{align-items:center}
 #confirmModal .modal{max-width:340px; border-radius:22px; text-align:center}
 #confirmMsg{font-size:14px; line-height:1.7; margin-bottom:16px; white-space:pre-line; color:var(--text)}
+/* 全屏看图 */
+.photo-viewer{position:fixed; inset:0; background:rgba(0,0,0,.94); z-index:300; display:none; align-items:center; justify-content:center; cursor:zoom-out}
+.photo-viewer.show{display:flex}
+.photo-viewer img{max-width:94vw; max-height:92vh; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.photo-viewer .pv-close{position:absolute; top:14px; right:18px; color:#fff; font-size:28px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.15); border-radius:50%}
+.photo-viewer .pv-note{position:absolute; bottom:18px; left:0; right:0; text-align:center; color:rgba(255,255,255,.65); font-size:12px}
+/* 记录照片可点击 */
+.photo-strip img{cursor:zoom-in}
+.photo-tile img{cursor:zoom-in}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -368,7 +377,13 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <div class="modal">
     <div class="close-row"><button class="icon-btn" id="houseIconClose">✕</button></div>
     <div class="card-title">选一个小屋图标 🏷</div>
-    <div class="photo-note" style="margin:6px 0 10px">你和 TA 都看得到，选择后自动保存。选完后首页左上角、启动封面都会用它。</div>
+    <div class="photo-note" style="margin:6px 0 10px">你和 TA 都看得到，选择后自动保存。可以传照片，也可以选表情。</div>
+    <div class="row" style="margin-bottom:10px">
+      <input id="houseIconFile" type="file" accept="image/*" style="display:none">
+      <button class="btn small ghost" id="houseIconUploadBtn">📷 用照片当图标</button>
+      <span class="photo-note" id="houseIconUploadHint"></span>
+    </div>
+    <div class="photo-note" style="margin-bottom:8px">或从下面选一个表情：</div>
     <div id="houseIconPicker" style="display:flex; flex-wrap:wrap; gap:8px"></div>
   </div>
 </div>
@@ -382,6 +397,13 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
     <input class="input" id="nameInput" placeholder="你在小屋里的名字" maxlength="12" style="margin-bottom:12px">
     <button class="btn" id="nameSave" style="width:100%">保存</button>
   </div>
+</div>
+
+<!-- 全屏看图（点记录/照片墙的缩略图打开） -->
+<div class="photo-viewer" id="photoViewer">
+  <button class="pv-close" id="pvClose">✕</button>
+  <img id="photoViewerImg" alt="">
+  <div class="pv-note">点任意处关闭</div>
 </div>
 
 <!-- 通用确认弹窗（App 风格，替代浏览器 confirm） -->
@@ -1180,7 +1202,9 @@ function updateCloudUI(){
   }else{
     $("cloudHouseSetup").style.display = "none";
     $("cloudHouseConnected").style.display = "block";
-    $("cloudHouseText").innerHTML = (currentHouse.icon || "🏡")+" 小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
+    let iconText = currentHouse.icon || "🏡";
+    if(String(iconText).startsWith("photo:")) iconText = "📷";
+    $("cloudHouseText").innerHTML = iconText+" 小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
       + (cloudSyncEnabled ? "<br><span style='color:var(--ok)'>已开启自动同步</span>" : "<br><span style='color:var(--warn)'>还没有选择上传或拉取</span>");
     setCloudStatus(cloudSyncEnabled ? "云端已连接" : "待选择同步","ok");
     renderHouseIconPicker();
@@ -1193,8 +1217,20 @@ function updateMascotIcon(){
   const btn = $("mascotBtn");
   if(!btn) return;
   const img = btn.querySelector("img"), em = $("mascotEmoji");
-  const ic = currentHouse && currentHouse.icon && currentHouse.icon !== "🏡" ? currentHouse.icon : "";
-  if(ic){
+  const ic = currentHouse && currentHouse.icon ? currentHouse.icon : "🏡";
+  if(typeof ic === "string" && ic.startsWith("photo:")){
+    /* 照片图标：显示签名后的照片（每次刷新重新签名） */
+    img.style.display = "block";
+    em.style.display = "none";
+    const path = ic.slice(6);
+    if(supabaseClient && path){
+      supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400)
+        .then(r=>{ if(r.data && r.data.signedUrl && btn.isConnected) img.src = r.data.signedUrl; })
+        .catch(()=>{});
+    }
+    return;
+  }
+  if(ic && ic !== "🏡"){
     img.style.display = "none";
     em.style.display = "block";
     em.textContent = ic;
@@ -1374,7 +1410,11 @@ function updateHouseTitle(){
   if(el) el.textContent = t;
   document.title = t;
   const st = $("splashTitle");
-  if(st) st.textContent = (currentHouse && currentHouse.icon && currentHouse.icon !== "🏡" ? currentHouse.icon+" " : "") + t;
+  if(st){
+    const ic = currentHouse && currentHouse.icon ? currentHouse.icon : "";
+    const hasEmoji = ic && !String(ic).startsWith("photo:") && ic !== "🏡";
+    st.textContent = (hasEmoji ? ic+" " : "") + t;
+  }
 }
 function isPublicHost(){
   const h = (location.hostname || "").toLowerCase();
@@ -1712,7 +1752,45 @@ function photosForRecord(record){
 function photoStrip(record){
   const refs = photosForRecord(record);
   if(!refs.length) return "";
-  return '<div class="photo-strip">'+refs.map(photo=>'<img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'">').join("")+'</div>';
+  return '<div class="photo-strip">'+refs.map(photo=>'<img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'">').join("")+'</div>';
+}
+/* 前端压缩图片（图标等小图用途）：最长边 maxSide，JPEG 0.85 */
+function resizeImageFile(file, maxSide){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = ()=>{
+      try{
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        c.toBlob(b=>{
+          URL.revokeObjectURL(url);
+          b ? resolve(b) : reject(new Error("图片压缩失败"));
+        }, "image/jpeg", 0.85);
+      }catch(e){ URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("图片读取失败")); };
+    img.src = url;
+  });
+}
+/* 照片链接 24 小时过期：每次显示后重新签名，避免空白图 */
+async function refreshVisiblePhotos(){
+  const imgs = Array.from(document.querySelectorAll("img[data-photo-path]"));
+  const paths = [...new Set(imgs.map(im=>im.dataset.photoPath).filter(Boolean))];
+  if(!paths.length || !supabaseClient) return;
+  const results = await Promise.all(paths.map(async path=>{
+    try{
+      /* 缩略图：自动压缩到 500px 宽，加载快 */
+      const r = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 500 } });
+      return [path, (r.data && r.data.signedUrl) || ""];
+    }catch(e){ return [path, ""]; }
+  }));
+  const map = Object.fromEntries(results);
+  imgs.forEach(im=>{ const u = map[im.dataset.photoPath]; if(u) im.src = u; });
 }
 function renderPhotoWall(){
   const wall = $("homePhotoWall");
@@ -1723,7 +1801,7 @@ function renderPhotoWall(){
     updatePhotoControls();
     return;
   }
-  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'">'
+  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'">'
     + delBtn(photo.id,"photo") + '</div>').join("");
   updatePhotoControls();
 }
@@ -2163,6 +2241,20 @@ function addPeriod(){
   toast(pred ? "已记录，下次预计 "+pred.date : "已记录");
 }
 
+let pvPath = null;
+function openPhotoViewer(path){
+  if(!path) return;
+  pvPath = path;
+  const v = $("photoViewer"), img = $("photoViewerImg");
+  img.src = "";
+  v.classList.add("show");
+  if(supabaseClient){
+    supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 1600 } })
+      .then(r=>{ if(r.data && r.data.signedUrl && pvPath === path) img.src = r.data.signedUrl; })
+      .catch(()=>{});
+  }
+}
+function closePhotoViewer(){ pvPath = null; $("photoViewer").classList.remove("show"); }
 /* ---------- 生活页 ---------- */
 let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
 /* ---------- 记账 ---------- */
@@ -2253,6 +2345,7 @@ function renderLife(){
   renderTodo();
   renderDiary();
   renderMoney();
+  refreshVisiblePhotos();
 }
 function renderDiary(){
   const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
@@ -2845,6 +2938,13 @@ function bindEvents(){
       return;
     }
 
+    /* 点击照片 → 全屏看图 */
+    const photoImg = t.closest ? t.closest("img[data-photo-path]") : null;
+    if(photoImg){
+      openPhotoViewer(photoImg.dataset.photoPath);
+      return;
+    }
+
     /* 性别选择（成员资料） */
     const genderChip = t.closest(".gender-chip");
     if(genderChip){
@@ -3039,6 +3139,9 @@ function bindAddButtons(){
   });
   $("chatNickClose").addEventListener("click", ()=>nickModal.classList.remove("show"));
   nickModal.addEventListener("click", e=>{ if(e.target === nickModal) nickModal.classList.remove("show"); });
+  $("pvClose").addEventListener("click", closePhotoViewer);
+  const pv = $("photoViewer");
+  if(pv) pv.addEventListener("click", closePhotoViewer);
   const iconBtn = $("mascotBtn"), iconModal = $("houseIconModal");
   if(iconBtn && iconModal){
     iconBtn.addEventListener("click", ()=>{
@@ -3047,6 +3150,34 @@ function bindAddButtons(){
     });
     $("houseIconClose").addEventListener("click", ()=>iconModal.classList.remove("show"));
     iconModal.addEventListener("click", e=>{ if(e.target === iconModal) iconModal.classList.remove("show"); });
+    const iconFile = $("houseIconFile"), iconUpBtn = $("houseIconUploadBtn");
+    if(iconFile && iconUpBtn){
+      iconUpBtn.addEventListener("click", ()=>iconFile.click());
+      iconFile.addEventListener("change", async e=>{
+        const f = e.target.files[0];
+        if(!f) return;
+        const hint = $("houseIconUploadHint");
+        if(!currentHouse || !cloudReady() || !cloudSyncEnabled){ hint.textContent = "先连接云端再传。"; return; }
+        hint.textContent = "处理中…";
+        try{
+          /* 自动压缩成图标尺寸（最长边 800px，存小图，上传快） */
+          const blob = await resizeImageFile(f, 800);
+          const refs = await uploadPhotoFiles("house_icon", "hicon_"+uid(), [new File([blob], "house-icon.jpg", {type:"image/jpeg"})]);
+          if(!refs.length) throw new Error("上传失败");
+          const path = refs[0].storage_path;
+          const r = await supabaseClient.from("xj_houses").update({icon:"photo:"+path}).eq("id", currentHouse.id);
+          if(r.error) throw r.error;
+          currentHouse.icon = "photo:"+path;
+          updateMascotIcon(); updateHouseTitle(); updateCloudUI();
+          iconModal.classList.remove("show");
+          toast("小屋图标已更新 📷");
+        }catch(err){
+          hint.textContent = "上传失败："+cloudErrorText(err);
+        }finally{
+          e.target.value = "";
+        }
+      });
+    }
   }
   $("chatNickSave").addEventListener("click", ()=>{
     if(!chatOtherUid){ toast("还没找到对方，稍后再试"); return; }
