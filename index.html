@@ -197,6 +197,12 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 /* 新手引导弹窗：强制流程，不能点外面关闭，位置居中偏上 */
 #welcomeModal{align-items:center}
 #welcomeModal .modal{margin-bottom:7vh}
+/* 所有功能弹窗统一为居中窗口（偏上一点） */
+#chatNickModal, #houseIconModal, #nameModal, #inviteCardModal, #mealModal, #moneyModal{align-items:center}
+#chatNickModal .modal, #houseIconModal .modal, #nameModal .modal, #inviteCardModal .modal, #mealModal .modal, #moneyModal .modal{margin-bottom:7vh}
+/* 搜索弹窗：居中窗口 */
+#searchModal{align-items:center}
+#searchModal .modal{margin-bottom:7vh}
 /* 确认弹窗（App 风格，替代浏览器 confirm） */
 #confirmModal{align-items:center}
 #confirmModal .modal{max-width:340px; border-radius:22px; text-align:center}
