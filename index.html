@@ -596,7 +596,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <div id="homeTodoList"></div>
       <div class="card-title" style="margin-top:10px">
         <span style="font-size:13px; font-weight:400; color:var(--text2)">去待办页安排更多</span>
-        <span class="more"><button onclick="goPage('todo')">去待办 →</button></span>
+        <span class="more"><button onclick="goPage('life'); setTimeout(()=>{ lifeSub='todo'; renderLife(); },0)">去待办 →</button></span>
       </div>
     </div>
 
@@ -616,11 +616,9 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <div class="row" id="wallMonthChips" style="margin-bottom:8px; flex-wrap:wrap; gap:5px"></div>
       <div class="photo-wall" id="homePhotoWall"></div>
       <div class="row">
-        <input class="photo-input" id="wallPhotoInput" type="file" accept="image/*" multiple>
-      </div>
-      <div class="row" style="margin-bottom:0">
-        <span class="photo-note" id="wallPhotoNote">连接云端后，可以把原图放进这里；未连接时不会上传。</span>
-        <button class="btn small" id="wallPhotoBtn" style="margin-left:auto">上传照片</button>
+        <input class="photo-input" id="wallPhotoInput" type="file" accept="image/*" multiple style="display:none">
+        <button class="btn small" id="wallPhotoBtn">📷 上传照片</button>
+        <span class="photo-note" id="wallPhotoNote" style="margin-left:8px">选完自动上传，双方可见</span>
       </div>
     </div>
 
@@ -638,7 +636,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
     </div>
 
     <div class="card">
-      <div class="card-title">💪 今天运动了 <span class="more"><button onclick="goPage('record')">去记录 →</button></span></div>
+      <div class="card-title">💪 今天运动了 <span class="more"><button onclick="goPage('health'); setTimeout(()=>{ recordSub='sport'; renderRecord(); },0)">去记录 →</button></span></div>
       <div id="homeSportList"></div>
     </div>
 
@@ -1884,7 +1882,7 @@ function renderWallMonthChips(){
   const chips = ["all", ...months.slice(0,6)];
   box.innerHTML = chips.map(m=>'<button class="chip'+(m===wallMonth?" on":"")+'" data-wm="'+m+'">'+(m==="all"?"全部":m)+"</button>").join("");
   box.querySelectorAll("[data-wm]").forEach(b=>{
-    b.addEventListener("click", ()=>{ wallMonth = b.dataset.wm; renderPhotoWall(); refreshVisiblePhotos(); });
+    b.addEventListener("click", ()=>{ wallMonth = b.dataset.wm; renderWallMonthChips(); renderPhotoWall(); refreshVisiblePhotos(); });
   });
 }
 function renderPhotoWall(){
@@ -2846,6 +2844,7 @@ function subscribeChat(){
       if(m && !chatMessages.some(x=>x.id===m.id)){
         chatMessages.push(m);
         renderChat();
+        updateChatBadge();
       }
     })
     .subscribe();
@@ -3495,7 +3494,11 @@ function bindAddButtons(){
     markDemoGone(); save(); renderAll(); toast("纪念日已添加 ❤️");
   });
 
-  $("wallPhotoBtn").addEventListener("click", uploadWallPhotos);
+  $("wallPhotoBtn").addEventListener("click", ()=>$("wallPhotoInput").click());
+  $("wallPhotoInput").addEventListener("change", async ()=>{
+    await uploadWallPhotos();
+    $("wallPhotoInput").value = "";
+  });
 
   /* 睡眠 / 生理期 */
   $("sleepToggleBtn").addEventListener("click", toggleSleep);
