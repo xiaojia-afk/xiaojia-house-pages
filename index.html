@@ -594,29 +594,15 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
    - 谁记的：mine=我，xiaojia=小佳
    ================================================================ */
 
-/* ---------- GitHub Pages 公共版使用原创内嵌占位插图，不发布私人/版权图片 ---------- */
-function safeSvg(inner, bg="#fff8ff"){
-  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220">
-      <rect width="320" height="220" rx="28" fill="${bg}"/>
-      ${inner}
-    </svg>`
-  );
-}
-const genericFriend = `
-  <path d="M93 111C47 84 39 33 71 28c25-4 38 24 53 43 19-11 53-11 72 0 15-19 28-47 53-43 32 5 24 56-22 83l-12 38c-27 22-78 22-105 0z" fill="#fff" stroke="#a38bd5" stroke-width="6"/>
-  <circle cx="125" cy="111" r="9" fill="#8eb8ec"/><circle cx="195" cy="111" r="9" fill="#8eb8ec"/>
-  <path d="M151 128q9 8 18 0" fill="none" stroke="#a38bd5" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="112" cy="128" r="8" fill="#ffd8e8" opacity=".8"/><circle cx="208" cy="128" r="8" fill="#ffd8e8" opacity=".8"/>
-`;
+/* ---------- 已从桌面图片文件夹筛选并匹配；素材仅限两人本地自用 ---------- */
 const PHOTOS = {
-  mascot: safeSvg(genericFriend + `<path d="M140 64q20-28 40 0" fill="none" stroke="#ffd38b" stroke-width="8" stroke-linecap="round"/>`, "#f2f2ff"),
-  logo: safeSvg(`<path d="M92 104 160 52l68 52v61H92z" fill="#d9c9ff" stroke="#866eb4" stroke-width="6"/><path d="M132 165v-38h56v38" fill="#fff" stroke="#866eb4" stroke-width="6"/><path d="m148 88 12-12 12 12" fill="none" stroke="#ff9fc7" stroke-width="7" stroke-linecap="round"/>`, "#f6f0ff"),
-  empty: safeSvg(`<rect x="82" y="72" width="156" height="100" rx="16" fill="#fff" stroke="#b8a4dd" stroke-width="6"/><path d="M110 105h100M110 130h70" stroke="#d4c9eb" stroke-width="8" stroke-linecap="round"/><path d="M57 54l5 13 13 5-13 5-5 13-5-13-13-5 13-5zM258 62l4 10 10 4-10 4-4 10-4-10-10-4 10-4z" fill="#ffd38b"/>`, "#fffaf1"),
-  navHome: safeSvg(`<path d="M84 111 160 52l76 59" fill="none" stroke="#7caee6" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><path d="M103 103v70h114v-70" fill="#e9f3ff" stroke="#7caee6" stroke-width="12" stroke-linejoin="round"/><path d="M145 173v-43h30v43" fill="#fff" stroke="#7caee6" stroke-width="10"/>`, "#f3f9ff"),
-  navTodo: safeSvg(`<rect x="84" y="62" width="152" height="112" rx="18" fill="#eaf5ff" stroke="#7caee6" stroke-width="8"/><path d="m111 99 13 13 25-28M111 143l13 13 25-28" fill="none" stroke="#7caee6" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M171 98h40M171 143h40" stroke="#a6c7ed" stroke-width="9" stroke-linecap="round"/>`, "#f5fbff"),
-  navRecord: safeSvg(`<circle cx="160" cy="116" r="64" fill="#fff0f7" stroke="#e9a5c8" stroke-width="8"/><path d="M160 116V77M160 116l31 19" stroke="#d982b2" stroke-width="9" stroke-linecap="round"/><circle cx="160" cy="116" r="8" fill="#d982b2"/>`, "#fff7fb"),
-  navDiary: safeSvg(`<path d="M76 82q0-22 22-22h124q22 0 22 22v66q0 22-22 22h-73l-39 28 8-28H98q-22 0-22-22z" fill="#ecfff8" stroke="#86c9b2" stroke-width="8"/><path d="M112 103h96M112 132h72" stroke="#86c9b2" stroke-width="9" stroke-linecap="round"/>`, "#f5fffb")
+  mascot: "assets/mascot-watercolor.jpg",
+  logo: "assets/logo-chef-bread.jpg",
+  empty: "assets/empty-roll-cake.jpg",
+  navHome: "assets/nav-home.jpg",
+  navTodo: "assets/nav-todo.jpg",
+  navRecord: "assets/nav-record.jpg",
+  navDiary: "assets/nav-diary.jpg"
 };
 
 const SUPABASE_CONFIG = window.XIAOJIA_SUPABASE_CONFIG || { url:"", anonKey:"" };
@@ -763,7 +749,28 @@ function setCloudLink(enabled){
   updatePhotoControls();
 }
 function cloudErrorText(error){
-  return String(error && (error.message || error.error_description) || "云端请求失败").replace(/\s+/g," ");
+  const raw = String(error && (error.message || error.error_description) || "云端请求失败").replace(/\s+/g," ").trim();
+  if(!raw) return "云端请求失败";
+  const t = raw.toLowerCase();
+  const rules = [
+    [/invalid login credentials|invalid email|password.*(incorrect|wrong)/, "邮箱或密码不对，请检查后重试"],
+    [/user already registered|already been registered/, "这个邮箱已经注册过了，直接点“登录”就行"],
+    [/email not confirmed|verify your email|confirm.*email/, "邮箱还没确认：先去邮箱点一下确认链接，再回来登录"],
+    [/password should be at least|password.*(too short|6 characters)/, "密码太短，至少要 6 位"],
+    [/could not find the function|function .* does not exist/, "云端功能没装好：需要重新运行一次 SQL（告诉我，我给你步骤）"],
+    [/violates row-level security|permission denied/, "云端权限没配好：需要重新运行 SQL（告诉我，我给你步骤）"],
+    [/relation .* does not exist|table .* does not exist/, "云端数据表没建好：需要重新运行 SQL（告诉我，我给你步骤）"],
+    [/jwt expired|auth session missing|invalid jwt|no user found|not logged in/, "登录已过期，请重新登录"],
+    [/failed to fetch|networkerror|network request failed|load failed|network error|connection refused|unable to connect|typeerror/, "网络连不上：检查手机网络，刷新页面再试一次"],
+    [/duplicate key value|new row violates/, "云端已有这条数据，刷新页面看看"],
+    [/rate limit|too many requests/, "刚才操作太快了，等 1 分钟再试"],
+    [/storage object not found|object not found/, "云端图片找不到了，可能已被删除"],
+    [/fetch failed/, "请求没发出去：检查网络后重试"]
+  ];
+  for(const [re, zh] of rules){
+    if(re.test(t)) return zh;
+  }
+  return raw;
 }
 function setCloudStatus(text, kind="off"){
   const el = $("cloudStatus");
@@ -984,14 +991,33 @@ async function switchCloudHouse(){
   const code = $("cloudSwitchInviteCode").value.trim();
   const displayName = $("cloudSwitchDisplayName").value.trim() || "小佳";
   if(!code){ toast("先填正确的小屋邀请码"); return; }
-  if(!confirm("这会把当前账号切换到新邀请码对应的小屋。只有当前小屋为空且只有你一个成员时，系统才会清理当前小屋。确定继续吗？")) return;
-  const {error} = await supabaseClient.rpc("xj_switch_house", { p_invite_code:code, p_display_name:displayName });
+  let oldSummary = "空（没有记录和照片）";
+  if(currentHouse){
+    try{
+      const stateRes = await supabaseClient.from("xj_house_state").select("data").eq("house_id", currentHouse.id).maybeSingle();
+      const photoRes = await supabaseClient.from("xj_photos").select("id", { count:"exact" }).eq("house_id", currentHouse.id);
+      if(stateRes.error) throw stateRes.error;
+      if(photoRes.error) throw photoRes.error;
+      const d = (stateRes.data && stateRes.data.data) || {};
+      const itemCount = ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].reduce((n,k)=>n+((d[k]&&d[k].length)||0), 0);
+      const photoCount = photoRes.count || 0;
+      if(itemCount || photoCount){
+        oldSummary = itemCount+" 条记录"+(photoCount ? "、"+photoCount+" 张照片" : "");
+      }
+    }catch(e){
+      oldSummary = "（查询失败，仍可继续）";
+    }
+  }
+  const oldName = currentHouse ? currentHouse.name : "（没有旧小屋）";
+  if(!confirm("这会把当前账号切换到新邀请码对应的小屋。\n\n当前小屋「"+oldName+"」里有："+oldSummary+"。\n\n确认后旧小屋会被清理删除（不可恢复），然后加入新小屋。确定继续吗？")) return;
+  const {error} = await supabaseClient.rpc("xj_switch_house", { p_invite_code:code, p_display_name:displayName, p_drop_old:true });
   if(error){ toast("切换失败："+cloudErrorText(error)); return; }
   await loadCurrentHouse();
   cloudSyncEnabled = false;
+  localStorage.removeItem(CLOUD_LINK_KEY);
   updateCloudUI();
   $("cloudSwitchInviteCode").value = "";
-  toast("已切换到正确的小屋，请选择从云端拉取");
+  toast("已切换到正确的小屋，旧小屋已清理，请选择从云端拉取");
 }
 function cloudStateData(){
   const data = JSON.parse(JSON.stringify(S));
