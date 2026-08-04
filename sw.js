@@ -3,7 +3,7 @@
   策略：优先用网络（保证拿到最新版），网络失败时用缓存（离线也能打开）。
 */
 const CACHE = "xiaojia-house-v3";
-const PRECACHE = ["./", "./index.html", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png"];
+const PRECACHE = ["./", "./index.html", "./supabase-config.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./vendor/supabase.min.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
