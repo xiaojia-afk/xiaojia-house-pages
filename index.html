@@ -785,7 +785,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
         </div>
       </div>
-      <div class="card"><div class="card-title" id="mealListTitle">今天的三餐</div><div id="mealList"></div></div>
+      <div id="mealCards"></div>
     </div>
 
     <div id="sub-weight" style="display:none">
@@ -1328,7 +1328,7 @@ function loadSupabaseLibrary(){
   if(cloudLibraryPromise) return cloudLibraryPromise;
   cloudLibraryPromise = new Promise((resolve,reject)=>{
     const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.src = "vendor/supabase.min.js";
     script.onload = ()=> window.supabase && window.supabase.createClient
       ? resolve(window.supabase)
       : reject(new Error("Supabase 网页库没有正确加载"));
@@ -2234,6 +2234,30 @@ function renderMoodList(){
 /* ---------- 记录页 ---------- */
 let recordSub = "diet", mealSel = "breakfast", weightWho = "mine", sportWho = "mine";
 let dietWho = "mine", sleepWho = "mine", periodWho = "mine";
+const MEAL_ICONS = { breakfast:"assets/meal-breakfast.png", lunch:"assets/meal-lunch.png", dinner:"assets/meal-dinner.png", snack:"assets/meal-snack.png" };
+function renderMealCards(dateStr){
+  const box = $("mealCards");
+  if(!box) return;
+  const day = S.meals.filter(m=>m.date===dateStr);
+  box.innerHTML = ["breakfast","lunch","dinner","snack"].map(meal=>{
+    const rows = day.filter(m=>m.meal===meal);
+    const list = rows.length ? rows.map(m=>{
+      return '<div class="list-item"><div class="txt">'
+        + (m.text ? '<div>'+esc(m.text)+'</div>' : '')
+        + photoStrip(m)
+        + '<div class="meta">'+whoTag(m.who)+'</div></div>'
+        + delBtn(m.id,"meal") + '</div>';
+    }).join("") : '<div class="photo-note" style="text-align:center; padding:8px 0">这一餐还没记录</div>';
+    return '<div class="card meal-card"><div class="card-title">'
+      + '<img src="'+MEAL_ICONS[meal]+'" style="width:22px; height:22px; border-radius:50%; object-fit:cover; vertical-align:-4px"> '
+      + MEALS[meal] + (rows.length ? ' <span class="more">'+rows.length+' 条</span>' : '')
+      + '</div>' + list
+      + '<button class="btn small ghost" style="width:100%; margin-top:8px" data-meal-add="'+meal+'">＋ 记录</button></div>';
+  }).join("");
+  box.querySelectorAll("[data-meal-add]").forEach(b=>{
+    b.addEventListener("click", ()=>openMealModal(b.dataset.mealAdd));
+  });
+}
 function renderRecord(){
   const subs = { diet:$("sub-diet"), weight:$("sub-weight"), sport:$("sub-sport"), sleep:$("sub-sleep"), period:$("sub-period") };
   Object.keys(subs).forEach(k=>{ subs[k].style.display = k===recordSub ? "block" : "none"; });
@@ -2241,18 +2265,10 @@ function renderRecord(){
     c.classList.toggle("on", c.dataset.sub === recordSub);
   });
 
-  /* 饮食 */
+  /* 饮食：每餐一个卡片 */
   if($("mealDate") && !$("mealDate").value) $("mealDate").value = TODAY;
   const mealDateSel = ($("mealDate") && $("mealDate").value) || TODAY;
-  $("mealListTitle").textContent = dateText(mealDateSel)+" 的三餐（"+S.meals.filter(m=>m.date===mealDateSel && m.meal===mealSel).length+" 条）";
-  const meals = S.meals.filter(m=>m.date===mealDateSel && m.meal===mealSel);
-  let h = "";
-  if(!meals.length){ h = '<div class="empty">'+emptyArt()+'这一餐还没记录</div>'; }
-  meals.forEach(m=>{
-    h += '<div class="list-item"><div class="txt">'+esc(m.text)+'<div class="meta">'+whoTag(m.who)+'</div>'+photoStrip(m)+'</div>'
-      + delBtn(m.id,"meal") + '</div>';
-  });
-  $("mealList").innerHTML = h;
+  renderMealCards(mealDateSel);
 
   /* 体重 */
   let wh = "";
@@ -2656,12 +2672,24 @@ function renderDiary(){
 /* ---------- 统一渲染 ---------- */
 function renderAll(){
   updateHouseTitle();
-  renderChat();
   document.querySelectorAll(".gender-chip").forEach(c=>{
     c.classList.toggle("on", (S.memberGenders||{})[c.dataset.gender]===c.dataset.val);
   });
-  $("demoBanner").style.display = S.demo ? "flex" : "none";
-  renderHome(); renderLife(); renderRecord(); renderChat();
+  if($("demoBanner")) $("demoBanner").style.display = S.demo ? "flex" : "none";
+  /* 只渲染当前页面（首屏快；切页时 goPage → renderAll 会渲染对应页） */
+  const activePage = document.querySelector(".page.active");
+  const pid = activePage ? activePage.id : "page-home";
+  if(pid === "page-home") renderHome();
+  else if(pid === "page-life") renderLife();
+  else if(pid === "page-health") renderRecord();
+  else if(pid === "page-chat") renderChat();
+  /* page-me（设置页）由 updateCloudUI 驱动，无需额外渲染 */
+  /* 公共更新 */
+  updateTodoBadge();
+  updateChatBadge();
+  renderUsage();
+  maybeRemindBackup();
+  refreshVisiblePhotos();
 }
 
 /* ---------- 聊天 ---------- */
@@ -3407,6 +3435,8 @@ function bindAddButtons(){
   $("todoInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("todoAddBtn").click(); });
 
   $("mealModalDate") && $("mealModalDate").addEventListener("change", ()=>{});
+  const md = $("mealDate");
+  if(md) md.addEventListener("change", ()=>renderRecord());
 
   $("weightAddBtn").addEventListener("click", ()=>addWeight($("weightInput").value));
   $("homeWeightBtn").addEventListener("click", ()=>{
