@@ -34,7 +34,10 @@ body{
   font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   background:linear-gradient(160deg,var(--bg),var(--bg2));
   color:var(--text); min-height:100vh; padding-bottom:86px;
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
 }
+/* 长按文字不再弹系统菜单（输入框和邀请码仍可正常使用/复制） */
+input, textarea, #cloudHouseText{-webkit-user-select:text; user-select:text}
 button{font-family:inherit; cursor:pointer}
 input,select,textarea{font-family:inherit; font-size:15px; color:var(--text)}
 
