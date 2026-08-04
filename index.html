@@ -556,11 +556,12 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
       <div id="cloudGuestBox" style="display:none">
         <div class="row"><input class="input" id="cloudEmail" type="email" placeholder="邮箱地址"></div>
         <div class="row"><input class="input" id="cloudPassword" type="password" placeholder="密码（至少 8 位）"></div>
+        <div class="row"><input class="input" id="cloudSignupCode" type="text" placeholder="注册通行码（老用户登录不用填）" autocomplete="off"></div>
         <div class="cloud-actions">
           <button class="btn small" id="cloudLoginBtn">登录</button>
           <button class="btn small ghost" id="cloudSignupBtn">注册新账号</button>
         </div>
-        <div class="photo-note" id="cloudAuthHint" style="margin-top:7px">两个人各注册一个账号；密码只交给 Supabase，不会保存到这个网页。</div>
+        <div class="photo-note" id="cloudAuthHint" style="margin-top:7px">两个人各注册一个账号；密码只交给 Supabase，不会保存到这个网页。注册需要向屋主要通行码。</div>
       </div>
       <div id="cloudUserBox" style="display:none">
         <div class="cloud-box" id="cloudUserText"></div>
@@ -1028,6 +1029,11 @@ async function cloudSignUp(){
   if(!supabaseClient || !checkCloudPassword()) return;
   const email = $("cloudEmail").value.trim();
   if(!email){ toast("先填邮箱地址"); return; }
+  const code = $("cloudSignupCode") ? $("cloudSignupCode").value.trim() : "";
+  if(!code){ toast("先填注册通行码（向屋主要）"); return; }
+  const codeCheck = await supabaseClient.rpc("xj_check_signup_code", { p_code:code });
+  if(codeCheck.error){ $("cloudAuthHint").textContent = "通行码验证失败："+cloudErrorText(codeCheck.error); return; }
+  if(codeCheck.data !== true){ $("cloudAuthHint").textContent = "通行码不对，请向屋主要正确的通行码。"; return; }
   const protocol = window.location.protocol;
   const emailRedirectTo = (protocol === "http:" || protocol === "https:")
     ? window.location.origin + window.location.pathname
