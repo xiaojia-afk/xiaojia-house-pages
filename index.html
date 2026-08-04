@@ -369,6 +369,17 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   </div>
 </div>
 
+<!-- 修改称呼弹窗（点成员资料的我的称呼打开） -->
+<div class="modal-mask" id="nameModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="nameClose">✕</button></div>
+    <div class="card-title">修改称呼</div>
+    <div class="photo-note" style="margin:6px 0 10px">改完后，小屋另一台设备上的名字也会一起变（只能改自己的）。</div>
+    <input class="input" id="nameInput" placeholder="你在小屋里的名字" maxlength="12" style="margin-bottom:12px">
+    <button class="btn" id="nameSave" style="width:100%">保存</button>
+  </div>
+</div>
+
 <!-- 记账弹窗 -->
 <div class="modal-mask" id="moneyModal">
   <div class="modal">
@@ -562,7 +573,9 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
         <div class="row"><input class="input" id="diaryDate" type="date"></div>
         <div class="row"><textarea class="input" id="diaryText" rows="3" placeholder="今天发生了什么？想写什么写什么…" style="resize:none"></textarea></div>
         <div class="row">
-          <input class="photo-input" id="diaryPhotoInput" type="file" accept="image/*" multiple>
+          <input class="photo-input" id="diaryPhotoInput" type="file" accept="image/*" multiple style="display:none">
+          <button class="btn small ghost" id="diaryPhotoBtn">📷 传照片</button>
+          <span class="photo-note" id="diaryPhotoHint"></span>
         </div>
         <div class="row">
           <span style="font-size:12px; color:var(--text2)">谁写的：</span>
@@ -651,7 +664,9 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <button class="btn small" id="mealAddBtn">记录</button>
         </div>
         <div class="row">
-          <input class="photo-input" id="mealPhotoInput" type="file" accept="image/*" multiple>
+          <input class="photo-input" id="mealPhotoInput" type="file" accept="image/*" multiple style="display:none">
+          <button class="btn small ghost" id="mealPhotoBtn">📷 传照片</button>
+          <span class="photo-note" id="mealPhotoHint"></span>
         </div>
         <div class="row">
           <span style="font-size:12px; color:var(--text2)">谁记的：</span>
@@ -692,7 +707,9 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <button class="btn small" id="sportAddBtn">记录</button>
         </div>
         <div class="row">
-          <input class="photo-input" id="sportPhotoInput" type="file" accept="image/*" multiple>
+          <input class="photo-input" id="sportPhotoInput" type="file" accept="image/*" multiple style="display:none">
+          <button class="btn small ghost" id="sportPhotoBtn">📷 传照片</button>
+          <span class="photo-note" id="sportPhotoHint"></span>
         </div>
         <div class="row">
           <span style="font-size:12px; color:var(--text2)">谁记的：</span>
@@ -821,6 +838,10 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 
     <div class="card" style="box-shadow:none">
       <div class="card-title">👥 成员资料</div>
+      <div class="row" style="margin-bottom:8px">
+        <span style="font-size:13px; width:46px">我的称呼：</span>
+        <button class="btn small ghost" id="myNameBtn" style="flex:1; text-align:left">👤 <span id="myNameText">…</span> <span class="photo-note">✏️ 点我修改</span></button>
+      </div>
       <div class="row" style="margin-bottom:8px">
         <span style="font-size:13px; width:46px">我：</span>
         <button class="chip gender-chip" data-gender="mine" data-val="male">👦 男</button>
@@ -1080,7 +1101,7 @@ function setCloudStatus(text, kind="off"){
 }
 function updatePhotoControls(){
   const enabled = cloudReady() && cloudSyncEnabled;
-  ["wallPhotoInput","wallPhotoBtn","mealPhotoInput","sportPhotoInput","diaryPhotoInput"].forEach(id=>{
+  ["wallPhotoInput","wallPhotoBtn","mealPhotoInput","mealPhotoBtn","sportPhotoInput","sportPhotoBtn","diaryPhotoInput","diaryPhotoBtn"].forEach(id=>{
     const el = $(id);
     if(el) el.disabled = !enabled;
   });
@@ -1132,6 +1153,7 @@ function updateCloudUI(){
       + (cloudSyncEnabled ? "<br><span style='color:var(--ok)'>已开启自动同步</span>" : "<br><span style='color:var(--warn)'>还没有选择上传或拉取</span>");
     setCloudStatus(cloudSyncEnabled ? "云端已连接" : "待选择同步","ok");
     renderHouseIconPicker();
+    if($("myNameText")) $("myNameText").textContent = currentHouse.displayName || "未设置";
   }
   updatePhotoControls();
 }
@@ -1692,8 +1714,25 @@ function whoTag(who){
     : '<span class="chip who who-mine">💜 我</span>';
 }
 function delBtn(id, kind){
+  /* 只能删自己的记录：对方记的（有 recorder 且不是当前账号）不显示删除按钮 */
+  const myId = cloudSession ? cloudSession.user.id : null;
+  if(myId){
+    const arrs = { todo:S.todos, meal:S.meals, weight:S.weights, sport:S.sports, diary:S.diaries, mood:S.moods, anniv:S.anniversaries, sleep:S.sleeps, period:S.periods, expense:S.expenses };
+    const arr = arrs[kind];
+    let rec = null;
+    if(Array.isArray(arr)){
+      if(kind === "weight"){
+        const parts = String(id).split("|");
+        rec = arr.find(x=>x.date===parts[0] && x.who===parts[1]);
+      }else{
+        rec = arr.find(x=>x.id===id);
+      }
+    }
+    if(rec && rec.recorder && rec.recorder !== myId) return "";
+  }
   return '<button class="del-btn" data-del="'+kind+'" data-id="'+id+'">✕</button>';
 }
+function MY_UID(){ return cloudSession ? cloudSession.user.id : null; }
 function applyPhotos(){
   document.querySelectorAll("img[data-photo]").forEach(img=>{
     const src = PHOTOS[img.dataset.photo];
@@ -1989,7 +2028,7 @@ function toggleSleep(){
     renderSleep();
     toast("睡了 "+fmtDuration(active.minutes)+"，"+sleepEval(active.minutes));
   }else{
-    S.sleeps.push({ id:uid(), who:sleepWho, start:localStamp(new Date()), end:null, minutes:0 });
+    S.sleeps.push({ id:uid(), who:sleepWho, start:localStamp(new Date()), end:null, minutes:0, recorder:MY_UID() });
     markDemoGone();
     save();
     renderSleep();
@@ -2049,7 +2088,7 @@ function addPeriod(){
   if(genderOf(periodWho)!=="female"){ toast("先给女生设置性别"); return; }
   const d = $("periodDate").value || TODAY;
   if(S.periods.some(p=>p.who===periodWho && p.start===d)){ toast("这一天已经记过了"); return; }
-  S.periods.push({ id:uid(), who:periodWho, start:d });
+  S.periods.push({ id:uid(), who:periodWho, start:d, recorder:MY_UID() });
   markDemoGone();
   save();
   renderPeriod();
@@ -2102,7 +2141,7 @@ function saveMoney(){
   const amount = parseFloat($("moneyAmount").value);
   if(!(amount > 0)){ toast("先填个金额，比如 35.5"); return; }
   const date = $("moneyDate").value || TODAY;
-  S.expenses.push({ id:uid(), date:date, type:moneyType, cat:moneyCat, amount:Math.round(amount*100)/100, note:$("moneyNote").value.trim(), who:moneyWho });
+  S.expenses.push({ id:uid(), date:date, type:moneyType, cat:moneyCat, amount:Math.round(amount*100)/100, note:$("moneyNote").value.trim(), who:moneyWho, recorder:MY_UID() });
   save(); renderAll();
   $("moneyModal").classList.remove("show");
   toast("记好了 💰");
@@ -2335,7 +2374,7 @@ function asstReply(text){
     case "addTodo": {
       const todo = text.replace(/^(加|添加|记|帮我)?(个|一条|一个)?(待办|提醒|记事)?[:：]?/,"").replace(/提醒我/,"").trim();
       if(todo){
-        S.todos.push({ id:uid(), text:todo, bucket:"today", repeat:false, done:false, who:todoWho, date:TODAY });
+        S.todos.push({ id:uid(), text:todo, bucket:"today", repeat:false, done:false, who:todoWho, date:TODAY, recorder:MY_UID() });
         markDemoGone(); save(); renderAll();
         return "已帮你记下待办：「"+todo+"」✅ 记得完成哦～";
       }
@@ -2696,7 +2735,7 @@ function bindEvents(){
         S.moods = S.moods.filter(m=>m!==todayMood);
       }else{
         if(todayMood){ todayMood.mood = t.dataset.mood; }
-        else { S.moods.push({ id:uid(), date:TODAY, mood:t.dataset.mood, note:"", who:moodWho }); }
+        else { S.moods.push({ id:uid(), date:TODAY, mood:t.dataset.mood, note:"", who:moodWho, recorder:MY_UID() }); }
       }
       markDemoGone(); save(); renderAll(); toast("心情已记录");
       return;
@@ -2745,7 +2784,7 @@ function bindEvents(){
       mealSel = t.dataset.quick;
       const text = prompt("吃了什么？（如：豆浆、包子）");
       if(text && text.trim()){
-        S.meals.push({ id:uid(), date:TODAY, meal:mealSel, text:text.trim(), who:"mine", photoIds:[] });
+        S.meals.push({ id:uid(), date:TODAY, meal:mealSel, text:text.trim(), who:"mine", photoIds:[], recorder:MY_UID() });
         markDemoGone(); save(); renderAll(); toast(MEALS[mealSel]+"已记录 🍚");
       }
       return;
@@ -2804,10 +2843,21 @@ function bindMoneyModal(){
 
 /* ---------- 添加类按钮 ---------- */
 function bindAddButtons(){
+  /* 照片按钮：点按钮 = 打开文件选择 */
+  [["mealPhotoBtn","mealPhotoInput","mealPhotoHint"],["diaryPhotoBtn","diaryPhotoInput","diaryPhotoHint"],["sportPhotoBtn","sportPhotoInput","sportPhotoHint"]].forEach(([btnId,inputId,hintId])=>{
+    const btn = $(btnId), input = $(inputId);
+    if(btn && input){
+      btn.addEventListener("click", ()=>input.click());
+      input.addEventListener("change", ()=>{
+        const h = $(hintId);
+        if(h) h.textContent = input.files && input.files.length ? "已选 "+input.files.length+" 张，点「记录」一起保存" : "";
+      });
+    }
+  });
   $("todoAddBtn").addEventListener("click", ()=>{
     const v = $("todoInput").value.trim();
     if(!v){ toast("先写要做什么哦"); return; }
-    S.todos.push({ id:uid(), text:v, bucket:todoBucket, repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY });
+    S.todos.push({ id:uid(), text:v, bucket:todoBucket, repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY, recorder:MY_UID() });
     $("todoInput").value = ""; $("todoRepeat").checked = false;
     markDemoGone(); save(); renderAll(); toast("已添加待办 ✅");
   });
@@ -2816,7 +2866,7 @@ function bindAddButtons(){
   $("mealAddBtn").addEventListener("click", async ()=>{
     const v = $("mealInput").value.trim();
     if(!v){ toast("写一下吃了什么"); return; }
-    const item = { id:uid(), date:($("mealDate") && $("mealDate").value) || TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[] };
+    const item = { id:uid(), date:($("mealDate") && $("mealDate").value) || TODAY, meal:mealSel, text:v, who:dietWho, photoIds:[], recorder:MY_UID() };
     if(!await uploadPhotosForRecord("meal", item, "mealPhotoInput")) return;
     S.meals.push(item);
     $("mealInput").value = "";
@@ -2835,7 +2885,7 @@ function bindAddButtons(){
       if(!confirmDel("今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return;
       S.weights[idx].kg = kg;
     }else{
-      S.weights.push({ date:TODAY, kg, who:weightWho });
+      S.weights.push({ date:TODAY, kg, who:weightWho, recorder:MY_UID() });
     }
     markDemoGone(); save(); renderAll(); toast("体重已记录 ⚖️");
   }
@@ -2844,7 +2894,7 @@ function bindAddButtons(){
     const type = $("sportType").value;
     const min = parseInt($("sportMinutes").value, 10);
     if(!min || min < 1){ toast("填一下运动了多久（分钟）"); return; }
-    const item = { id:uid(), date:TODAY, type, minutes:min, who:sportWho, photoIds:[] };
+    const item = { id:uid(), date:TODAY, type, minutes:min, who:sportWho, photoIds:[], recorder:MY_UID() };
     if(!await uploadPhotosForRecord("sport", item, "sportPhotoInput")) return;
     S.sports.push(item);
     $("sportMinutes").value = "";
@@ -2856,7 +2906,7 @@ function bindAddButtons(){
     const text = $("diaryText").value.trim();
     if(!text){ toast("写点内容再保存哦"); return; }
     const date = $("diaryDate").value || TODAY;
-    const item = { id:uid(), date, text, who:diaryWho, photoIds:[] };
+    const item = { id:uid(), date, text, who:diaryWho, photoIds:[], recorder:MY_UID() };
     if(!await uploadPhotosForRecord("diary", item, "diaryPhotoInput")) return;
     S.diaries.push(item);
     $("diaryText").value = "";
@@ -2875,7 +2925,7 @@ function bindAddButtons(){
     const date = $("annivDate").value;
     if(!name){ toast("写一下纪念日的名称"); return; }
     if(!date){ toast("选一下日期"); return; }
-    S.anniversaries.push({ id:uid(), name, date, remindDays:annivRemind, who:diaryWho });
+    S.anniversaries.push({ id:uid(), name, date, remindDays:annivRemind, who:diaryWho, recorder:MY_UID() });
     $("annivName").value = ""; $("annivDate").value = "";
     markDemoGone(); save(); renderAll(); toast("纪念日已添加 ❤️");
   });
@@ -2935,6 +2985,27 @@ applyTheme(S.theme);
 bindEvents();
 bindMoneyModal();
 bindWelcomeModal();
+const nameBtn = $("myNameBtn"), nameModal = $("nameModal");
+if(nameBtn && nameModal){
+  nameBtn.addEventListener("click", ()=>{
+    $("nameInput").value = (currentHouse && currentHouse.displayName) || "";
+    nameModal.classList.add("show");
+  });
+  $("nameClose").addEventListener("click", ()=>nameModal.classList.remove("show"));
+  nameModal.addEventListener("click", e=>{ if(e.target === nameModal) nameModal.classList.remove("show"); });
+  $("nameSave").addEventListener("click", async ()=>{
+    if(!cloudSession || !currentHouse){ toast("先登录并加入小屋"); nameModal.classList.remove("show"); return; }
+    const v = $("nameInput").value.trim();
+    if(!v){ toast("写个称呼，比如：小佳"); return; }
+    const r = await supabaseClient.from("xj_house_members")
+      .update({display_name:v}).eq("user_id", cloudSession.user.id);
+    if(r.error){ toast("保存失败："+cloudErrorText(r.error)); return; }
+    await loadCurrentHouse();
+    if($("myNameText")) $("myNameText").textContent = currentHouse.displayName || "未设置";
+    nameModal.classList.remove("show");
+    toast("称呼已更新："+v);
+  });
+}
 bindAddButtons();
 syncChips();
 setGate(true);
