@@ -51,7 +51,7 @@ input,select,textarea{font-family:inherit; font-size:15px; color:var(--text)}
 .brand{display:flex; align-items:center; gap:8px; font-weight:700; font-size:18px; color:var(--pink-deep)}
 .brand .logo{
   width:34px; height:34px; border-radius:50%; object-fit:cover; display:block;
-  background:#fff; border:2px solid var(--border); box-shadow:0 3px 10px rgba(149,117,205,.2);
+  background:var(--card); border:2px solid var(--border); box-shadow:0 3px 10px rgba(149,117,205,.2);
 }
 .top-actions{display:flex; gap:8px}
 .icon-btn{
@@ -94,13 +94,14 @@ input,select,textarea{font-family:inherit; font-size:15px; color:var(--text)}
   border-top:1px solid var(--border); padding:6px 0 calc(6px + env(safe-area-inset-bottom));
 }
 .bottom-nav button{
-  flex:1; border:none; background:none; color:var(--text2);
+  position:relative; flex:1; border:none; background:none; color:var(--text2);
   display:flex; flex-direction:column; align-items:center; gap:2px;
   font-size:11px; padding:4px 0;
 }
+.nav-badge{position:absolute; top:1px; right:calc(50% - 24px); background:var(--pink-deep); color:#fff; font-size:10px; min-width:16px; height:16px; line-height:16px; border-radius:8px; padding:0 4px; text-align:center; z-index:5}
 .bottom-nav button .nav-ico{
   width:29px; height:29px; display:block; overflow:hidden; border-radius:10px;
-  background:#fff; border:1px solid var(--border); box-shadow:0 2px 7px rgba(149,117,205,.13);
+  background:var(--card); border:1px solid var(--border); box-shadow:0 2px 7px rgba(149,117,205,.13);
   transition:transform .2s, border-color .2s, box-shadow .2s;
 }
 .bottom-nav button .nav-ico img{width:100%; height:100%; display:block; object-fit:cover}
@@ -163,7 +164,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .empty .big{font-size:30px; display:block; margin-bottom:6px}
 .empty-art{
   width:78px; height:74px; display:block; object-fit:cover; object-position:center 58%;
-  margin:0 auto 8px; border-radius:24px; border:1px solid var(--border); background:#fff;
+  margin:0 auto 8px; border-radius:24px; border:1px solid var(--border); background:var(--card);
   box-shadow:0 4px 13px rgba(149,117,205,.13);
 }
 .photo-wall{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px}
@@ -209,6 +210,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 /* 记录照片可点击 */
 .photo-strip img{cursor:zoom-in}
 .photo-tile img{cursor:zoom-in}
+.link-btn{border:none; background:none; color:var(--lav-deep); font-size:12.5px; text-decoration:underline; padding:2px 4px}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -225,6 +227,10 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .gate-mask.show{display:flex}
 .gate-box{text-align:center; padding:26px 24px; background:var(--card); border:1px solid var(--border); border-radius:18px; max-width:320px; width:100%}
 .gate-box h3{margin:8px 0 6px}
+.gate-slider{margin:2px 0 12px; border-radius:14px; background:var(--bg2); padding:10px 12px; min-height:44px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative}
+.gate-slide{display:none; font-size:13px; color:var(--text); animation:gate-fade .6s ease}
+.gate-slide.on{display:block}
+@keyframes gate-fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
 .gate-box p{color:var(--text2); font-size:13px; margin:0 0 14px}
 
 
@@ -262,13 +268,14 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 .asst-input-row{display:flex; gap:8px; padding:10px; background:var(--card); flex-shrink:0}
 /* ============ 微信风聊天 ============ */
 #chatList{background:#f4f0f6; border-radius:14px; padding:10px 8px}
-.chat-day{text-align:center; font-size:11px; color:var(--text2); margin:6px 0; background:rgba(255,255,255,.7); padding:2px 10px; border-radius:8px; align-self:center}
+.chat-day{text-align:center; font-size:11px; color:var(--text2); margin:6px 0; background:var(--card); padding:2px 10px; border-radius:8px; align-self:center; border:1px solid var(--border)}
+.chat-photo{max-width:210px; max-height:210px; border-radius:12px; display:block; margin-bottom:4px; cursor:zoom-in; object-fit:cover}
 .chat-row{display:flex; align-items:flex-end; gap:8px; margin-bottom:10px}
 .chat-row.mine{justify-content:flex-end}
 .chat-avatar{width:34px; height:34px; border-radius:50%; flex-shrink:0; object-fit:cover}
 .chat-bubble{max-width:72%; padding:9px 12px; border-radius:14px; font-size:14px; line-height:1.5; word-break:break-word; white-space:pre-wrap}
 .chat-bubble.mine{background:var(--pink-deep); color:#fff; border-bottom-right-radius:4px}
-.chat-bubble.other{background:#fff; color:var(--text); border:1px solid var(--border); border-bottom-left-radius:4px}
+.chat-bubble.other{background:var(--card); color:var(--text); border:1px solid var(--border); border-bottom-left-radius:4px}
 .chat-bubble .chat-nick{font-size:11px; color:var(--text2); margin-bottom:2px}
 .chat-bubble .chat-time{font-size:10px; opacity:.6; margin-top:3px; text-align:right}
 .chat-peer-head{text-align:center; padding:7px; font-size:14px; font-weight:600; color:var(--text); background:var(--bg); border-radius:10px; margin-bottom:8px; cursor:pointer}
@@ -313,7 +320,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 
 .mascot{
   width:94px; height:94px; flex-shrink:0; display:block; object-fit:cover; object-position:center;
-  border-radius:28px; border:2px solid var(--border); background:#fff; box-shadow:var(--shadow);
+  border-radius:28px; border:2px solid var(--border); background:var(--card); box-shadow:var(--shadow);
 }
 .mascot-btn{position:relative; border:none; background:none; padding:0; cursor:pointer; flex-shrink:0; line-height:0}
 .mascot-btn:active{transform:scale(.94)}
@@ -323,6 +330,11 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 .greet h1{font-size:20px; margin:0 0 4px}
 .greet .date{font-size:12.5px; color:var(--text2)}
 .greet .time{font-size:17px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; margin-top:2px}
+.greet .countdown{font-size:12.5px; color:var(--lav-deep); margin-top:3px}
+.overview-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+.overview-item{background:var(--bg2); border-radius:12px; padding:9px 4px; text-align:center}
+.overview-item b{display:block; font-size:15px; color:var(--text)}
+.overview-item span{font-size:10.5px; color:var(--text2)}
 .count-num{font-size:26px; font-weight:800; color:var(--pink-deep)}
 </style>
 </head>
@@ -333,13 +345,21 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <div class="gate-box">
     <div style="font-size:44px">🏡</div>
     <h3>情侣小屋</h3>
-    <p style="font-size:13px; color:var(--text2); margin:4px 0 12px">这是你们的私密小屋，登录后进入</p>
+    <p style="font-size:13px; color:var(--text2); margin:4px 0 8px">两个人的私密小天地，登录后进入</p>
+
+    <!-- 介绍轮播 -->
+    <div class="gate-slider" id="gateSlider">
+      <div class="gate-slide on">💌 待办、日记、纪念日，一起记录每一天</div>
+      <div class="gate-slide">📷 照片墙、三餐打卡、私密聊天</div>
+      <div class="gate-slide">☁️ 两台手机自动同步，随时看到对方</div>
+    </div>
 
     <!-- 账号登录 -->
     <div id="gateLogin">
       <div class="row" style="margin-bottom:8px"><input class="input" id="gateEmail" type="email" placeholder="邮箱地址" autocomplete="username"></div>
       <div class="row" style="margin-bottom:8px"><input class="input" id="gatePassword" type="password" placeholder="密码" autocomplete="current-password" style="flex:1"><button class="icon-btn" id="gatePwToggle" title="显示/隐藏密码">👁</button></div>
       <button class="btn" id="gateLoginBtn" style="width:100%">登 录</button>
+      <div class="photo-note" style="margin:8px 0 0; text-align:center"><button class="link-btn" id="gateForgotBtn">忘记密码？</button></div>
       <div class="photo-note" style="margin:12px 0 8px; text-align:center">— 没有账号？先填通行码再注册 —</div>
       <div class="row" style="margin-bottom:8px"><input class="input" id="gateSignupCode" type="text" placeholder="注册通行码（找屋主要）" autocomplete="off"></div>
       <button class="btn small ghost" id="gateSignupBtn" style="width:100%">注册新账号</button>
@@ -396,6 +416,27 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
     <div class="photo-note" style="margin:6px 0 10px">改完后，小屋另一台设备上的名字也会一起变（只能改自己的）。</div>
     <input class="input" id="nameInput" placeholder="你在小屋里的名字" maxlength="12" style="margin-bottom:12px">
     <button class="btn" id="nameSave" style="width:100%">保存</button>
+  </div>
+</div>
+
+<!-- 搜索弹窗 -->
+<div class="modal-mask" id="searchModal">
+  <div class="modal">
+    <div class="close-row"><button class="icon-btn" id="searchClose">✕</button></div>
+    <div class="card-title">🔍 搜索</div>
+    <input class="input" id="searchInput" placeholder="搜待办、日记、饮食、记账、纪念日…" style="margin-bottom:10px">
+    <div id="searchResults" style="max-height:56vh; overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- 邀请卡片弹窗 -->
+<div class="modal-mask" id="inviteCardModal">
+  <div class="modal" style="text-align:center">
+    <div class="close-row"><button class="icon-btn" id="inviteCardClose">✕</button></div>
+    <div class="card-title">💌 邀请卡片</div>
+    <img id="inviteCardImg" style="width:100%; max-width:340px; border-radius:18px; display:block; margin:0 auto 10px" alt="邀请卡片">
+    <div class="photo-note" style="margin-bottom:10px">长按图片保存到手机，或点下面按钮下载，发给 TA。</div>
+    <button class="btn small" id="inviteCardDownload">下载卡片</button>
   </div>
 </div>
 
@@ -532,7 +573,15 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
         <h1 id="greetText">你好呀 👋</h1>
         <div class="date" id="todayLine"></div>
         <div class="time" id="homeClock"></div>
+        <div class="countdown" id="homeCountdown"></div>
       </div>
+    </div>
+
+    <div class="row" style="margin:0 0 12px"><button class="btn small ghost" id="searchBtn" style="width:100%; justify-content:flex-start; text-align:left">🔍 搜索待办、日记、记账…</button></div>
+
+    <div class="card" id="homeOverviewCard" style="display:none">
+      <div class="card-title">📊 本月概览 <span class="more" id="overviewStat"></span></div>
+      <div class="overview-grid" id="overviewGrid"></div>
     </div>
 
     <div class="card">
@@ -557,6 +606,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 
     <div class="card">
       <div class="card-title">📷 我们的照片墙 <span class="more" id="wallPhotoHint"></span></div>
+      <div class="row" id="wallMonthChips" style="margin-bottom:8px; flex-wrap:wrap; gap:5px"></div>
       <div class="photo-wall" id="homePhotoWall"></div>
       <div class="row">
         <input class="photo-input" id="wallPhotoInput" type="file" accept="image/*" multiple>
@@ -817,6 +867,8 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <div class="chat-peer-head" id="chatPeerBtn">👤 对方：…</div>
       <div id="chatList" style="flex:1; overflow-y:auto; padding:6px 2px; display:flex; flex-direction:column; gap:8px"></div>
       <div class="row" style="margin-top:8px">
+        <input id="chatPhotoInput" type="file" accept="image/*" style="display:none">
+        <button class="icon-btn" id="chatPhotoBtn" title="发图片">📷</button>
         <input class="input" id="chatInput" placeholder="说点什么…" maxlength="500" style="flex:1">
         <button class="btn small" id="chatSendBtn">发送</button>
       </div>
@@ -872,6 +924,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
           <div class="cloud-box" id="cloudHouseText"></div>
           <div class="cloud-actions">
             <button class="btn small ghost" id="cloudDownloadBtn">从云端拉取</button>
+            <button class="btn small ghost" id="inviteCardBtn">💌 生成邀请卡片</button>
           </div>
           <div class="cloud-box" id="cloudSwitchBox" style="margin-top:8px">
             <b>刚才选错小屋了？</b><br>
@@ -887,6 +940,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <div class="photo-note" id="cloudGeneralHint" style="margin-top:8px">
         登录后会自动拉取云端最新数据；云端还没有数据时，会自动询问是否把本机数据设为第一份。之后新增和修改自动同步。两台设备同时修改同一项时，后保存的一方会覆盖前一方。
       </div>
+      <div class="photo-note" id="usageText" style="margin-top:6px"></div>
     </div>
 
     <div class="card" style="box-shadow:none">
@@ -940,9 +994,9 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 <!-- ================= 底部导航 ================= -->
 <nav class="bottom-nav">
   <button data-page="home" class="active"><span class="nav-ico"><img data-photo="navHome" alt="" aria-hidden="true"></span>首页</button>
-  <button data-page="life"><span class="nav-ico"><img src="assets/nav-life.png" alt=""></span>生活</button>
+  <button data-page="life"><span class="nav-ico"><img src="assets/nav-life.png" alt=""></span>生活<span class="nav-badge" id="todoBadge" style="display:none"></span></button>
   <button data-page="health"><span class="nav-ico"><img src="assets/nav-health.png" alt=""></span>健康</button>
-  <button data-page="chat"><span class="nav-ico"><img src="assets/nav-chat.png" alt=""></span>聊天</button>
+  <button data-page="chat"><span class="nav-ico"><img src="assets/nav-chat.png" alt=""></span>聊天<span class="nav-badge" id="chatBadge" style="display:none"></span></button>
   <button data-page="me"><span class="nav-ico"><img src="assets/nav-me.png" alt=""></span>设置</button>
 </nav>
 
@@ -1403,6 +1457,20 @@ async function initCloud(){
   setTimeout(hide, 1500);
 })();
 
+/* 登录门轮播 */
+(function(){
+  const slider = $("gateSlider");
+  if(!slider) return;
+  const slides = slider.querySelectorAll(".gate-slide");
+  if(slides.length < 2) return;
+  let i = 0;
+  setInterval(()=>{
+    slides[i].classList.remove("on");
+    i = (i + 1) % slides.length;
+    slides[i].classList.add("on");
+  }, 3500);
+})();
+
 /* ---------- 登录门 ---------- */
 function updateHouseTitle(){
   const t = (currentHouse && currentHouse.name) ? currentHouse.name : "情侣小屋";
@@ -1792,10 +1860,28 @@ async function refreshVisiblePhotos(){
   const map = Object.fromEntries(results);
   imgs.forEach(im=>{ const u = map[im.dataset.photoPath]; if(u) im.src = u; });
 }
+let wallMonth = "all";
+function renderWallMonthChips(){
+  const box = $("wallMonthChips");
+  if(!box) return;
+  const months = [];
+  (S.photos || []).forEach(p=>{
+    const m = String(p.created_at || "").slice(0,7);
+    if(m && !months.includes(m)) months.push(m);
+  });
+  months.sort().reverse();
+  const chips = ["all", ...months.slice(0,6)];
+  box.innerHTML = chips.map(m=>'<button class="chip'+(m===wallMonth?" on":"")+'" data-wm="'+m+'">'+(m==="all"?"全部":m)+"</button>").join("");
+  box.querySelectorAll("[data-wm]").forEach(b=>{
+    b.addEventListener("click", ()=>{ wallMonth = b.dataset.wm; renderPhotoWall(); });
+  });
+}
 function renderPhotoWall(){
   const wall = $("homePhotoWall");
   if(!wall) return;
-  const refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photo.url).slice(0,12);
+  let refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photo.url);
+  if(wallMonth !== "all") refs = refs.filter(p=>String(p.created_at || "").slice(0,7) === wallMonth);
+  refs = refs.slice(0,12);
   if(!refs.length){
     wall.innerHTML = '<div class="photo-empty">连接云端后，把你们喜欢的照片放进这里吧 ✨</div>';
     updatePhotoControls();
@@ -1904,7 +1990,7 @@ function goPage(name){
     b.classList.toggle("active", b.dataset.page === name);
   });
   renderAll();
-  if(name === "chat"){ loadChatHistory(); subscribeChat(); }
+  if(name === "chat"){ loadChatHistory(); subscribeChat(); markChatRead(); }
   window.scrollTo(0,0);
 }
 /* 左右滑切换板块 */
@@ -1984,6 +2070,43 @@ if(!window.__homeClockStarted){
   window.__homeClockStarted = true;
   setInterval(tickHomeClock, 1000);
 }
+/* 最近纪念日：在一起第几天 + 距下次还有几天 */
+function nextAnnivInfo(){
+  const list = S.anniversaries || [];
+  if(!list.length) return "";
+  const today = new Date(TODAY+"T00:00:00");
+  const rows = list.map(a=>{
+    const d = new Date(a.date+"T00:00:00");
+    const daysTogether = Math.round((today - d)/86400000);
+    let next = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    while(next < today) next = new Date(next.getFullYear()+1, next.getMonth(), next.getDate());
+    const daysTo = Math.round((next - today)/86400000);
+    return { name:a.name, daysTogether, daysTo };
+  }).sort((a,b)=>a.daysTo-b.daysTo);
+  const t = rows[0];
+  if(t.daysTo === 0) return "🎉 今天就是「"+t.name+"」！";
+  if(t.daysTogether >= 0) return "💕「"+t.name+"」第 "+t.daysTogether+" 天 · 还有 "+t.daysTo+" 天";
+  return "🎯 还有 "+t.daysTo+" 天是「"+t.name+"」";
+}
+/* 本月概览 */
+function renderOverview(){
+  const card = $("homeOverviewCard");
+  if(!card) return;
+  const month = TODAY.slice(0,7);
+  const exps = S.expenses.filter(e=>String(e.date).startsWith(month));
+  const out = exps.filter(e=>e.type==="out").reduce((s,e)=>s+Number(e.amount||0),0);
+  const inn = exps.filter(e=>e.type==="in").reduce((s,e)=>s+Number(e.amount||0),0);
+  const sports = S.sports.filter(s=>String(s.date).startsWith(month));
+  const sleeps = S.sleeps.filter(s=>String(s.start).startsWith(month));
+  const diaries = S.diaries.filter(d=>String(d.date).startsWith(month));
+  const grid = $("overviewGrid");
+  const item = (b,l)=>'<div class="overview-item"><b>'+b+'</b><span>'+l+'</span></div>';
+  grid.innerHTML = item("¥"+Math.round(out),"支出") + item("¥"+Math.round(inn),"收入")
+    + item(String(sports.length),"运动 次") + item(String(sleeps.length),"睡眠 晚")
+    + item(String(diaries.length),"日记 篇") + item(String((S.photos||[]).length),"照片");
+  $("overviewStat").textContent = month;
+  card.style.display = "block";
+}
 function renderHome(){
   /* 问候语按时间 */
   const h = new Date().getHours();
@@ -1992,6 +2115,14 @@ function renderHome(){
   $("todayLine").textContent = dateText(TODAY);
   tickHomeClock();
   updateMascotIcon();
+
+  /* 纪念日倒计时（问候语下方） */
+  const cd = $("homeCountdown");
+  if(cd){
+    const info = nextAnnivInfo();
+    cd.textContent = info || "";
+  }
+  renderOverview();
 
   /* 今日待办 */
   const done = S.doneMap[TODAY] || {};
@@ -2019,6 +2150,7 @@ function renderHome(){
   });
   $("homeMealList").innerHTML = mh;
   renderPhotoWall();
+  renderWallMonthChips();
 
   /* 今日体重 */
   const todayWeights = S.weights.filter(w=>w.date===TODAY);
@@ -2255,6 +2387,98 @@ function openPhotoViewer(path){
   }
 }
 function closePhotoViewer(){ pvPath = null; $("photoViewer").classList.remove("show"); }
+/* ---------- 邀请卡片 ---------- */
+function buildInviteCard(){
+  const c = document.createElement("canvas");
+  c.width = 720; c.height = 980;
+  const x = c.getContext("2d");
+  x.fillStyle = "#fdf4f8"; x.fillRect(0, 0, 720, 980);
+  const g = x.createLinearGradient(0, 0, 720, 980);
+  g.addColorStop(0, "#f9d9ec"); g.addColorStop(1, "#e7d3f6");
+  x.fillStyle = g;
+  x.beginPath(); x.roundRect(24, 24, 672, 932, 36); x.fill();
+  x.fillStyle = "#fff";
+  x.beginPath(); x.arc(360, 150, 64, 0, Math.PI * 2); x.fill();
+  x.font = "60px serif"; x.textAlign = "center"; x.textBaseline = "middle";
+  x.fillText("🏡", 360, 158);
+  x.fillStyle = "#4a3b52";
+  x.font = "bold 42px 'PingFang SC','Microsoft YaHei',sans-serif";
+  x.fillText("邀请你加入我们的小屋", 360, 290);
+  x.font = "bold 34px 'PingFang SC','Microsoft YaHei',sans-serif";
+  x.fillStyle = "#ec6f9d";
+  const houseName = currentHouse ? currentHouse.name : "情侣小屋";
+  x.fillText(houseName, 360, 380);
+  const code = currentHouse ? currentHouse.inviteCode : "";
+  x.setLineDash([10, 8]);
+  x.strokeStyle = "#d9a8c8"; x.lineWidth = 3;
+  x.beginPath(); x.roundRect(120, 470, 480, 190, 24); x.stroke();
+  x.setLineDash([]);
+  x.fillStyle = "#4a3b52";
+  x.font = "20px 'PingFang SC','Microsoft YaHei',sans-serif";
+  x.fillText("小屋邀请码", 360, 530);
+  x.font = "bold 58px 'Consolas','Courier New',monospace";
+  x.fillStyle = "#9575cd";
+  x.fillText(code, 360, 610);
+  x.fillStyle = "#8a7288";
+  x.font = "19px 'PingFang SC','Microsoft YaHei',sans-serif";
+  x.fillText("打开「情侣小屋」→ 注册登录 → 选择“加入已有小屋”", 360, 730);
+  x.fillText("输入上面的邀请码，就能进来啦", 360, 768);
+  x.fillStyle = "#b39db3";
+  x.font = "16px 'PingFang SC','Microsoft YaHei',sans-serif";
+  x.fillText("—— 情侣小屋 · 两个人的私密小天地 ——", 360, 900);
+  return c.toDataURL("image/png");
+}
+function openInviteCard(){
+  if(!currentHouse){ toast("先创建或加入小屋"); return; }
+  const url = buildInviteCard();
+  $("inviteCardImg").src = url;
+  $("inviteCardModal").classList.add("show");
+  $("inviteCardDownload").onclick = ()=>{
+    const a = document.createElement("a");
+    a.href = url; a.download = "小屋邀请卡.png";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+/* ---------- 搜索 ---------- */
+function openSearchModal(){
+  $("searchInput").value = "";
+  $("searchResults").innerHTML = '<div class="photo-note" style="text-align:center">输入关键词，比如：买菜、火锅、跑步</div>';
+  $("searchModal").classList.add("show");
+  setTimeout(()=>$("searchInput").focus(), 100);
+}
+function runSearch(){
+  const q = $("searchInput").value.trim().toLowerCase();
+  const box = $("searchResults");
+  if(!q){ box.innerHTML = '<div class="photo-note" style="text-align:center">输入关键词搜索</div>'; return; }
+  const hit = (arr, test) => (arr || []).filter(test);
+  const groups = [];
+  const todos = hit(S.todos, t=>t.text.toLowerCase().includes(q)).slice(0,5);
+  if(todos.length) groups.push(["📋 待办", "life", todos.map(t=>"<div class='list-item' data-jump='life-todo'><div class='txt'>"+esc(t.text)+"<div class='meta'>"+dateText(t.date)+"</div></div></div>").join("")]);
+  const diaries = hit(S.diaries, d=>d.text.toLowerCase().includes(q)).slice(0,5);
+  if(diaries.length) groups.push(["📖 日记", "life", diaries.map(d=>"<div class='list-item' data-jump='life-diary'><div class='txt'>"+esc(d.text).replace(/\n/g," ")+"<div class='meta'>"+dateText(d.date)+"</div></div></div>").join("")]);
+  const meals = hit(S.meals, m=>m.text.toLowerCase().includes(q)).slice(0,5);
+  if(meals.length) groups.push(["🍚 饮食", "health", meals.map(m=>"<div class='list-item' data-jump='health-diet'><div class='txt'>"+esc(m.text)+"<div class='meta'>"+dateText(m.date)+" · "+MEALS[m.meal]+"</div></div></div>").join("")]);
+  const exps = hit(S.expenses, e=>((e.cat||"")+" "+(e.note||"")).toLowerCase().includes(q)).slice(0,5);
+  if(exps.length) groups.push(["💰 记账", "life", exps.map(e=>"<div class='list-item' data-jump='life-money'><div class='txt'>"+esc(e.cat||"")+(e.note?" "+esc(e.note):"")+"<div class='meta'>"+dateText(e.date)+"</div></div><b style='color:var(--warn)'>-"+fmtMoney(e.amount)+"</b></div>").join("")]);
+  const annivs = hit(S.anniversaries, a=>a.name.toLowerCase().includes(q)).slice(0,5);
+  if(annivs.length) groups.push(["❤️ 纪念日", "life", annivs.map(a=>"<div class='list-item' data-jump='life-anniv'><div class='txt'>"+esc(a.name)+"<div class='meta'>"+dateText(a.date)+"</div></div></div>").join("")]);
+  const moods = hit(S.moods, m=>((m.note||"")).toLowerCase().includes(q)).slice(0,5);
+  if(moods.length) groups.push(["😊 心情", "life", moods.map(m=>"<div class='list-item' data-jump='life-mood'><div class='txt'>"+esc(m.note||"心情记录")+"<div class='meta'>"+dateText(m.date)+"</div></div></div>").join("")]);
+  if(!groups.length){ box.innerHTML = '<div class="empty">'+emptyArt()+'没找到相关记录</div>'; return; }
+  box.innerHTML = groups.map(g=>'<div style="margin-bottom:8px"><div class="card-title" style="margin-bottom:4px">'+g[0]+'</div>'+g[2]+'</div>').join("");
+  box.querySelectorAll("[data-jump]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const j = el.dataset.jump;
+      $("searchModal").classList.remove("show");
+      if(j === "health-diet"){ goPage("health"); recordSub = "diet"; renderRecord(); }
+      else if(j === "life-todo"){ goPage("life"); lifeSub = "todo"; renderLife(); }
+      else if(j === "life-diary"){ goPage("life"); lifeSub = "diary"; renderLife(); }
+      else if(j === "life-money"){ goPage("life"); lifeSub = "money"; renderLife(); }
+      else if(j === "life-anniv"){ goPage("life"); lifeSub = "anniv"; renderLife(); }
+      else if(j === "life-mood"){ goPage("life"); lifeSub = "mood"; renderLife(); }
+    });
+  });
+}
 /* ---------- 生活页 ---------- */
 let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
 /* ---------- 记账 ---------- */
@@ -2335,6 +2559,28 @@ function bindMealModal(){
     toast(MEALS[mealSel]+"已记录 🍚");
   });
 }
+/* 用量显示（本地统计估算） */
+function renderUsage(){
+  const el = $("usageText");
+  if(!el) return;
+  const photos = (S.photos || []).length;
+  const records = (S.todos||[]).length + (S.meals||[]).length + (S.weights||[]).length
+    + (S.sports||[]).length + (S.diaries||[]).length + (S.moods||[]).length
+    + (S.anniversaries||[]).length + (S.expenses||[]).length + (S.sleeps||[]).length + (S.periods||[]).length;
+  el.textContent = "📦 云端已存：照片 "+photos+" 张 · 记录 "+records+" 条（免费额度：存储 1GB / 每月 5 万次请求）";
+}
+/* 备份提醒：每 14 天提醒一次 */
+function maybeRemindBackup(){
+  try{
+    const KEY = "xiaojia-last-export";
+    const last = Number(localStorage.getItem(KEY) || 0);
+    const days = (Date.now() - last) / 86400000;
+    if(last > 0 && days >= 14){
+      toast("💾 距离上次导出备份已经 "+Math.floor(days)+" 天，记得去「设置」导出一次哦");
+      localStorage.setItem(KEY, String(Date.now()));
+    }
+  }catch(e){}
+}
 function renderLife(){
   document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
     c.classList.toggle("on", c.dataset.sub===lifeSub);
@@ -2346,6 +2592,10 @@ function renderLife(){
   renderDiary();
   renderMoney();
   refreshVisiblePhotos();
+  updateTodoBadge();
+  updateChatBadge();
+  renderUsage();
+  maybeRemindBackup();
 }
 function renderDiary(){
   const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
@@ -2436,6 +2686,44 @@ function chatDayText(day){
   if(diff === 1) return "昨天";
   return (d.getMonth()+1)+"月"+d.getDate()+"日";
 }
+/* ---------- 未读红点 ---------- */
+function chatLastReadKey(){ return "xiaojia-chat-read-"+(currentHouse ? currentHouse.id : "none"); }
+function chatUnreadCount(){
+  const me = cloudSession ? cloudSession.user.id : null;
+  if(!me || !chatMessages.length) return 0;
+  const lastRead = Number(localStorage.getItem(chatLastReadKey()) || 0);
+  return chatMessages.filter(m=>m.sender_id !== me && new Date(m.created_at).getTime() > lastRead).length;
+}
+function updateChatBadge(){
+  const b = $("chatBadge");
+  if(!b) return;
+  const n = chatUnreadCount();
+  if(n > 0 && document.querySelector(".bottom-nav [data-page=chat]")){
+    if(!document.querySelector("#page-chat.active")){
+      b.style.display = "block";
+      b.textContent = n > 99 ? "99+" : n;
+      return;
+    }
+  }
+  b.style.display = "none";
+}
+function markChatRead(){
+  let latest = 0;
+  chatMessages.forEach(m=>{ const t = new Date(m.created_at).getTime(); if(t > latest) latest = t; });
+  localStorage.setItem(chatLastReadKey(), String(Math.max(Date.now(), latest)));
+  updateChatBadge();
+}
+/* 生活页（待办）红点：今天有未完成待办 */
+function updateTodoBadge(){
+  const b = $("todoBadge");
+  if(!b) return;
+  const done = S.doneMap[TODAY] || {};
+  const items = todayTodoList();
+  const openCount = items.filter(t=>!done[t.id]).length;
+  const openToday = S.todos.filter(t=>t.bucket==="today" && !t.repeat && !t.done).length + openCount;
+  b.style.display = (openToday > 0 && !document.querySelector("#page-life.active")) ? "block" : "none";
+  b.textContent = openToday > 99 ? "99+" : openToday;
+}
 function renderChat(){
   const list = $("chatList");
   if(!list) return;
@@ -2450,12 +2738,16 @@ function renderChat(){
     if(day !== lastDay){ lastDay = day; h += '<div class="chat-day">'+chatDayText(day)+'</div>'; }
     const mine = m.sender_id === me;
     const showName = mine ? "" : (chatNickGet(m.sender_id) || m.sender_name || "对方");
+    const body = (m.photo_path
+        ? '<img class="chat-photo" src="assets/nav-life.png" data-photo-path="'+esc(m.photo_path)+'" alt="图片">'
+        : "")
+      + (m.content ? esc(m.content) : "");
     if(mine){
-      h += '<div class="chat-row mine"><div class="chat-bubble mine">'+esc(m.content)
+      h += '<div class="chat-row mine"><div class="chat-bubble mine">'+body
         +'<div class="chat-time">'+fmtChatTime(m.created_at)+'</div></div></div>';
     }else{
       h += '<div class="chat-row"><img class="chat-avatar" src="assets/nav-life.png" alt="">'
-        +'<div class="chat-bubble other"><div class="chat-nick">'+esc(showName)+'</div>'+esc(m.content)
+        +'<div class="chat-bubble other"><div class="chat-nick">'+esc(showName)+'</div>'+body
         +'<div class="chat-time">'+fmtChatTime(m.created_at)+'</div></div></div>';
     }
   });
@@ -2488,6 +2780,7 @@ async function loadChatHistory(){
     if(error) throw error;
     chatMessages = data || [];
     renderChat();
+    updateChatBadge();
   }catch(e){ /* 静默失败，下次进入再试 */ }
 }
 function subscribeChat(){
@@ -2505,6 +2798,25 @@ function subscribeChat(){
       }
     })
     .subscribe();
+}
+async function sendChatPhoto(file){
+  if(!cloudReady() || !currentHouse){ toast("登录并加入小屋后才能发图"); return; }
+  try{
+    /* 压缩到 1200px 宽，聊天图够清晰又不占空间 */
+    const blob = await resizeImageFile(file, 1200);
+    const refs = await uploadPhotoFiles("chat", "chat_"+uid(), [new File([blob], "chat.jpg", {type:"image/jpeg"})]);
+    if(!refs.length) throw new Error("上传失败");
+    const {error} = await supabaseClient.from("xj_messages").insert({
+      house_id: currentHouse.id,
+      sender_id: cloudSession.user.id,
+      sender_name: currentHouse.displayName || "我",
+      content: "",
+      photo_path: refs[0].storage_path
+    });
+    if(error) throw error;
+  }catch(error){
+    toast("发图失败："+cloudErrorText(error));
+  }
 }
 async function sendChatMessage(){
   if(!cloudReady() || !currentHouse){ toast("登录并加入小屋后才能聊天"); return; }
@@ -2792,6 +3104,14 @@ function bindEvents(){
  $("settingsBtn").addEventListener("click", ()=>goPage("me"));
  $("gateLoginBtn").addEventListener("click", gateSignIn);
  $("gateSignupBtn").addEventListener("click", gateSignUp);
+  const gateForgot = $("gateForgotBtn");
+  if(gateForgot) gateForgot.addEventListener("click", async ()=>{
+    const email = $("gateEmail").value.trim();
+    if(!email){ $("gateHint").textContent = "先在邮箱框里填你的邮箱，再点忘记密码。"; return; }
+    if(!supabaseClient){ $("gateHint").textContent = "云端还没连上，稍后再试。"; return; }
+    const r = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+    $("gateHint").textContent = r.error ? "发送失败："+cloudErrorText(r.error) : "重置链接已发到 "+email+"，按邮件提示重设密码（用新密码登录即可）。";
+  });
  $("gatePassword").addEventListener("keydown", e=>{ if(e.key === "Enter") gateSignIn(); });
 
   /* 密码显示/隐藏 */
@@ -2823,6 +3143,7 @@ function bindEvents(){
 
  /* 导出 / 导入 */
   $("exportBtn").addEventListener("click", ()=>{
+    localStorage.setItem("xiaojia-last-export", String(Date.now()));
     const blob = new Blob([JSON.stringify(S, null, 2)], { type:"application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -3128,9 +3449,22 @@ function bindAddButtons(){
   $("periodAddBtn").addEventListener("click", addPeriod);
 
   /* 聊天 */
+  const chatPhotoBtn = $("chatPhotoBtn"), chatPhotoInput = $("chatPhotoInput");
+  if(chatPhotoBtn && chatPhotoInput){
+    chatPhotoBtn.addEventListener("click", ()=>chatPhotoInput.click());
+    chatPhotoInput.addEventListener("change", e=>{
+      const f = e.target.files[0];
+      if(f){ sendChatPhoto(f); }
+      e.target.value = "";
+    });
+  }
   $("chatSendBtn").addEventListener("click", sendChatMessage);
   $("chatInput").addEventListener("keydown", e=>{ if(e.key === "Enter") sendChatMessage(); });
   /* 备注弹窗（微信式：点对方名字设置） */
+  $("searchBtn").addEventListener("click", openSearchModal);
+  $("searchClose").addEventListener("click", ()=>$("searchModal").classList.remove("show"));
+  $("searchModal").addEventListener("click", e=>{ if(e.target === $("searchModal")) $("searchModal").classList.remove("show"); });
+  $("searchInput").addEventListener("input", runSearch);
   const nickModal = $("chatNickModal"), nickInput = $("chatNickInput");
   $("chatPeerBtn").addEventListener("click", ()=>{
     if(!chatOtherUid){ toast("还没找到对方，稍后再试"); return; }
@@ -3142,6 +3476,10 @@ function bindAddButtons(){
   $("pvClose").addEventListener("click", closePhotoViewer);
   const pv = $("photoViewer");
   if(pv) pv.addEventListener("click", closePhotoViewer);
+  const icCardBtn = $("inviteCardBtn");
+  if(icCardBtn) icCardBtn.addEventListener("click", openInviteCard);
+  const icClose = $("inviteCardClose");
+  if(icClose) icClose.addEventListener("click", ()=>$("inviteCardModal").classList.remove("show"));
   const iconBtn = $("mascotBtn"), iconModal = $("houseIconModal");
   if(iconBtn && iconModal){
     iconBtn.addEventListener("click", ()=>{
