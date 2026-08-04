@@ -723,7 +723,10 @@ function seedDemo(){
       { id:"a1", name:"在一起的日子", date:"2025-06-01", remindDays:3, who:"mine" }
     ],
     photos: [],
-    doneMap: {}   // { "日期": { 待办id: true } }
+    doneMap: {},   // { "日期": { 待办id: true } }
+    sleeps: [],
+    periods: [],
+    memberGenders: {}
   };
 }
 
@@ -763,7 +766,7 @@ function load(){
   }catch(e){
     S = null;
   }
-  if(!S){ S = seedDemo(); localSaveOnly(); }
+  if(!S){ S = normalizeState(seedDemo()); localSaveOnly(); }
   else { localSaveOnly(); }
 }
 function localSaveOnly(){
@@ -1020,42 +1023,53 @@ function setGate(show){
   if(show && !isPublicHost()) return;
   m.classList.toggle("show", !!show);
 }
-function checkCloudPassword(){
-  const password = $("cloudPassword").value;
-  if(password.length < 8){ toast("密码至少需要 8 位"); return false; }
+function checkCloudPassword(password){
+  const pass = (password !== undefined) ? password : ($("cloudPassword") ? $("cloudPassword").value : "");
+  if(pass.length < 8){ toast("密码至少需要 8 位"); return false; }
   return true;
 }
-async function cloudSignUp(){
-  if(!supabaseClient || !checkCloudPassword()) return;
-  const email = $("cloudEmail").value.trim();
+async function cloudSignUpWith(email, password, code, hintEl){
+  if(!supabaseClient || !checkCloudPassword(password)) return;
   if(!email){ toast("先填邮箱地址"); return; }
-  const code = $("cloudSignupCode") ? $("cloudSignupCode").value.trim() : "";
   if(!code){ toast("先填注册通行码（向屋主要）"); return; }
   const codeCheck = await supabaseClient.rpc("xj_check_signup_code", { p_code:code });
-  if(codeCheck.error){ $("cloudAuthHint").textContent = "通行码验证失败："+cloudErrorText(codeCheck.error); return; }
-  if(codeCheck.data !== true){ $("cloudAuthHint").textContent = "通行码不对，请向屋主要正确的通行码。"; return; }
+  if(codeCheck.error){ if(hintEl) hintEl.textContent = "通行码验证失败："+cloudErrorText(codeCheck.error); return; }
+  if(codeCheck.data !== true){ if(hintEl) hintEl.textContent = "通行码不对，请向屋主要正确的通行码。"; return; }
   const protocol = window.location.protocol;
   const emailRedirectTo = (protocol === "http:" || protocol === "https:")
     ? window.location.origin + window.location.pathname
     : null;
   if(!emailRedirectTo){
-    $("cloudAuthHint").textContent = "请先用 http://127.0.0.1:8000/index.html 打开小屋，再注册账号；双击 file:// 文件无法正确回到小屋。";
+    if(hintEl) hintEl.textContent = "请先用 http://127.0.0.1:8000/index.html 打开小屋，再注册账号；双击 file:// 文件无法正确回到小屋。";
     return;
   }
   const {data,error} = await supabaseClient.auth.signUp({
     email,
-    password:$("cloudPassword").value,
+    password,
     options:{ emailRedirectTo }
   });
-  if(error){ $("cloudAuthHint").textContent = cloudErrorText(error); return; }
-  $("cloudAuthHint").textContent = data.session ? "注册成功，已经登录。" : "注册成功，请先去邮箱点确认链接，再回来登录。";
+  if(error){ if(hintEl) hintEl.textContent = cloudErrorText(error); return; }
+  if(hintEl) hintEl.textContent = data.session ? "注册成功，已经登录。" : "注册成功，请先去邮箱点确认链接，再回来登录。";
+}
+async function cloudSignUp(){
+  cloudSignUpWith($("cloudEmail").value.trim(), $("cloudPassword").value,
+    $("cloudSignupCode") ? $("cloudSignupCode").value.trim() : "", $("cloudAuthHint"));
+}
+async function gateSignIn(){
+  cloudSignInWith($("gateEmail").value.trim(), $("gatePassword").value, $("gateHint"));
+}
+async function gateSignUp(){
+  cloudSignUpWith($("gateEmail").value.trim(), $("gatePassword").value,
+    $("gateSignupCode") ? $("gateSignupCode").value.trim() : "", $("gateHint"));
+}
+async function cloudSignInWith(email, password, hintEl){
+  if(!supabaseClient) return;
+  if(!email || !password){ toast("先填邮箱和密码"); return; }
+  const {error} = await supabaseClient.auth.signInWithPassword({ email, password });
+  if(error && hintEl) hintEl.textContent = "登录失败："+cloudErrorText(error);
 }
 async function cloudSignIn(){
-  if(!supabaseClient || !checkCloudPassword()) return;
-  const email = $("cloudEmail").value.trim();
-  if(!email){ toast("先填邮箱地址"); return; }
-  const {error} = await supabaseClient.auth.signInWithPassword({ email, password:$("cloudPassword").value });
-  if(error) $("cloudAuthHint").textContent = "登录失败："+cloudErrorText(error);
+  cloudSignInWith($("cloudEmail").value.trim(), $("cloudPassword").value, $("cloudAuthHint"));
 }
 async function createCloudHouse(){
   if(!cloudSession) return;
@@ -1743,7 +1757,9 @@ function bindEvents(){
 
  /* 设置弹窗 */
  $("settingsBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
- $("gateLoginBtn").addEventListener("click", ()=>$("settingsModal").classList.add("show"));
+ $("gateLoginBtn").addEventListener("click", gateSignIn);
+ $("gateSignupBtn").addEventListener("click", gateSignUp);
+ $("gatePassword").addEventListener("keydown", e=>{ if(e.key === "Enter") gateSignIn(); });
  $("settingsClose").addEventListener("click", ()=>$("settingsModal").classList.remove("show"));
  $("settingsModal").addEventListener("click", e=>{ if(e.target === $("settingsModal")) $("settingsModal").classList.remove("show"); });
 
@@ -2055,14 +2071,19 @@ setGate(true);
 renderAll();
 initCloud();
 </script>
-<!-- ================= 登录门（公网未登录时遮住页面） ================= -->
+<!-- ================= 登录门（公网未登录时显示，登录后消失） ================= -->
 <div class="gate-mask" id="gateMask">
   <div class="gate-box">
     <div style="font-size:44px">🏡</div>
     <h3>情侣小屋</h3>
-    <p>这是你们的私密小屋，登录后才能使用。</p>
-    <button class="btn" id="gateLoginBtn" style="width:100%">去登录</button>
-    <div class="photo-note" style="margin-top:10px">没有账号？登录窗口里有「注册新账号」</div>
+    <p>这是你们的私密小屋，登录后进入</p>
+    <div class="row" style="margin-bottom:8px"><input class="input" id="gateEmail" type="email" placeholder="邮箱地址" autocomplete="username"></div>
+    <div class="row" style="margin-bottom:8px"><input class="input" id="gatePassword" type="password" placeholder="密码" autocomplete="current-password"></div>
+    <button class="btn" id="gateLoginBtn" style="width:100%">登 录</button>
+    <div class="photo-note" style="margin:12px 0 8px; text-align:center">— 没有账号？先填通行码再注册 —</div>
+    <div class="row" style="margin-bottom:8px"><input class="input" id="gateSignupCode" type="text" placeholder="注册通行码（找屋主要）" autocomplete="off"></div>
+    <button class="btn small ghost" id="gateSignupBtn" style="width:100%">注册新账号</button>
+    <div class="photo-note" id="gateHint" style="margin-top:10px"></div>
   </div>
 </div>
 </body>
