@@ -196,6 +196,10 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 /* 新手引导弹窗：强制流程，不能点外面关闭，位置居中偏上 */
 #welcomeModal{align-items:center}
 #welcomeModal .modal{margin-bottom:7vh}
+/* 确认弹窗（App 风格，替代浏览器 confirm） */
+#confirmModal{align-items:center}
+#confirmModal .modal{max-width:340px; border-radius:22px; text-align:center}
+#confirmMsg{font-size:14px; line-height:1.7; margin-bottom:16px; white-space:pre-line; color:var(--text)}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -377,6 +381,18 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
     <div class="photo-note" style="margin:6px 0 10px">改完后，小屋另一台设备上的名字也会一起变（只能改自己的）。</div>
     <input class="input" id="nameInput" placeholder="你在小屋里的名字" maxlength="12" style="margin-bottom:12px">
     <button class="btn" id="nameSave" style="width:100%">保存</button>
+  </div>
+</div>
+
+<!-- 通用确认弹窗（App 风格，替代浏览器 confirm） -->
+<div class="modal-mask" id="confirmModal">
+  <div class="modal">
+    <div class="card-title" id="confirmTitle" style="margin-bottom:10px">提示</div>
+    <div id="confirmMsg"></div>
+    <div class="row" style="gap:10px">
+      <button class="btn small ghost" id="confirmNo" style="flex:1">取消</button>
+      <button class="btn small" id="confirmYes" style="flex:1">确定</button>
+    </div>
   </div>
 </div>
 
@@ -1305,7 +1321,7 @@ async function handleCloudSession(session){
       const pulled = await pullCloudState(false, true);
       if(!pulled){
         const hasReal = !S.demo && ["todos","meals","weights","sports","diaries","moods","anniversaries","photos","expenses"].some(k=>(S[k] && S[k].length));
-        if(hasReal && confirm("云端还没有数据。要把本机数据设为云端第一份吗？\n\n确定后本机数据会存到云端，以后两台设备都以它为准。")){
+        if(hasReal && await showConfirm("云端还没有数据。要把本机数据设为云端第一份吗？\n\n确定后本机数据会存到云端，以后两台设备都以它为准。")){
           await uploadLocalState();
         }else if(!hasReal){
           setCloudStatus("云端还没有数据：先随便记一条（比如一个待办），下次打开本页会自动设为云端第一份","warn");
@@ -1435,7 +1451,7 @@ async function rpcCreateHouse(name, displayName){
 }
 async function createCloudHouse(){
   if(!cloudSession) return;
-  if(!confirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
+  if(!await showConfirm("创建新小屋只适合第一个人使用。你还没有收到已有小屋的邀请码吗？\n\n如果已经收到邀请码，请取消后使用“加入已有小屋”。")) return;
   const name = $("cloudHouseName").value.trim() || "我们的小屋";
   const displayName = $("cloudDisplayName").value.trim() || "我";
   if(await rpcCreateHouse(name, displayName)) toast("小屋创建好了，请把邀请码发给另一位");
@@ -1517,7 +1533,7 @@ async function switchCloudHouse(){
     }
   }
   const oldName = currentHouse ? currentHouse.name : "（没有旧小屋）";
-  if(!confirm("这会把当前账号切换到新邀请码对应的小屋。\n\n当前小屋「"+oldName+"」里有："+oldSummary+"。\n\n确认后旧小屋会被清理删除（不可恢复），然后加入新小屋。确定继续吗？")) return;
+  if(!await showConfirm("这会把当前账号切换到新邀请码对应的小屋。\n\n当前小屋「"+oldName+"」里有："+oldSummary+"。\n\n确认后旧小屋会被清理删除（不可恢复），然后加入新小屋。确定继续吗？", {danger:true})) return;
   const {error} = await supabaseClient.rpc("xj_switch_house", { p_invite_code:code, p_display_name:displayName, p_drop_old:true });
   if(error){ toast("切换失败："+cloudErrorText(error)); return; }
   await loadCurrentHouse();
@@ -1576,7 +1592,7 @@ async function uploadLocalState(){
   }
   const {data,error} = await supabaseClient.from("xj_house_state").select("house_id,updated_at").eq("house_id",currentHouse.id).maybeSingle();
   if(error){ toast("读取云端状态失败："+cloudErrorText(error)); return; }
-  if(data && !confirm("云端已经有一份数据，上传本机数据会覆盖云端这一份。确定继续吗？")) return;
+  if(data && !await showConfirm("云端已经有一份数据，上传本机数据会覆盖云端这一份。确定继续吗？", {danger:true})) return;
   try{
     await writeStateToCloud();
     setCloudLink(true);
@@ -1589,7 +1605,7 @@ async function pullCloudState(ask=true, silent=false){
   const {data,error} = await supabaseClient.from("xj_house_state").select("data,updated_at").eq("house_id",currentHouse.id).maybeSingle();
   if(error){ if(!silent) toast("读取云端失败："+cloudErrorText(error)); return false; }
   if(!data){ if(!silent) toast("云端还没有数据，请先由一人上传本机数据"); return false; }
-  if(ask && !confirm("从云端拉取会覆盖本机当前数据。确定继续吗？")) return false;
+  if(ask && !await showConfirm("从云端拉取会覆盖本机当前数据。确定继续吗？", {danger:true})) return false;
   S = normalizeState(data.data);
   localSaveOnly();
   setCloudLink(true);
@@ -1782,8 +1798,22 @@ function emptyArt(){
 function markDemoGone(){
   if(S.demo){ S.demo = false; save(); $("demoBanner").style.display = "none"; }
 }
-function confirmDel(msg){ return confirm(msg); }
-
+let confirmResolve = null;
+function showConfirm(msg, opts={}){
+  return new Promise(resolve=>{
+    confirmResolve = resolve;
+    $("confirmTitle").textContent = opts.title || "提示";
+    $("confirmMsg").textContent = msg;
+    $("confirmYes").textContent = opts.yesText || "确定";
+    $("confirmYes").style.background = opts.danger ? "var(--warn)" : "";
+    $("confirmModal").classList.add("show");
+  });
+}
+function settleConfirm(val){
+  if(confirmResolve){ confirmResolve(val); confirmResolve = null; }
+  $("confirmModal").classList.remove("show");
+}
+function confirmDel(msg){ return showConfirm(msg); }
 /* ---------- 页面切换 ---------- */
 const PAGES = ["home","life","health","chat","me"];
 let pageIndex = 0;
@@ -2632,6 +2662,13 @@ function applyTheme(theme){
 /* ================================================================
    事件绑定
    ================================================================ */
+function bindConfirmModal(){
+  const m = $("confirmModal");
+  if(!m) return;
+  $("confirmYes").addEventListener("click", ()=>settleConfirm(true));
+  $("confirmNo").addEventListener("click", ()=>settleConfirm(false));
+  m.addEventListener("click", e=>{ if(e.target === m) settleConfirm(false); });
+}
 function bindEvents(){
   /* 底部导航 */
   document.querySelectorAll(".bottom-nav button").forEach(b=>{
@@ -2702,10 +2739,10 @@ function bindEvents(){
     toast("备份文件已导出 📦");
   });
   $("importBtn").addEventListener("click", ()=>$("importFile").click());
-  $("importFile").addEventListener("change", e=>{
+  $("importFile").addEventListener("change", async e=>{
     const f = e.target.files[0];
     if(!f) return;
-    if(!confirm("导入会【覆盖】当前所有数据，确定继续吗？")){ e.target.value=""; return; }
+    if(!await showConfirm("导入会【覆盖】当前所有数据，确定继续吗？", {danger:true})){ e.target.value=""; return; }
     const reader = new FileReader();
     reader.onload = ()=>{
       try{
@@ -2720,14 +2757,14 @@ function bindEvents(){
   });
 
   /* 清空演示数据 / 清空所有 */
-  $("clearDemoBtn").addEventListener("click", ()=>{
-    if(!confirm("确定清空演示数据，从空白开始吗？")) return;
+  $("clearDemoBtn").addEventListener("click", async ()=>{
+    if(!await showConfirm("确定清空演示数据，从空白开始吗？")) return;
     S = emptyState(); save(); applyTheme(S.theme); renderAll();
     toast("已清空，从现在开始记录吧 ✨");
   });
   $("clearAllBtn").addEventListener("click", async ()=>{
-    if(!confirm("确定要清空【所有】数据吗？")) return;
-    if(!confirm("再确认一次：所有记录都会被删除，且无法恢复。确定吗？")) return;
+    if(!await showConfirm("确定要清空【所有】数据吗？", {danger:true})) return;
+    if(!await showConfirm("再确认一次：所有记录都会被删除，且无法恢复。确定吗？", {danger:true, title:"最后确认"})) return;
     const photoIds = (S.photos || []).map(photo=>photo.id);
     if(photoIds.length && cloudReady() && cloudSyncEnabled){
       try{ await deletePhotoRefs(photoIds); }catch(error){ toast("照片清理失败，数据仍会清空："+cloudErrorText(error)); }
@@ -2738,7 +2775,7 @@ function bindEvents(){
   });
 
   /* 全局委托：勾选待办 / 删除 / 心情 / 快捷入口 / 谁记的 / 子页签 */
-  document.addEventListener("click", e=>{
+  document.addEventListener("click", async e=>{
     const t = e.target;
 
     /* 待办勾选 */
@@ -2846,14 +2883,9 @@ function bindEvents(){
       return;
     }
 
-    /* 首页快捷记餐 */
+    /* 首页快捷记餐：直接打开 App 风格记餐弹窗 */
     if(t.classList && t.classList.contains("quick")){
-      mealSel = t.dataset.quick;
-      const text = prompt("吃了什么？（如：豆浆、包子）");
-      if(text && text.trim()){
-        S.meals.push({ id:uid(), date:TODAY, meal:mealSel, text:text.trim(), who:"mine", photoIds:[], recorder:MY_UID() });
-        markDemoGone(); save(); renderAll(); toast(MEALS[mealSel]+"已记录 🍚");
-      }
+      openMealModal(t.dataset.quick);
       return;
     }
 
@@ -3044,6 +3076,7 @@ applyTheme(S.theme);
 bindEvents();
 bindMoneyModal();
 bindMealModal();
+bindConfirmModal();
 bindWelcomeModal();
 const nameBtn = $("myNameBtn"), nameModal = $("nameModal");
 if(nameBtn && nameModal){
