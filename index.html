@@ -338,7 +338,8 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 .greet .time{font-size:17px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; margin-top:2px}
 .greet .countdown{font-size:12.5px; color:var(--lav-deep); margin-top:3px}
 .overview-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
-.overview-item{background:var(--bg2); border-radius:12px; padding:9px 4px; text-align:center}
+.overview-item{background:var(--bg2); border-radius:12px; padding:9px 4px; text-align:center; cursor:pointer}
+.overview-item:active{background:var(--border)}
 .overview-item b{display:block; font-size:15px; color:var(--text)}
 .overview-item span{font-size:10.5px; color:var(--text2)}
 .count-num{font-size:26px; font-weight:800; color:var(--pink-deep)}
@@ -1826,7 +1827,7 @@ function photosForRecord(record){
 function photoStrip(record){
   const refs = photosForRecord(record);
   if(!refs.length) return "";
-  return '<div class="photo-strip">'+refs.map(photo=>'<img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'">').join("")+'</div>';
+  return '<div class="photo-strip">'+refs.map(photo=>'<img loading="lazy" src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'">').join("")+'</div>';
 }
 /* 前端压缩图片（图标等小图用途）：最长边 maxSide，JPEG 0.85 */
 function resizeImageFile(file, maxSide){
@@ -1851,20 +1852,24 @@ function resizeImageFile(file, maxSide){
     img.src = url;
   });
 }
-/* 照片链接 24 小时过期：每次显示后重新签名，避免空白图 */
+/* 照片链接 24 小时过期：每次显示后重新签名，避免空白图（防抖：合并多次调用） */
+let __refreshTimer = null;
 async function refreshVisiblePhotos(){
-  const imgs = Array.from(document.querySelectorAll("img[data-photo-path]"));
-  const paths = [...new Set(imgs.map(im=>im.dataset.photoPath).filter(Boolean))];
-  if(!paths.length || !supabaseClient) return;
-  const results = await Promise.all(paths.map(async path=>{
-    try{
-      /* 缩略图：自动压缩到 500px 宽，加载快 */
-      const r = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 500 } });
-      return [path, (r.data && r.data.signedUrl) || ""];
-    }catch(e){ return [path, ""]; }
-  }));
-  const map = Object.fromEntries(results);
-  imgs.forEach(im=>{ const u = map[im.dataset.photoPath]; if(u) im.src = u; });
+  clearTimeout(__refreshTimer);
+  __refreshTimer = setTimeout(async ()=>{
+    const imgs = Array.from(document.querySelectorAll("img[data-photo-path]"));
+    const paths = [...new Set(imgs.map(im=>im.dataset.photoPath).filter(Boolean))];
+    if(!paths.length || !supabaseClient) return;
+    const results = await Promise.all(paths.map(async path=>{
+      try{
+        /* 缩略图：自动压缩到 500px 宽，加载快 */
+        const r = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 500 } });
+        return [path, (r.data && r.data.signedUrl) || ""];
+      }catch(e){ return [path, ""]; }
+    }));
+    const map = Object.fromEntries(results);
+    imgs.forEach(im=>{ const u = map[im.dataset.photoPath]; if(u) im.src = u; });
+  }, 120);
 }
 let wallMonth = "all";
 function renderWallMonthChips(){
@@ -1879,7 +1884,7 @@ function renderWallMonthChips(){
   const chips = ["all", ...months.slice(0,6)];
   box.innerHTML = chips.map(m=>'<button class="chip'+(m===wallMonth?" on":"")+'" data-wm="'+m+'">'+(m==="all"?"全部":m)+"</button>").join("");
   box.querySelectorAll("[data-wm]").forEach(b=>{
-    b.addEventListener("click", ()=>{ wallMonth = b.dataset.wm; renderPhotoWall(); });
+    b.addEventListener("click", ()=>{ wallMonth = b.dataset.wm; renderPhotoWall(); refreshVisiblePhotos(); });
   });
 }
 function renderPhotoWall(){
@@ -1893,7 +1898,7 @@ function renderPhotoWall(){
     updatePhotoControls();
     return;
   }
-  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'">'
+  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img loading="lazy" src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'">'
     + delBtn(photo.id,"photo") + '</div>').join("");
   updatePhotoControls();
 }
@@ -1999,16 +2004,18 @@ function goPage(name){
   if(name === "chat"){ loadChatHistory(); subscribeChat(); markChatRead(); }
   window.scrollTo(0,0);
 }
-/* 左右滑切换板块 */
-let touchX = null, touchY = null;
+/* 左右滑切换板块（在小功能标签上滑动不触发，避免误切） */
+let touchX = null, touchY = null, touchOnTabs = false;
 document.addEventListener("touchstart", e=>{
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+  touchOnTabs = !!(e.target && e.target.closest && e.target.closest(".sub-tabs"));
 }, {passive:true});
 document.addEventListener("touchend", e=>{
-  if(touchX === null) return;
+  if(touchX === null){ touchOnTabs = false; return; }
   const dx = e.changedTouches[0].clientX - touchX;
   const dy = e.changedTouches[0].clientY - touchY;
   touchX = null; touchY = null;
+  if(touchOnTabs){ touchOnTabs = false; return; }
   if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)*1.2) return;
   const next = dx < 0 ? pageIndex+1 : pageIndex-1;
   if(next >= 0 && next < PAGES.length) goPage(PAGES[next]);
@@ -2106,10 +2113,20 @@ function renderOverview(){
   const sleeps = S.sleeps.filter(s=>String(s.start).startsWith(month));
   const diaries = S.diaries.filter(d=>String(d.date).startsWith(month));
   const grid = $("overviewGrid");
-  const item = (b,l)=>'<div class="overview-item"><b>'+b+'</b><span>'+l+'</span></div>';
-  grid.innerHTML = item("¥"+Math.round(out),"支出") + item("¥"+Math.round(inn),"收入")
-    + item(String(sports.length),"运动 次") + item(String(sleeps.length),"睡眠 晚")
-    + item(String(diaries.length),"日记 篇") + item(String((S.photos||[]).length),"照片");
+  const item = (b,l,j)=>'<div class="overview-item" data-ov="'+j+'"><b>'+b+'</b><span>'+l+'</span></div>';
+  grid.innerHTML = item("¥"+Math.round(out),"支出","money") + item("¥"+Math.round(inn),"收入","money")
+    + item(String(sports.length),"运动 次","sport") + item(String(sleeps.length),"睡眠 晚","sleep")
+    + item(String(diaries.length),"日记 篇","diary") + item(String((S.photos||[]).length),"照片","photo");
+  grid.querySelectorAll("[data-ov]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const j = el.dataset.ov;
+      if(j === "money"){ goPage("life"); lifeSub = "money"; renderLife(); }
+      else if(j === "sport"){ goPage("health"); recordSub = "sport"; renderRecord(); }
+      else if(j === "sleep"){ goPage("health"); recordSub = "sleep"; renderRecord(); }
+      else if(j === "diary"){ goPage("life"); lifeSub = "diary"; renderLife(); }
+      else if(j === "photo"){ goPage("home"); }
+    });
+  });
   $("overviewStat").textContent = month;
   card.style.display = "block";
 }
