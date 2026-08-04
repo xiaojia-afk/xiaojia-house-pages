@@ -1057,6 +1057,15 @@ async function syncStateToCloud(){
 }
 async function uploadLocalState(){
   if(!cloudReady()) return;
+  if(S.demo){
+    toast("手机里是示例数据，不能上传。请先点“从云端拉取”获取云端数据");
+    return;
+  }
+  const empty = ["todos","meals","weights","sports","diaries","moods","anniversaries","photos"].every(k=>!(S[k] && S[k].length));
+  if(empty){
+    toast("本机还没有记录，不能上传（会清空云端）。请先点“从云端拉取”");
+    return;
+  }
   const {data,error} = await supabaseClient.from("xj_house_state").select("house_id,updated_at").eq("house_id",currentHouse.id).maybeSingle();
   if(error){ toast("读取云端状态失败："+cloudErrorText(error)); return; }
   if(data && !confirm("云端已经有一份数据，上传本机数据会覆盖云端这一份。确定继续吗？")) return;
