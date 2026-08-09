@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-build="2026-08-09-p1">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,7 +13,7 @@
 /* ============ 颜色（浅色/深色自动切换） ============ */
 :root{
   --bg:#ffffff; --bg2:#f6f3f9; --card:#ffffff;
-  --text:#4a3b52; --text2:#a08ba6; --border:#eadfea;
+  --text:#4a3b52; --text2:#75667b; --border:#eadfea;
   --pink:#f48fb1; --lav:#b39ddb; --pink-deep:#ec6f9d; --lav-deep:#9575cd;
   --mine:#8b7bd8; --xiaojia:#ff8fb3;
   --shadow:0 6px 20px rgba(244,143,177,.16);
@@ -22,7 +22,7 @@
 }
 [data-theme="dark"]{
   --bg:#241b30; --bg2:#2c2138; --card:#342a45;
-  --text:#efe7f7; --text2:#a99bbd; --border:#4a3a5e;
+  --text:#efe7f7; --text2:#b8acc8; --border:#4a3a5e;
   --pink:#f48fb1; --lav:#b39ddb; --pink-deep:#f48fb1; --lav-deep:#b39ddb;
   --mine:#a89be0; --xiaojia:#ff9dbb;
   --shadow:0 6px 20px rgba(0,0,0,.35);
@@ -40,6 +40,9 @@ body{
 input, textarea, #cloudHouseText{-webkit-user-select:text; user-select:text}
 button{font-family:inherit; cursor:pointer}
 input,select,textarea{font-family:inherit; font-size:15px; color:var(--text)}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+  outline:3px solid rgba(149,117,205,.55); outline-offset:2px;
+}
 
 /* ============ 顶部栏 ============ */
 .topbar{
@@ -176,12 +179,13 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .photo-strip img{width:46px; height:46px; flex:0 0 46px; object-fit:cover; border-radius:10px; border:1px solid var(--border); background:var(--bg)}
 
 /* ============ 心情 ============ */
-.mood-row{display:flex; justify-content:space-between; gap:6px}
-.mood{font-size:26px; border:none; background:none; border-radius:14px; padding:6px 8px; filter:grayscale(.4); opacity:.7}
+.mood-row{display:flex; justify-content:space-between; gap:5px; max-width:100%}
+.mood{flex:1 1 0; min-width:0; font-size:25px; border:none; background:none; border-radius:14px; padding:6px 4px; filter:grayscale(.4); opacity:.7}
 .mood.on{filter:none; opacity:1; background:var(--bg); box-shadow:0 0 0 2px var(--pink)}
 
 /* ============ 子页签 ============ */
-.sub-tabs{display:flex; gap:8px; margin-bottom:14px; overflow-x:auto}
+.sub-tabs{display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; padding:1px 1px 4px; scrollbar-width:none; -webkit-overflow-scrolling:touch}
+.sub-tabs::-webkit-scrollbar{display:none}
 .sub-tabs .chip{flex-shrink:0}
 
 /* ============ 数字统计 ============ */
@@ -235,7 +239,9 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
   display:none; align-items:flex-end; justify-content:center;
 }
 .modal-mask.show{display:flex}
-.gate-mask{position:fixed; inset:0; background:var(--bg); z-index:90; display:none; align-items:center; justify-content:center; padding:20px}
+.gate-mask{position:fixed; inset:0; background:var(--bg); z-index:400; display:none; align-items:center; justify-content:center; padding:20px}
+body.gate-open{overflow:hidden}
+body.gate-open #asstFloat, body.gate-open #asstPanel{display:none!important}
 /* ============ 启动封面 ============ */
 .splash-screen{position:fixed; inset:0; z-index:98; background:linear-gradient(160deg,#fdf4f8,#f6d9ea 60%,#eeb6d8); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; transition:opacity .5s ease}
 .splash-screen.hide{opacity:0; pointer-events:none}
@@ -268,7 +274,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .page-banner b{font-size:16px; display:block}
 .page-banner span{font-size:12px; opacity:.9}
 /* ============ 大耳狗小助手 ============ */
-#asstFloat{position:fixed; right:14px; bottom:92px; width:56px; height:56px; border-radius:50%; background:#fff; border:2px solid var(--pink-deep); box-shadow:0 4px 14px rgba(232,121,176,.4); z-index:96; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; transition:transform .18s; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none}
+#asstFloat{position:fixed; right:8px; bottom:100px; width:50px; height:50px; padding:0; border-radius:50%; background:#fff; border:2px solid var(--pink-deep); box-shadow:0 4px 14px rgba(232,121,176,.4); z-index:96; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; transition:transform .18s; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none}
 /* 拖拽期间：禁止下层元素响应点击/触摸（防穿透），并取消按下缩放抖动 */
 body.asst-dragging *{pointer-events:none!important}
 body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!important}
@@ -279,12 +285,13 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 .asst-head{display:flex; align-items:center; gap:8px; padding:10px 12px; background:linear-gradient(120deg,#f291c3,#e879b0); color:#fff; flex-shrink:0}
 .asst-head img{width:30px; height:30px; border-radius:50%; border:2px solid #fff}
 .asst-head b{flex:1; font-size:14px}
-.asst-tts{font-size:16px; cursor:pointer; opacity:.9}
+.asst-tts{font-size:16px; cursor:pointer; opacity:.9; border:0; background:transparent; color:inherit; padding:5px; border-radius:8px}
 .asst-msgs{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px; background:var(--bg)}
 .asst-msgs .msg{max-width:85%; padding:8px 11px; border-radius:14px; font-size:13.5px; line-height:1.55; white-space:pre-wrap; word-break:break-word}
 .asst-msgs .msg-user{align-self:flex-end; background:var(--pink-deep); color:#fff; border-bottom-right-radius:4px}
 .asst-msgs .msg-bot{align-self:flex-start; background:var(--card); color:var(--text); border:1px solid var(--border); border-bottom-left-radius:4px}
 .asst-input-row{display:flex; gap:8px; padding:10px; background:var(--card); flex-shrink:0}
+body[data-active-page="chat"] #asstFloat{display:none}
 /* ============ 微信风聊天 ============ */
 #chatList{background:#f4f0f6; border-radius:14px; padding:10px 8px}
 .chat-day{text-align:center; font-size:11px; color:var(--text2); margin:6px 0; background:var(--card); padding:2px 10px; border-radius:8px; align-self:center; border:1px solid var(--border)}
@@ -326,6 +333,22 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   padding:9px 18px; border-radius:999px; z-index:200; opacity:0; transition:opacity .25s; pointer-events:none;
 }
 .toast.show{opacity:1}
+.upload-progress{
+  position:fixed; left:50%; bottom:104px; transform:translateX(-50%) translateY(8px);
+  width:min(340px,calc(100vw - 28px)); padding:10px 14px; border-radius:14px;
+  background:rgba(50,35,60,.94); color:#fff; font-size:12.5px; text-align:center;
+  z-index:210; opacity:0; pointer-events:none; transition:opacity .2s,transform .2s;
+}
+.upload-progress.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+@media (max-width:350px){
+  .page{padding-left:10px; padding-right:10px}
+  .mood{font-size:22px; padding:5px 2px}
+  .asst-panel{right:8px; width:calc(100vw - 16px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important}
+}
 
 /* ============ 小部件 ============ */
 .quick-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
@@ -361,10 +384,10 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 <body>
 
 <!-- ================= 登录门（公网未登录时显示；密码可用键盘输入） ================= -->
-<div class="gate-mask" id="gateMask">
+<div class="gate-mask" id="gateMask" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-hidden="true">
   <div class="gate-box">
     <div style="font-size:44px">🏡</div>
-    <h3>情侣小屋</h3>
+    <h3 id="gateTitle">情侣小屋</h3>
     <p style="font-size:13px; color:var(--text2); margin:4px 0 8px">两个人的私密小天地，登录后进入</p>
 
     <!-- 介绍轮播 -->
@@ -468,7 +491,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 </div>
 
 <!-- 通用确认弹窗（App 风格，替代浏览器 confirm） -->
-<div class="modal-mask" id="confirmModal">
+<div class="modal-mask" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
   <div class="modal">
     <div class="card-title" id="confirmTitle" style="margin-bottom:10px">提示</div>
     <div id="confirmMsg"></div>
@@ -476,6 +499,19 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
       <button class="btn small ghost" id="confirmNo" style="flex:1">取消</button>
       <button class="btn small" id="confirmYes" style="flex:1">确定</button>
     </div>
+  </div>
+</div>
+
+<!-- 找回密码邮件返回后，在这里设置新密码 -->
+<div class="modal-mask" id="passwordRecoveryModal" role="dialog" aria-modal="true" aria-labelledby="passwordRecoveryTitle" style="z-index:410; align-items:center">
+  <div class="modal" style="max-width:360px; border-radius:24px; margin:0 14px">
+    <div class="close-row"><button class="icon-btn" id="passwordRecoveryClose" aria-label="关闭设置新密码窗口">✕</button></div>
+    <h3 id="passwordRecoveryTitle">设置新密码</h3>
+    <div class="photo-note" style="margin:-4px 0 12px">邮件验证已经通过，请输入至少 8 位的新密码。</div>
+    <input class="input" id="passwordRecoveryPassword" type="password" autocomplete="new-password" minlength="8" placeholder="新密码（至少 8 位）" style="width:100%; margin-bottom:8px">
+    <input class="input" id="passwordRecoveryConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="再输入一次新密码" style="width:100%; margin-bottom:12px">
+    <button class="btn" id="passwordRecoverySave" style="width:100%">保存新密码</button>
+    <div class="photo-note" id="passwordRecoveryHint" aria-live="polite" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -528,13 +564,13 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 </div>
 
 <!-- 大耳狗小助手：悬浮球 + 对话面板 -->
-<div id="asstFloat" title="大耳狗小助手"><img src="assets/nav-life.png" alt=""></div>
-<div id="asstPanel" class="asst-panel" style="display:none">
+<button id="asstFloat" type="button" title="大耳狗小助手" aria-label="打开大耳狗小助手" aria-controls="asstPanel" aria-expanded="false"><img src="assets/nav-life.png" alt=""></button>
+<div id="asstPanel" class="asst-panel" role="dialog" aria-label="大耳狗小助手" aria-hidden="true" style="display:none">
   <div class="asst-head">
     <img src="assets/nav-life.png" alt="">
     <b>大耳狗小助手</b>
-    <span class="asst-tts" id="asstTtsBtn" title="语音播报开关">🔊</span>
-    <button class="icon-btn" id="asstClose">✕</button>
+    <button class="asst-tts" id="asstTtsBtn" title="语音播报开关" aria-label="开启语音播报" aria-pressed="false">🔇</button>
+    <button class="icon-btn" id="asstClose" aria-label="关闭小助手">✕</button>
   </div>
   <div id="asstMsgs" class="asst-msgs"></div>
   <div class="asst-input-row">
@@ -900,7 +936,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
   <!-- ================= 聊天 ================= -->
   <section class="page" id="page-chat">
     <div class="card" style="display:flex; flex-direction:column; height:calc(100vh - 180px); min-height:420px">
-      <div class="card-title">💬 小屋聊天 <span class="photo-note">页面开着时对方消息 1 秒内到达；锁屏/后台时收不到，打开后才看到</span></div>
+      <div class="card-title">💬 小屋聊天 <span class="photo-note">进入聊天页会加载最近消息；这里是可爱的附加功能，不替代微信</span></div>
       <div class="chat-peer-head" id="chatPeerBtn">👤 对方：…</div>
       <div id="chatList" style="flex:1; overflow-y:auto; padding:6px 2px; display:flex; flex-direction:column; gap:8px"></div>
       <div class="row" style="margin-top:8px">
@@ -1029,7 +1065,7 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 </main>
 
 <!-- ================= 底部导航 ================= -->
-<nav class="bottom-nav">
+<nav class="bottom-nav" aria-label="主导航">
   <button data-page="home" class="active"><span class="nav-ico"><img data-photo="navHome" alt="" aria-hidden="true"></span>首页</button>
   <button data-page="life"><span class="nav-ico"><img src="assets/nav-life.png" alt=""></span>生活<span class="nav-badge" id="todoBadge" style="display:none"></span></button>
   <button data-page="health"><span class="nav-ico"><img src="assets/nav-health.png" alt=""></span>健康</button>
@@ -1038,7 +1074,8 @@ body.asst-dragging #asstFloat{pointer-events:auto!important; transform:none!impo
 </nav>
 
 <!-- ================= 设置弹窗 ================= -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="upload-progress" id="photoUploadProgress" role="status" aria-live="polite"></div>
 
 <script src="supabase-config.js"></script>
 <script>
@@ -1064,9 +1101,12 @@ const PHOTOS = {
 const SUPABASE_CONFIG = window.XIAOJIA_SUPABASE_CONFIG || { url:"", anonKey:"" };
 const PHOTO_BUCKET = "xiaojia-photos";
 const PHOTO_MAX_BYTES = 20 * 1024 * 1024;
+const PHOTO_MAIN_MAX_SIDE = 2048;
+const PHOTO_THUMB_MAX_SIDE = 480;
 const LS_KEY = "xiaojia-app-data-v1";
 const CLOUD_LINK_KEY = "xiaojia-cloud-link-v1";
-const TODAY = (()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); })();
+function localToday(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+let TODAY = localToday();
 const WEEK = ["日","一","二","三","四","五","六"];
 const MEALS = { breakfast:"早餐", lunch:"午餐", dinner:"晚餐", snack:"加餐" };
 const MOODS = [
@@ -1251,7 +1291,7 @@ function updatePhotoControls(){
   });
   if($("wallPhotoNote")){
     $("wallPhotoNote").textContent = enabled
-      ? "原图不会被压缩；单张照片最大 20MB。"
+      ? "上传前会自动压缩并生成小缩略图，打开更快；小屋不作为原图备份。"
       : "连接云端并选择同步方向后，才可以上传照片。";
   }
   if($("wallPhotoHint")) $("wallPhotoHint").textContent = S.photos.length ? S.photos.length+" 张" : "还没有照片";
@@ -1295,7 +1335,7 @@ function updateCloudUI(){
     $("cloudHouseConnected").style.display = "block";
     let iconText = currentHouse.icon || "🏡";
     if(String(iconText).startsWith("photo:")) iconText = "📷";
-    $("cloudHouseText").innerHTML = iconText+" 小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
+    $("cloudHouseText").innerHTML = esc(iconText)+" 小屋：<b>"+esc(currentHouse.name)+"</b><br>邀请码：<b>"+esc(currentHouse.inviteCode)+"</b>"
       + (cloudSyncEnabled ? "<br><span style='color:var(--ok)'>已开启自动同步</span>" : "<br><span style='color:var(--warn)'>还没有选择上传或拉取</span>");
     setCloudStatus(cloudSyncEnabled ? "云端已连接" : "待选择同步","ok");
     renderHouseIconPicker();
@@ -1472,6 +1512,7 @@ async function initCloud(){
       cloudSession = session || null;
       /* 官方文档提醒不要在这个回调里直接 await 数据库请求，避免请求互相等待。 */
       setTimeout(()=>handleCloudSession(session),0);
+      if(event === "PASSWORD_RECOVERY") setTimeout(openPasswordRecovery, 0);
     });
     const result = await supabaseClient.auth.getSession();
     if(result.error) throw result.error;
@@ -1529,8 +1570,55 @@ function setGate(show){
   const m = $("gateMask");
   if(!m) return;
   const forcePreview = location.search.includes("gate=1");
-  if(show && !isPublicHost() && !forcePreview) return;
-  m.classList.toggle("show", !!show);
+  const shouldShow = !!show && (isPublicHost() || forcePreview);
+  m.classList.toggle("show", shouldShow);
+  m.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+  document.body.classList.toggle("gate-open", shouldShow);
+  document.querySelectorAll("body > :not(#gateMask):not(script)").forEach(node=>{
+    if(shouldShow){
+      node.inert = true;
+      node.setAttribute("data-gate-hidden","1");
+      node.setAttribute("aria-hidden","true");
+    }else if(node.getAttribute("data-gate-hidden") === "1"){
+      node.inert = false;
+      node.removeAttribute("data-gate-hidden");
+      node.removeAttribute("aria-hidden");
+    }
+  });
+  if(shouldShow){
+    if(typeof asstToggle === "function") asstToggle(false);
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    setTimeout(()=>{ const email=$("gateEmail"); if(email) email.focus(); }, 50);
+  }
+}
+function openPasswordRecovery(){
+  const modal = $("passwordRecoveryModal");
+  if(!modal) return;
+  setGate(false);
+  $("passwordRecoveryPassword").value = "";
+  $("passwordRecoveryConfirm").value = "";
+  $("passwordRecoveryHint").textContent = "";
+  modal.classList.add("show");
+  setTimeout(()=>$("passwordRecoveryPassword").focus(), 80);
+}
+function closePasswordRecovery(){
+  const modal = $("passwordRecoveryModal");
+  if(modal) modal.classList.remove("show");
+  if(!cloudSession) setGate(true);
+}
+async function saveRecoveredPassword(){
+  const password = $("passwordRecoveryPassword").value;
+  const confirmPassword = $("passwordRecoveryConfirm").value;
+  const hint = $("passwordRecoveryHint");
+  if(password.length < 8){ hint.textContent = "新密码至少需要 8 位。"; return; }
+  if(password !== confirmPassword){ hint.textContent = "两次输入的密码不一样，请重新确认。"; return; }
+  if(!supabaseClient){ hint.textContent = "云端还没连接好，请稍后重试。"; return; }
+  hint.textContent = "正在保存…";
+  const {error} = await supabaseClient.auth.updateUser({ password });
+  if(error){ hint.textContent = "保存失败："+cloudErrorText(error); return; }
+  hint.textContent = "密码已经更新成功。";
+  toast("新密码已保存 ✅");
+  setTimeout(closePasswordRecovery, 500);
 }
 function checkCloudPassword(password){
   const pass = (password !== undefined) ? password : ($("cloudPassword") ? $("cloudPassword").value : "");
@@ -1693,6 +1781,7 @@ function cloudStateData(){
   data.photos = (data.photos || []).map(photo=>{
     const clean = Object.assign({}, photo);
     delete clean.url;
+    delete clean.thumb_url;
     return clean;
   });
   return data;
@@ -1774,43 +1863,109 @@ function photoExtension(file){
   if(file.type === "image/gif") return "gif";
   return "jpg";
 }
-async function uploadPhotoFiles(kind, recordId, files){
-  if(!cloudReady() || !cloudSyncEnabled) throw new Error("请先连接云端并选择同步方向");
+function thumbnailPath(path){
+  const value = String(path || "");
+  return /-main\.jpg$/i.test(value) ? value.replace(/-main\.jpg$/i, "-thumb.jpg") : "";
+}
+function photoPreviewPath(photo){ return photo?.thumb_path || thumbnailPath(photo?.storage_path) || photo?.storage_path || ""; }
+function photoPreviewUrl(photo){ return photo?.thumb_url || photo?.url || ""; }
+let photoUploadBusy = false, photoProgressTimer = null;
+function setPhotoUploadProgress(message, hideAfter=0){
+  const el = $("photoUploadProgress");
+  if(!el) return;
+  clearTimeout(photoProgressTimer);
+  el.textContent = message || "";
+  el.classList.toggle("show", !!message);
+  if(message && hideAfter > 0){
+    photoProgressTimer = setTimeout(()=>{ el.classList.remove("show"); el.textContent = ""; }, hideAfter);
+  }
+}
+function supportedPhotoFile(file){
+  const ext = String(file.name || "").split(".").pop().toLowerCase();
+  return ["jpg","jpeg","png","webp","gif","heic","heif"].includes(ext)
+    || ["image/jpeg","image/png","image/webp","image/gif","image/heic","image/heif"].includes(file.type);
+}
+async function preparePhotoVariants(file, options={}){
+  if(file.type === "image/gif" || /\.gif$/i.test(file.name || "")){
+    return { main:file, thumb:null, extension:"gif", mimeType:"image/gif" };
+  }
+  try{
+    const main = await resizeImageFile(file, options.mainMaxSide || PHOTO_MAIN_MAX_SIDE, options.mainQuality || 0.82);
+    const thumb = await resizeImageFile(file, options.thumbMaxSide || PHOTO_THUMB_MAX_SIDE, options.thumbQuality || 0.74);
+    return { main, thumb, extension:"jpg", mimeType:"image/jpeg" };
+  }catch(error){
+    if(/\.(heic|heif)$/i.test(file.name || "") || /image\/hei[cf]/i.test(file.type || "")){
+      throw new Error("这张 HEIC/HEIF 照片当前浏览器无法读取，请在相册里转成兼容格式后再试");
+    }
+    throw error;
+  }
+}
+async function uploadPhotoFiles(kind, recordId, files, options={}){
+  if(!cloudReady() || (options.requireSync !== false && !cloudSyncEnabled)) throw new Error("请先连接云端并选择同步方向");
+  if(photoUploadBusy) throw new Error("上一批照片还在上传，请稍等");
   const valid = [];
   for(const file of files){
-    if(!file.type || !file.type.startsWith("image/")) throw new Error("只能上传图片文件");
+    if(!supportedPhotoFile(file)) throw new Error("暂时支持 JPG、PNG、WEBP、GIF、HEIC/HEIF 图片："+file.name);
     if(file.size > PHOTO_MAX_BYTES) throw new Error("单张图片不能超过 20MB："+file.name);
-    if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){
-      throw new Error("暂时支持 JPG、PNG、WEBP、GIF 图片："+file.name);
-    }
     valid.push(file);
   }
   const refs = [];
-  for(const file of valid){
-    const id = uid();
-    const path = currentHouse.id + "/" + id + "." + photoExtension(file);
-    const uploadResult = await supabaseClient.storage.from(PHOTO_BUCKET).upload(path, file, {
-      cacheControl:"3600", upsert:false, contentType:file.type
-    });
-    if(uploadResult.error) throw uploadResult.error;
-    const insertResult = await supabaseClient.from("xj_photos").insert({
-      house_id:currentHouse.id,
-      owner_id:cloudSession.user.id,
-      record_kind:kind,
-      record_id:String(recordId),
-      storage_path:path,
-      original_name:file.name,
-      mime_type:file.type,
-      byte_size:file.size
-    }).select("id,house_id,owner_id,record_kind,record_id,storage_path,original_name,mime_type,byte_size,created_at").single();
-    if(insertResult.error){
-      await supabaseClient.storage.from(PHOTO_BUCKET).remove([path]);
-      throw insertResult.error;
+  photoUploadBusy = true;
+  try{
+    for(let index=0; index<valid.length; index++){
+      const file = valid[index];
+      setPhotoUploadProgress("正在优化第 "+(index+1)+" / "+valid.length+" 张照片…");
+      const variants = await preparePhotoVariants(file, options);
+      const id = uid();
+      const mainPath = currentHouse.id + "/" + id + (variants.thumb ? "-main.jpg" : "."+variants.extension);
+      const thumbPath = variants.thumb ? currentHouse.id + "/" + id + "-thumb.jpg" : "";
+      const uploadedPaths = [];
+      try{
+        setPhotoUploadProgress("正在上传第 "+(index+1)+" / "+valid.length+" 张照片…");
+        const uploadMain = await supabaseClient.storage.from(PHOTO_BUCKET).upload(mainPath, variants.main, {
+          cacheControl:"31536000", upsert:false, contentType:variants.mimeType
+        });
+        if(uploadMain.error) throw uploadMain.error;
+        uploadedPaths.push(mainPath);
+        if(variants.thumb){
+          const uploadThumb = await supabaseClient.storage.from(PHOTO_BUCKET).upload(thumbPath, variants.thumb, {
+            cacheControl:"31536000", upsert:false, contentType:"image/jpeg"
+          });
+          if(uploadThumb.error) throw uploadThumb.error;
+          uploadedPaths.push(thumbPath);
+        }
+        const insertResult = await supabaseClient.from("xj_photos").insert({
+          house_id:currentHouse.id,
+          owner_id:cloudSession.user.id,
+          record_kind:kind,
+          record_id:String(recordId),
+          storage_path:mainPath,
+          original_name:file.name,
+          mime_type:variants.mimeType,
+          byte_size:variants.main.size
+        }).select("id,house_id,owner_id,record_kind,record_id,storage_path,original_name,mime_type,byte_size,created_at").single();
+        if(insertResult.error) throw insertResult.error;
+        const previewPath = thumbPath || mainPath;
+        const signedResult = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(previewPath, 86400);
+        const signedUrl = signedResult.data?.signedUrl || "";
+        refs.push(Object.assign({}, insertResult.data, {
+          url:thumbPath ? "" : signedUrl,
+          thumb_path:thumbPath,
+          thumb_url:thumbPath ? signedUrl : ""
+        }));
+      }catch(error){
+        if(uploadedPaths.length) await supabaseClient.storage.from(PHOTO_BUCKET).remove(uploadedPaths).catch(()=>{});
+        throw error;
+      }
     }
-    const signedResult = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400);
-    refs.push(Object.assign({}, insertResult.data, { url:signedResult.data?.signedUrl || "" }));
+    setPhotoUploadProgress("照片上传完成 ✓", 1000);
+    return refs;
+  }catch(error){
+    setPhotoUploadProgress("照片处理失败，请查看提示", 1800);
+    throw error;
+  }finally{
+    photoUploadBusy = false;
   }
-  return refs;
 }
 async function uploadPhotosForRecord(kind, record, inputId){
   const files = selectedFiles(inputId);
@@ -1843,8 +1998,15 @@ async function hydratePhotoUrls(shouldRender=true){
     .eq("house_id",currentHouse.id).order("created_at",{ascending:false});
   if(result.error) throw result.error;
   const refs = await Promise.all((result.data || []).map(async photo=>{
-    const signed = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(photo.storage_path, 86400);
-    return Object.assign({}, photo, { url:signed.data?.signedUrl || "" });
+    const thumbPath = thumbnailPath(photo.storage_path);
+    const previewPath = thumbPath || photo.storage_path;
+    const signed = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(previewPath, 86400);
+    const signedUrl = signed.data?.signedUrl || "";
+    return Object.assign({}, photo, {
+      url:thumbPath ? "" : signedUrl,
+      thumb_path:thumbPath,
+      thumb_url:thumbPath ? signedUrl : ""
+    });
   }));
   S.photos = refs;
   localSaveOnly();
@@ -1852,15 +2014,15 @@ async function hydratePhotoUrls(shouldRender=true){
 }
 function photosForRecord(record){
   const ids = Array.isArray(record?.photoIds) ? record.photoIds : [];
-  return ids.map(id=>S.photos.find(photo=>photo.id===id)).filter(photo=>photo && photo.url);
+  return ids.map(id=>S.photos.find(photo=>photo.id===id)).filter(photo=>photo && photoPreviewUrl(photo));
 }
 function photoStrip(record){
   const refs = photosForRecord(record);
   if(!refs.length) return "";
-  return '<div class="photo-strip">'+refs.map(photo=>'<img loading="lazy" src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "记录照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'">').join("")+'</div>';
+  return '<div class="photo-strip">'+refs.map(photo=>'<img loading="lazy" src="'+esc(photoPreviewUrl(photo))+'" alt="'+esc(photo.original_name || "记录照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'" data-photo-preview-path="'+esc(photoPreviewPath(photo))+'">').join("")+'</div>';
 }
-/* 前端压缩图片（图标等小图用途）：最长边 maxSide，JPEG 0.85 */
-function resizeImageFile(file, maxSide){
+/* 前端压缩图片：移除大体积相机元数据，并按用途限制最长边。 */
+function resizeImageFile(file, maxSide, quality=0.82){
   return new Promise((resolve,reject)=>{
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -1871,11 +2033,14 @@ function resizeImageFile(file, maxSide){
         const h = Math.max(1, Math.round(img.height * scale));
         const c = document.createElement("canvas");
         c.width = w; c.height = h;
-        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
         c.toBlob(b=>{
           URL.revokeObjectURL(url);
           b ? resolve(b) : reject(new Error("图片压缩失败"));
-        }, "image/jpeg", 0.85);
+        }, "image/jpeg", quality);
       }catch(e){ URL.revokeObjectURL(url); reject(e); }
     };
     img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error("图片读取失败")); };
@@ -1888,17 +2053,16 @@ async function refreshVisiblePhotos(){
   clearTimeout(__refreshTimer);
   __refreshTimer = setTimeout(async ()=>{
     const imgs = Array.from(document.querySelectorAll("img[data-photo-path]"));
-    const paths = [...new Set(imgs.map(im=>im.dataset.photoPath).filter(Boolean))];
+    const paths = [...new Set(imgs.map(im=>im.dataset.photoPreviewPath || im.dataset.photoPath).filter(Boolean))];
     if(!paths.length || !supabaseClient) return;
     const results = await Promise.all(paths.map(async path=>{
       try{
-        /* 缩略图：自动压缩到 500px 宽，加载快 */
-        const r = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 500 } });
+        const r = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400);
         return [path, (r.data && r.data.signedUrl) || ""];
       }catch(e){ return [path, ""]; }
     }));
     const map = Object.fromEntries(results);
-    imgs.forEach(im=>{ const u = map[im.dataset.photoPath]; if(u) im.src = u; });
+    imgs.forEach(im=>{ const key = im.dataset.photoPreviewPath || im.dataset.photoPath; const u = map[key]; if(u) im.src = u; });
   }, 120);
 }
 let wallMonth = "all";
@@ -1920,7 +2084,7 @@ function renderWallMonthChips(){
 function renderPhotoWall(){
   const wall = $("homePhotoWall");
   if(!wall) return;
-  let refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photo.url);
+  let refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photoPreviewUrl(photo));
   if(wallMonth !== "all") refs = refs.filter(p=>String(p.created_at || "").slice(0,7) === wallMonth);
   refs = refs.slice(0,12);
   if(!refs.length){
@@ -1928,7 +2092,7 @@ function renderPhotoWall(){
     updatePhotoControls();
     return;
   }
-  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img loading="lazy" src="'+esc(photo.url)+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'">'
+  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img loading="lazy" src="'+esc(photoPreviewUrl(photo))+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'" data-photo-preview-path="'+esc(photoPreviewPath(photo))+'">'
     + delBtn(photo.id,"photo") + '</div>').join("");
   updatePhotoControls();
 }
@@ -1937,7 +2101,7 @@ async function deletePhotoRefs(ids){
   S.photos = (S.photos || []).filter(photo=>!ids.includes(photo.id));
   localSaveOnly();
   if(!refs.length || !cloudReady() || !cloudSyncEnabled) return;
-  const paths = refs.map(photo=>photo.storage_path).filter(Boolean);
+  const paths = [...new Set(refs.flatMap(photo=>[photo.storage_path, thumbnailPath(photo.storage_path)]).filter(Boolean))];
   if(paths.length){
     const removed = await supabaseClient.storage.from(PHOTO_BUCKET).remove(paths);
     if(removed.error) throw removed.error;
@@ -1949,7 +2113,8 @@ async function deletePhotoRefs(ids){
 /* ---------- 工具 ---------- */
 function $(id){ return document.getElementById(id); }
 function esc(s){
-  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
 }
 function toast(msg){
   const t = $("toast"); t.textContent = msg; t.classList.add("show");
@@ -2025,10 +2190,14 @@ let pageIndex = 0;
 function goPage(name){
   const idx = PAGES.indexOf(name);
   if(idx >= 0) pageIndex = idx;
+  if(name === "chat" && typeof asstToggle === "function") asstToggle(false);
+  document.body.dataset.activePage = name;
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   $("page-"+name).classList.add("active");
   document.querySelectorAll(".bottom-nav button").forEach(b=>{
-    b.classList.toggle("active", b.dataset.page === name);
+    const active = b.dataset.page === name;
+    b.classList.toggle("active", active);
+    if(active) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
   });
   renderAll();
   if(name === "chat"){ loadChatHistory(); subscribeChat(); markChatRead(); }
@@ -2095,7 +2264,21 @@ function renderTodo(){
   $("todoStatText").textContent = "";
 }
 let __lastGreetHour = -1;
+function refreshTodayIfNeeded(){
+  const next = localToday();
+  if(next === TODAY) return false;
+  const previous = TODAY;
+  TODAY = next;
+  if(histDate === previous) histDate = TODAY;
+  ["mealDate","mealModalDate","diaryDate","moneyDate","periodDate"].forEach(id=>{
+    const input = $(id);
+    if(input && input.value === previous) input.value = TODAY;
+  });
+  renderAll();
+  return true;
+}
 function tickHomeClock(){
+  if(refreshTodayIfNeeded()) return;
   const el = $("homeClock");
   if(!el) return;
   const d = new Date(), p = n => String(n).padStart(2,"0");
@@ -2450,7 +2633,7 @@ function openPhotoViewer(path){
   img.src = "";
   v.classList.add("show");
   if(supabaseClient){
-    supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400, { transform:{ width: 1600 } })
+    supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 86400)
       .then(r=>{ if(r.data && r.data.signedUrl && pvPath === path) img.src = r.data.signedUrl; })
       .catch(()=>{});
   }
@@ -2647,14 +2830,14 @@ function renderTimeline(){
   b += sec("📷 照片", "");
   const dayPhotos = (S.photos||[]).filter(p=>String(p.created_at).slice(0,10)===histDate);
   if(dayPhotos.length){
-    b += '<div class="photo-strip">'+dayPhotos.map(p=>'<img loading="lazy" src="'+esc(p.url)+'" alt="" data-photo-path="'+esc(p.storage_path||"")+'">').join("")+'</div>';
+    b += '<div class="photo-strip">'+dayPhotos.filter(photoPreviewUrl).map(p=>'<img loading="lazy" src="'+esc(photoPreviewUrl(p))+'" alt="" data-photo-path="'+esc(p.storage_path||"")+'" data-photo-preview-path="'+esc(photoPreviewPath(p))+'">').join("")+'</div>';
   }
   if(!total) b += '<div class="empty">'+emptyArt()+'这一天还没有记录</div>';
   body.innerHTML = b;
   refreshVisiblePhotos();
 }
 /* ---------- 生活页 ---------- */
-let lifeSub = "todo", diarySub = "diary", diaryWho = "mine";
+let lifeSub = "todo", diarySub = "diary", diaryWho = "mine", annivWho = "mine";
 /* ---------- 记账 ---------- */
 const MONEY_CATS = {
   out: [["餐饮","🍜"],["购物","🛍️"],["交通","🚌"],["娱乐","🎬"],["房租水电","🏠"],["日用","🧻"],["医疗","💊"],["其他","📦"]],
@@ -2691,6 +2874,7 @@ function openMoneyModal(){
   $("moneyAmount").value = ""; $("moneyNote").value = "";
   $("moneyDate").value = TODAY;
   $("moneyTypeOut").classList.add("on"); $("moneyTypeIn").classList.remove("on");
+  document.querySelectorAll("#moneyModal .chip[data-mwho]").forEach(c=>c.classList.toggle("on", c.dataset.mwho===moneyWho));
   renderMoneyCats();
   $("moneyModal").classList.add("show");
 }
@@ -2713,6 +2897,7 @@ function openMealModal(meal){
   if(pi) pi.value = "";
   const hint = $("mealPhotoHint");
   if(hint) hint.textContent = "";
+  document.querySelectorAll("#mealModal .who[data-who]").forEach(c=>c.classList.toggle("on", c.dataset.who===dietWho));
   $("mealModal").classList.add("show");
 }
 function bindMealModal(){
@@ -2741,7 +2926,12 @@ function renderUsage(){
   const records = (S.todos||[]).length + (S.meals||[]).length + (S.weights||[]).length
     + (S.sports||[]).length + (S.diaries||[]).length + (S.moods||[]).length
     + (S.anniversaries||[]).length + (S.expenses||[]).length + (S.sleeps||[]).length + (S.periods||[]).length;
-  el.textContent = "📦 云端已存：照片 "+photos+" 张 · 记录 "+records+" 条（免费额度：存储 1GB / 每月 5 万次请求）";
+  const bytes = (S.photos||[]).reduce((sum,p)=>sum+Number(p.byte_size||0),0);
+  const sizeText = bytes >= 1048576 ? " · 约 "+(bytes/1048576).toFixed(1)+" MB" : "";
+  const mode = cloudReady()
+    ? (cloudSyncEnabled ? "已连接云端" : "已登录，自动同步尚未开启")
+    : "当前保存在本机";
+  el.textContent = "📦 "+mode+"：照片 "+photos+" 张"+sizeText+" · 记录 "+records+" 条";
 }
 /* 备份提醒：每 14 天提醒一次 */
 function maybeRemindBackup(){
@@ -2761,7 +2951,6 @@ function renderLife(){
   });
   const map = { todo:$("sub-life-todo"), diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv"), money:$("sub-life-money"), timeline:$("sub-life-timeline") };
   Object.keys(map).forEach(k=>{ if(map[k]) map[k].style.display = k===lifeSub ? "block" : "none"; });
-  if(lifeSub !== "todo") diarySub = lifeSub;
   renderTodo();
   renderDiary();
   renderMoney();
@@ -2773,12 +2962,6 @@ function renderLife(){
   maybeRemindBackup();
 }
 function renderDiary(){
-  const subs = { diary:$("sub-diary"), mood:$("sub-mood"), anniv:$("sub-anniv") };
-  Object.keys(subs).forEach(k=>{ if(subs[k]) subs[k].style.display = k===diarySub ? "block" : "none"; });
-  document.querySelectorAll("#page-life .sub-tabs .chip").forEach(c=>{
-    if(["diary","mood","anniv"].includes(c.dataset.sub)) c.classList.toggle("on", c.dataset.sub===diarySub);
-  });
-
   /* 日记 */
   let h = "";
   S.diaries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30).forEach(d=>{
@@ -2815,6 +2998,7 @@ function renderAll(){
   /* 只渲染当前页面（首屏快；切页时 goPage → renderAll 会渲染对应页） */
   const activePage = document.querySelector(".page.active");
   const pid = activePage ? activePage.id : "page-home";
+  document.body.dataset.activePage = pid.replace("page-","");
   if(pid === "page-home") renderHome();
   else if(pid === "page-life") renderLife();
   else if(pid === "page-health") renderRecord();
@@ -2906,8 +3090,7 @@ function updateTodoBadge(){
   if(!b) return;
   const done = S.doneMap[TODAY] || {};
   const items = todayTodoList();
-  const openCount = items.filter(t=>!done[t.id]).length;
-  const openToday = S.todos.filter(t=>t.bucket==="today" && !t.repeat && !t.done).length + openCount;
+  const openToday = items.filter(t=>!done[t.id]).length;
   b.style.display = (openToday > 0 && !document.querySelector("#page-life.active")) ? "block" : "none";
   b.textContent = openToday > 99 ? "99+" : openToday;
 }
@@ -2926,7 +3109,7 @@ function renderChat(){
     const mine = m.sender_id === me;
     const showName = mine ? "" : (chatNickGet(m.sender_id) || m.sender_name || "对方");
     const body = (m.photo_path
-        ? '<img class="chat-photo" src="assets/nav-life.png" data-photo-path="'+esc(m.photo_path)+'" alt="图片">'
+        ? '<img class="chat-photo" src="assets/nav-life.png" data-photo-path="'+esc(m.photo_path)+'" data-photo-preview-path="'+esc(thumbnailPath(m.photo_path) || m.photo_path)+'" alt="图片">'
         : "")
       + (m.content ? esc(m.content) : "");
     if(mine){
@@ -2990,9 +3173,9 @@ function subscribeChat(){
 async function sendChatPhoto(file){
   if(!cloudReady() || !currentHouse){ toast("登录并加入小屋后才能发图"); return; }
   try{
-    /* 压缩到 1200px 宽，聊天图够清晰又不占空间 */
-    const blob = await resizeImageFile(file, 1200);
-    const refs = await uploadPhotoFiles("chat", "chat_"+uid(), [new File([blob], "chat.jpg", {type:"image/jpeg"})]);
+    const refs = await uploadPhotoFiles("chat", "chat_"+uid(), [file], {
+      requireSync:false, mainMaxSide:1400, thumbMaxSide:480
+    });
     if(!refs.length) throw new Error("上传失败");
     const {error} = await supabaseClient.from("xj_messages").insert({
       house_id: currentHouse.id,
@@ -3036,9 +3219,9 @@ const ASST_KB = {
   jokes: ["为什么大耳狗不喜欢打伞？因为它的耳朵就是天然雨伞！", "大耳狗去餐厅点餐，老板问要什么，它说：要耳朵……哦不，要点耳（耳）朵（朵）！", "大耳狗秤体重，秤说：你太重啦！大耳狗：不可能，我明明很轻！秤：我说的是耳朵！"],
   thanks: ["不客气～能帮到你我很开心 💕", "嘿嘿，小事一桩！", "随时找我玩哦～"],
   bye: ["拜拜～早点休息哦 🌙", "下次见！我会想你的～", "晚安，做个好梦～"],
-  default: ["嗯嗯，我在听～（可以试试问我：今天吃了什么 / 加待办 / 讲故事）", "这个话题我不太懂，但我会努力学习的！", "嘻嘻，要不要让我给你讲个笑话？"]
+  default: ["嗯嗯，我在听～（可以试试问我：今天吃了什么 / 加待办 / 讲故事）", "这句话我还听不懂，我只是按固定规则帮你查记录和记待办～", "嘻嘻，要不要让我给你讲个笑话？"]
 };
-let asstTtsOn = true, asstOpen = false;
+let asstTtsOn = (()=>{ try{ return localStorage.getItem("xiaojia-asst-tts-v1") === "1"; }catch(e){ return false; } })(), asstOpen = false;
 function asstPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function asstIntent(text){
   if(/你好|嗨|哈喽|hello|hi|早上好|晚上好/.test(text)) return "greeting";
@@ -3062,7 +3245,7 @@ function asstReply(text){
   const intent = asstIntent(text);
   switch(intent){
     case "greeting": return asstPick(ASST_KB.greetings);
-    case "whoami": return "我是大耳狗，你们小屋的贴心小管家 ☁️ 我能帮你们记待办、查记录、讲故事，随时找我玩～";
+    case "whoami": return "我是大耳狗，你们小屋里按固定规则工作的可爱小助手 ☁️ 我能帮你们记待办、查记录、讲故事，但还不是真正的 AI～";
     case "help": return "我能做这些：① 说「加待办：明早跑步」直接记待办 ② 问「今天吃了什么」查饮食 ③ 问「体重/睡眠/生理期/纪念日」查记录 ④ 说「讲故事/讲笑话」逗你开心～";
     case "addTodo": {
       const todo = text.replace(/^(加|添加|记|帮我)?(个|一条|一个)?(待办|提醒|记事)?[:：]?/,"").replace(/提醒我/,"").trim();
@@ -3101,7 +3284,7 @@ function asstReply(text){
     case "story": return "✨ "+asstPick(ASST_KB.stories);
     case "joke": return "😆 "+asstPick(ASST_KB.jokes);
     case "cheer": return asstPick(ASST_KB.cheer);
-    case "weather": return "今天"+(Math.random()<0.5?"晴☀️":"多云⛅")+"，适合出去走走，也适合在家窝着～";
+    case "weather": return "我现在还没有联网天气功能，不能乱猜你那边的天气～看看手机天气后，再决定要不要一起出去走走吧 ☁️";
     case "thanks": return asstPick(ASST_KB.thanks);
     case "bye": return asstPick(ASST_KB.bye);
     default: return asstPick(ASST_KB.default);
@@ -3139,8 +3322,11 @@ function asstSend(){
   }, 350);
 }
 function asstToggle(open){
+  if(open !== false && document.body.classList.contains("gate-open")) return;
   asstOpen = open !== undefined ? open : !asstOpen;
   $("asstPanel").style.display = asstOpen ? "flex" : "none";
+  $("asstPanel").setAttribute("aria-hidden", asstOpen ? "false" : "true");
+  $("asstFloat").setAttribute("aria-expanded", asstOpen ? "true" : "false");
   if(asstOpen && !$("asstMsgs").children.length){
     asstAddMsg("你好呀～我是大耳狗 ☁️ 欢迎回到小屋！可以问我「今天吃了什么」「加待办：明早跑步」或者「讲个故事」～", "bot");
   }
@@ -3236,11 +3422,20 @@ function asstUnhide(){
   const input = $("asstInput");
   if(input) input.addEventListener("keydown", e=>{ if(e.key==="Enter") asstSend(); });
   const tts = $("asstTtsBtn");
-  if(tts) tts.addEventListener("click", ()=>{
-    asstTtsOn = !asstTtsOn;
-    tts.textContent = asstTtsOn ? "🔊" : "🔇";
-    if(!asstTtsOn && window.speechSynthesis) window.speechSynthesis.cancel();
-  });
+  if(tts){
+    const syncTtsButton = ()=>{
+      tts.textContent = asstTtsOn ? "🔊" : "🔇";
+      tts.setAttribute("aria-pressed", asstTtsOn ? "true" : "false");
+      tts.setAttribute("aria-label", asstTtsOn ? "关闭语音播报" : "开启语音播报");
+    };
+    syncTtsButton();
+    tts.addEventListener("click", ()=>{
+      asstTtsOn = !asstTtsOn;
+      try{ localStorage.setItem("xiaojia-asst-tts-v1", asstTtsOn ? "1" : "0"); }catch(e){}
+      syncTtsButton();
+      if(!asstTtsOn && window.speechSynthesis) window.speechSynthesis.cancel();
+    });
+  }
 })();
 
 /* ---------- 主题 ---------- */
@@ -3315,7 +3510,7 @@ function bindEvents(){
     if(!email){ $("gateHint").textContent = "先在邮箱框里填你的邮箱，再点忘记密码。"; return; }
     if(!supabaseClient){ $("gateHint").textContent = "云端还没连上，稍后再试。"; return; }
     const r = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-    $("gateHint").textContent = r.error ? "发送失败："+cloudErrorText(r.error) : "重置链接已发到 "+email+"，按邮件提示重设密码（用新密码登录即可）。";
+    $("gateHint").textContent = r.error ? "发送失败："+cloudErrorText(r.error) : "重置链接已发到 "+email+"。打开邮件里的链接，回到小屋后会出现“设置新密码”窗口。";
   });
  $("gatePassword").addEventListener("keydown", e=>{ if(e.key === "Enter") gateSignIn(); });
 
@@ -3331,6 +3526,9 @@ function bindEvents(){
   }
   bindPwToggle("gatePassword","gatePwToggle");
   bindPwToggle("cloudPassword","cloudPwToggle");
+  $("passwordRecoveryClose").addEventListener("click", closePasswordRecovery);
+  $("passwordRecoverySave").addEventListener("click", saveRecoveredPassword);
+  $("passwordRecoveryConfirm").addEventListener("keydown", e=>{ if(e.key === "Enter") saveRecoveredPassword(); });
 
   /* 云端账号 / 小屋 */
   $("cloudLoginBtn").addEventListener("click", cloudSignIn);
@@ -3417,7 +3615,7 @@ function bindEvents(){
     /* 删除（都带确认） */
     if(t.classList && t.classList.contains("del-btn")){
       const id = t.dataset.id, kind = t.dataset.del;
-      if(!confirmDel(kind === "photo" ? "确定删除这张照片吗？" : "确定删除这条记录吗？")) return;
+      if(!await confirmDel(kind === "photo" ? "确定删除这张照片吗？" : "确定删除这条记录吗？")) return;
       let photoIds = [];
       if(kind === "photo"){
         deletePhotoRefs([id]).then(()=>{ save(); renderAll(); toast("照片已删除"); })
@@ -3442,6 +3640,7 @@ function bindEvents(){
       else if(kind === "anniv") S.anniversaries = S.anniversaries.filter(x=>x.id!==id);
       else if(kind === "sleep") S.sleeps = S.sleeps.filter(x=>x.id!==id);
       else if(kind === "period") S.periods = S.periods.filter(x=>x.id!==id);
+      else if(kind === "expense") S.expenses = S.expenses.filter(x=>x.id!==id);
       const finishDelete = ()=>{ save(); renderAll(); toast("已删除"); };
       if(photoIds.length){
         deletePhotoRefs(photoIds).then(finishDelete).catch(error=>{
@@ -3486,26 +3685,21 @@ function bindEvents(){
       return;
     }
 
-    /* 谁记的（通用） */
-    if(t.classList && t.classList.contains("who")){
-      const who = t.dataset.who;
-      document.querySelectorAll(".who").forEach(w=>w.classList.remove("on"));
-      t.classList.add("on");
-      /* 根据所在页面设置当前 who */
-      if(document.querySelector("#page-home.active")) weightWho = who;
-      if(document.querySelector("#page-life.active")){
-        if(lifeSub === "todo") todoWho = who;
-        else if(lifeSub === "diary") diaryWho = who;
-        else if(lifeSub === "anniv") annivWho = who;
-        else moodWho = who;
-      }
-      if(document.querySelector("#page-health.active")){
-        if(recordSub === "diet") dietWho = who;
-        else if(recordSub === "weight") weightWho = who;
-        else if(recordSub === "sleep"){ sleepWho = who; renderRecord(); }
-        else if(recordSub === "period"){ periodWho = who; renderPeriod(); }
-        else sportWho = who;
-      }
+    /* 谁记的：按当前表单分组处理，避免一个页面的选择误改另一个功能。 */
+    const whoChip = t.closest ? t.closest(".who[data-who]") : null;
+    if(whoChip){
+      const who = whoChip.dataset.who;
+      const row = whoChip.closest(".row") || whoChip.parentElement;
+      if(row) row.querySelectorAll(".who[data-who]").forEach(w=>w.classList.toggle("on", w===whoChip));
+      if(whoChip.closest("#mealModal") || whoChip.closest("#sub-diet")) dietWho = who;
+      else if(whoChip.closest("#sub-life-todo")) todoWho = who;
+      else if(whoChip.closest("#sub-diary")) diaryWho = who;
+      else if(whoChip.closest("#sub-mood")) moodWho = who;
+      else if(whoChip.closest("#sub-anniv")) annivWho = who;
+      else if(whoChip.closest("#sub-weight") || whoChip.closest("#page-home")) weightWho = who;
+      else if(whoChip.closest("#sub-sport")) sportWho = who;
+      else if(whoChip.closest("#sub-sleep")){ sleepWho = who; renderRecord(); }
+      else if(whoChip.closest("#sub-period")){ periodWho = who; renderPeriod(); }
       return;
     }
 
@@ -3592,21 +3786,24 @@ function bindAddButtons(){
   const md = $("mealDate");
   if(md) md.addEventListener("change", ()=>renderRecord());
 
-  $("weightAddBtn").addEventListener("click", ()=>addWeight($("weightInput").value));
-  $("homeWeightBtn").addEventListener("click", ()=>{
-    addWeight($("homeWeightInput").value); $("homeWeightInput").value = "";
+  $("weightAddBtn").addEventListener("click", async ()=>{
+    if(await addWeight($("weightInput").value)) $("weightInput").value = "";
   });
-  function addWeight(v){
+  $("homeWeightBtn").addEventListener("click", async ()=>{
+    if(await addWeight($("homeWeightInput").value)) $("homeWeightInput").value = "";
+  });
+  async function addWeight(v){
     const kg = parseFloat(v);
-    if(!kg || kg < 20 || kg > 200){ toast("填一个合理的体重数字（公斤）"); return; }
+    if(!kg || kg < 20 || kg > 200){ toast("填一个合理的体重数字（公斤）"); return false; }
     const idx = S.weights.findIndex(w=>w.date===TODAY && w.who===weightWho);
     if(idx >= 0){
-      if(!confirmDel("今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return;
+      if(!await confirmDel("今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return false;
       S.weights[idx].kg = kg;
     }else{
       S.weights.push({ date:TODAY, kg, who:weightWho, recorder:MY_UID() });
     }
     markDemoGone(); save(); renderAll(); toast("体重已记录 ⚖️");
+    return true;
   }
 
   $("sportAddBtn").addEventListener("click", async ()=>{
@@ -3644,7 +3841,7 @@ function bindAddButtons(){
     const date = $("annivDate").value;
     if(!name){ toast("写一下纪念日的名称"); return; }
     if(!date){ toast("选一下日期"); return; }
-    S.anniversaries.push({ id:uid(), name, date, remindDays:annivRemind, who:diaryWho, recorder:MY_UID() });
+    S.anniversaries.push({ id:uid(), name, date, remindDays:annivRemind, who:annivWho, recorder:MY_UID() });
     $("annivName").value = ""; $("annivDate").value = "";
     markDemoGone(); save(); renderAll(); toast("纪念日已添加 ❤️");
   });
@@ -3709,9 +3906,10 @@ function bindAddButtons(){
         if(!currentHouse || !cloudReady() || !cloudSyncEnabled){ hint.textContent = "先连接云端再传。"; return; }
         hint.textContent = "处理中…";
         try{
-          /* 自动压缩成图标尺寸（最长边 800px，存小图，上传快） */
-          const blob = await resizeImageFile(f, 800);
-          const refs = await uploadPhotoFiles("house_icon", "hicon_"+uid(), [new File([blob], "house-icon.jpg", {type:"image/jpeg"})]);
+          /* 自动压缩成图标尺寸，保留大耳狗页面的加载速度。 */
+          const refs = await uploadPhotoFiles("house_icon", "hicon_"+uid(), [f], {
+            mainMaxSide:800, thumbMaxSide:240
+          });
           if(!refs.length) throw new Error("上传失败");
           const path = refs[0].storage_path;
           const r = await supabaseClient.from("xj_houses").update({icon:"photo:"+path}).eq("id", currentHouse.id);
@@ -3790,7 +3988,7 @@ initCloud();
 /* PWA：注册离线缓存（仅 https 生效） */
 if("serviceWorker" in navigator && location.protocol === "https:"){
   window.addEventListener("load", ()=>{
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    navigator.serviceWorker.register("./sw.js").then(reg=>reg.update()).catch(()=>{});
   });
 }
 </script>
