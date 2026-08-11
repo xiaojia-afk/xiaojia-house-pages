@@ -149,6 +149,16 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .cloud-box b{color:var(--text)}
 .cloud-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
 .cloud-actions .btn{flex:1; min-width:118px}
+.todo-schedule-label{width:100%; font-size:11.5px; color:var(--text2)}
+.todo-schedule-input{min-width:135px; flex:1}
+.push-state{font-size:12px; color:var(--text2); line-height:1.7}
+.push-state.ok{color:var(--ok)}
+.push-state.warn{color:var(--warn)}
+.todo-schedule-label{width:100%; font-size:11.5px; color:var(--text2)}
+.todo-schedule-input{min-width:135px; flex:1}
+.push-state{font-size:12px; color:var(--text2); line-height:1.7}
+.push-state.ok{color:var(--ok)}
+.push-state.warn{color:var(--warn)}
 
 /* ============ 列表 ============ */
 .list-item{
@@ -723,6 +733,30 @@ body[data-active-page="chat"] #asstFloat{display:none}
         <label class="small"><input type="checkbox" id="todoRepeat"> 每天重复</label>
       </div>
       <div class="row">
+        <span class="todo-schedule-label">预约/工作时间（可选；填好才能按时提醒）</span>
+        <input class="input todo-schedule-input" id="todoDueDate" type="date" aria-label="待办日期">
+        <input class="input todo-schedule-input" id="todoDueTime" type="time" aria-label="待办时间">
+      </div>
+      <div class="row">
+        <span style="font-size:12px; color:var(--text2)">提醒小佳：</span>
+        <button class="chip" data-todo-remind="0">不提醒</button>
+        <button class="chip" data-todo-remind="30">提前 30 小时</button>
+        <button class="chip on" data-todo-remind="48">提前 48 小时</button>
+      </div>
+      <div class="push-state" id="todoReminderNote">填日期和时间后，默认提前 48 小时提醒小佳。</div>
+      <div class="row">
+        <span class="todo-schedule-label">预约/工作时间（可选；填好才能按时提醒）</span>
+        <input class="input todo-schedule-input" id="todoDueDate" type="date" aria-label="待办日期">
+        <input class="input todo-schedule-input" id="todoDueTime" type="time" aria-label="待办时间">
+      </div>
+      <div class="row">
+        <span style="font-size:12px; color:var(--text2)">提醒小佳：</span>
+        <button class="chip" data-todo-remind="0">不提醒</button>
+        <button class="chip" data-todo-remind="30">提前 30 小时</button>
+        <button class="chip on" data-todo-remind="48">提前 48 小时</button>
+      </div>
+      <div class="push-state" id="todoReminderNote">填日期和时间后，默认提前 48 小时提醒小佳。</div>
+      <div class="row">
         <span style="font-size:12px; color:var(--text2)">谁记的：</span>
         <button class="chip who who-mine" data-who="mine">我</button>
         <button class="chip who who-xiaojia" data-who="xiaojia">小佳</button>
@@ -1016,6 +1050,18 @@ body[data-active-page="chat"] #asstFloat{display:none}
       <div class="photo-note" id="usageText" style="margin-top:6px"></div>
     </div>
 
+    <div class="card" style="box-shadow:none" id="pushCard">
+      <div class="card-title">🔔 小佳手机提醒 <span class="cloud-status off" id="pushStatus">未开启</span></div>
+      <div class="cloud-box">
+        只给在“小佳 iPhone”上开启通知的设备发送提醒，不会自动发给客户，也不会接入 LINE。
+      </div>
+      <div class="cloud-actions">
+        <button class="btn small" id="enablePushBtn">在这台手机开启通知</button>
+        <button class="btn small ghost" id="disablePushBtn" style="display:none">关闭这台手机通知</button>
+      </div>
+      <div class="push-state" id="pushHint" style="margin-top:7px">请小佳用 Safari 打开公网小屋，添加到主屏幕后，在这里点一次按钮并选择“允许”。</div>
+    </div>
+
     <div class="card" style="box-shadow:none">
       <div class="card-title">👥 成员资料</div>
       <div class="row" style="margin-bottom:8px">
@@ -1057,7 +1103,7 @@ body[data-active-page="chat"] #asstFloat{display:none}
         清空所有数据前会连续确认两次，放心。<br>
         没有连接云端时，数据只保存在这台设备的浏览器里；连接后只有你明确选择同步，才会上传。<br>
         图片放在小屋的 assets 文件夹里，移动时请把整个项目文件夹一起移动。<br>
-        提醒：网页的「提醒」在手机锁屏时可能不准时，打开工作台就能看到今天的事。
+        提醒：小佳的预约待办可以提前 30 或 48 小时发手机通知；首次需要在小佳的 iPhone 上点“允许”。
       </div>
     </div>
   </section>
@@ -1188,6 +1234,11 @@ function normalizeState(data){
   if(!next.doneMap || typeof next.doneMap !== "object") next.doneMap = {};
   if(!next.theme) next.theme = "auto";
   if(typeof next.demo !== "boolean") next.demo = false;
+  next.todos.forEach(todo=>{
+    if(!todo || typeof todo !== "object") return;
+    if(typeof todo.reminderHours !== "number" || ![0,30,48].includes(todo.reminderHours)) todo.reminderHours = 0;
+    if(todo.dueAt && Number.isNaN(new Date(todo.dueAt).getTime())) delete todo.dueAt;
+  });
   ["meals","sports","diaries"].forEach(k=>{
     next[k].forEach(item=>{
       if(!Array.isArray(item.photoIds)) item.photoIds = [];
@@ -1229,6 +1280,9 @@ let cloudSyncTimer = null;
 let cloudSyncBusy = false;
 let cloudSyncDirty = false;
 let cloudLibraryPromise = null;
+let todoReminderHours = 48;
+let pushSubscription = null;
+const PUSH_FUNCTION_NAME = "xj-send-todo-reminders";
 
 function hasCloudConfig(){
   return typeof SUPABASE_CONFIG.url === "string"
@@ -1252,6 +1306,7 @@ function setCloudLink(enabled){
   }
   updateCloudUI();
   updatePhotoControls();
+  updatePushUI();
 }
 function cloudErrorText(error){
   const raw = String(error && (error.message || error.error_description) || "云端请求失败").replace(/\s+/g," ").trim();
@@ -1276,6 +1331,175 @@ function cloudErrorText(error){
     if(re.test(t)) return zh;
   }
   return raw;
+}
+function pushIsSupported(){
+  return !!(window.isSecureContext && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window);
+}
+function base64UrlToBytes(value){
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const raw = atob((value + padding).replace(/-/g,"+").replace(/_/g,"/"));
+  return Uint8Array.from(raw, c=>c.charCodeAt(0));
+}
+function arrayBufferToBase64Url(value){
+  const bytes = new Uint8Array(value || []);
+  let raw = "";
+  bytes.forEach(b=>{ raw += String.fromCharCode(b); });
+  return btoa(raw).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+}
+function isStandalonePwa(){
+  return !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+}
+function todoDueIso(dateStr, timeStr){
+  if(!dateStr || !timeStr) return null;
+  const value = new Date(dateStr + "T" + timeStr + ":00");
+  return Number.isNaN(value.getTime()) ? null : value.toISOString();
+}
+function todoBucketForDate(dateStr){
+  if(!dateStr) return todoBucket;
+  const today = new Date(localToday()+"T00:00:00");
+  const target = new Date(dateStr+"T00:00:00");
+  const days = Math.round((target - today) / 86400000);
+  return days <= 0 ? "today" : days === 1 ? "tomorrow" : "later";
+}
+function formatTodoDueAt(value){
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("zh-CN", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", hour12:false }).format(d);
+}
+function updateTodoReminderNote(){
+  const note = $("todoReminderNote");
+  if(!note) return;
+  const date = $("todoDueDate")?.value || "";
+  const time = $("todoDueTime")?.value || "";
+  if(!todoReminderHours){ note.textContent = "这条待办不发送手机通知。"; note.className = "push-state"; return; }
+  if(!date || !time){ note.textContent = "填好日期和时间后，默认提前 "+todoReminderHours+" 小时提醒小佳。"; note.className = "push-state warn"; return; }
+  const dueAt = todoDueIso(date,time);
+  if(!dueAt){ note.textContent = "日期或时间格式不对，请重新选择。"; note.className = "push-state warn"; return; }
+  const remindAt = new Date(new Date(dueAt).getTime() - todoReminderHours*3600000);
+  note.textContent = "小佳将在约 "+formatTodoDueAt(remindAt.toISOString())+" 收到提醒，事项时间是 "+formatTodoDueAt(dueAt)+"。";
+  note.className = "push-state ok";
+}
+function updatePushUI(){
+  const status = $("pushStatus"), hint = $("pushHint"), enable = $("enablePushBtn"), disable = $("disablePushBtn");
+  if(!status || !hint || !enable) return;
+  const ready = cloudReady() && cloudSyncEnabled;
+  enable.disabled = !ready;
+  if(!ready){
+    status.textContent = "先连接云端"; status.className = "cloud-status warn";
+    hint.textContent = "先登录并加入正确的小屋，再在小佳 iPhone 上开启。";
+    if(disable) disable.style.display = "none";
+    return;
+  }
+  if(!pushIsSupported()){
+    status.textContent = "当前环境不支持"; status.className = "cloud-status warn";
+    hint.textContent = "请用 iPhone Safari 打开公网网址，并添加到主屏幕后再试。";
+    return;
+  }
+  const permission = Notification.permission;
+  if(permission === "denied"){
+    status.textContent = "已被拒绝"; status.className = "cloud-status warn";
+    hint.textContent = "请到 iPhone 设置 → 通知 → 小佳专属小屋，把允许通知打开。";
+  }else if(pushSubscription){
+    status.textContent = "已开启"; status.className = "cloud-status ok";
+    hint.textContent = "这台手机已登记为小佳的提醒设备。以后新增的预约待办会按设置推送。";
+    enable.style.display = "none";
+    if(disable) disable.style.display = "";
+    return;
+  }else{
+    status.textContent = permission === "granted" ? "还差登记" : "未开启"; status.className = "cloud-status off";
+    hint.textContent = isStandalonePwa()
+      ? "点下面按钮，iPhone 弹出权限时选择“允许”。"
+      : "先在 Safari 分享菜单选择“添加到主屏幕”，再从主屏幕打开这个小屋。";
+  }
+  enable.style.display = "";
+  if(disable) disable.style.display = "none";
+}
+async function refreshPushState(){
+  pushSubscription = null;
+  if(!pushIsSupported()) { updatePushUI(); return; }
+  try{
+    const registration = await navigator.serviceWorker.getRegistration();
+    if(registration) pushSubscription = await registration.pushManager.getSubscription();
+  }catch(e){ console.warn("读取通知状态失败", e); }
+  updatePushUI();
+}
+function pushSubscriptionJson(subscription){
+  const json = subscription.toJSON ? subscription.toJSON() : {};
+  return {
+    endpoint: subscription.endpoint,
+    p256dh: json.keys?.p256dh || arrayBufferToBase64Url(subscription.getKey("p256dh")),
+    auth: json.keys?.auth || arrayBufferToBase64Url(subscription.getKey("auth"))
+  };
+}
+async function enableXiaojiaPush(){
+  if(!cloudReady() || !cloudSyncEnabled){ toast("先登录并连接小屋，再开启提醒"); return; }
+  if(!pushIsSupported()){ updatePushUI(); toast("请用 iPhone Safari 添加到主屏幕后再开启"); return; }
+  if(!isStandalonePwa()){ updatePushUI(); toast("先从 Safari 添加到主屏幕，再点开启通知"); return; }
+  if(!SUPABASE_CONFIG.vapidPublicKey){ toast("通知公钥还没配置好"); return; }
+  try{
+    const permission = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+    if(permission !== "granted"){ updatePushUI(); toast("没有允许通知，预约提醒不会发到手机"); return; }
+    const registration = await navigator.serviceWorker.ready;
+    pushSubscription = await registration.pushManager.getSubscription();
+    if(!pushSubscription){
+      pushSubscription = await registration.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:base64UrlToBytes(SUPABASE_CONFIG.vapidPublicKey) });
+    }
+    const sub = pushSubscriptionJson(pushSubscription);
+    const result = await supabaseClient.from("xj_push_subscriptions").upsert({
+      house_id:currentHouse.id, user_id:cloudSession.user.id, recipient_kind:"xiaojia",
+      endpoint:sub.endpoint, p256dh:sub.p256dh, auth:sub.auth, user_agent:navigator.userAgent
+    }, { onConflict:"endpoint" });
+    if(result.error) throw result.error;
+    try{ localStorage.setItem("xj-push-endpoint-"+currentHouse.id, sub.endpoint); }catch(e){}
+    updatePushUI(); toast("小佳手机通知已开启 🔔");
+  }catch(error){
+    console.error(error); updatePushUI(); toast("开启通知失败："+cloudErrorText(error));
+  }
+}
+async function disableXiaojiaPush(){
+  if(!pushSubscription || !cloudReady()) return;
+  const endpoint = pushSubscription.endpoint;
+  try{
+    await supabaseClient.from("xj_push_subscriptions").delete().eq("house_id",currentHouse.id).eq("endpoint",endpoint);
+    await pushSubscription.unsubscribe();
+  }catch(error){ toast("关闭通知失败："+cloudErrorText(error)); return; }
+  pushSubscription = null; updatePushUI(); toast("这台手机的提醒已关闭");
+}
+function todoReminderPayload(todo){
+  if(!todo || todo.repeat || todo.done || !todo.dueAt) return null;
+  const hours = Number(todo.reminderHours);
+  const due = new Date(todo.dueAt);
+  if(![30,48].includes(hours) || Number.isNaN(due.getTime())) return null;
+  return {
+    todo_id:String(todo.id), todo_text:String(todo.text || "待办事项").slice(0,240),
+    due_at:due.toISOString(), reminder_hours:hours,
+    remind_at:new Date(due.getTime()-hours*3600000).toISOString()
+  };
+}
+async function deleteTodoReminderById(todoId){
+  if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
+  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id).eq("todo_id",String(todoId));
+  if(result.error) throw result.error;
+}
+async function syncTodoReminder(todo){
+  if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
+  const payload = todoReminderPayload(todo);
+  if(!payload){ await deleteTodoReminderById(todo?.id); return; }
+  const result = await supabaseClient.from("xj_todo_reminders").upsert({
+    house_id:currentHouse.id, ...payload, created_by:cloudSession.user.id,
+    status:"pending", sent_at:null, processing_at:null, last_error:null
+  }, { onConflict:"house_id,todo_id" });
+  if(result.error) throw result.error;
+}
+async function syncAllTodoReminders(){
+  if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
+  const rows = (S.todos || []).map(todoReminderPayload).filter(Boolean).map(row=>({
+    house_id:currentHouse.id, ...row, created_by:cloudSession.user.id,
+    status:"pending", sent_at:null, processing_at:null, last_error:null
+  }));
+  if(!rows.length) return;
+  const result = await supabaseClient.from("xj_todo_reminders").upsert(rows, { onConflict:"house_id,todo_id" });
+  if(result.error) throw result.error;
 }
 function setCloudStatus(text, kind="off"){
   const el = $("cloudStatus");
@@ -1306,6 +1530,7 @@ function updateCloudUI(){
     user.style.display = "none";
     setCloudStatus("本地模式","off");
     updatePhotoControls();
+    updatePushUI();
     return;
   }
   missing.style.display = "none";
@@ -1314,6 +1539,7 @@ function updateCloudUI(){
     user.style.display = "none";
     setCloudStatus("连接中…","warn");
     updatePhotoControls();
+    updatePushUI();
     return;
   }
   if(!cloudSession){
@@ -1321,6 +1547,7 @@ function updateCloudUI(){
     user.style.display = "none";
     setCloudStatus("未登录","warn");
     updatePhotoControls();
+    updatePushUI();
     return;
   }
   guest.style.display = "none";
@@ -1342,6 +1569,7 @@ function updateCloudUI(){
     if($("myNameText")) $("myNameText").textContent = currentHouse.displayName || "未设置";
   }
   updatePhotoControls();
+  updatePushUI();
 }
 const HOUSE_ICONS = ["🏡","💕","🐰","🐻","🐱","🐶","🦊","🐼","🌸","🌙","⭐","🍑","🐥","🦄","🌈","🍓","🍀","🐧"];
 function updateMascotIcon(){
@@ -1494,6 +1722,8 @@ async function handleCloudSession(session){
           setCloudStatus("云端还没有数据：先随便记一条（比如一个待办），下次打开本页会自动设为云端第一份","warn");
         }
       }
+      try{ await syncAllTodoReminders(); }catch(error){ console.warn("同步待办提醒失败", error); }
+      await refreshPushState();
       renderAll();
     }
   }catch(error){
@@ -1501,6 +1731,7 @@ async function handleCloudSession(session){
     $("cloudAuthHint").textContent = "云端表还没有准备好，或权限规则没有运行成功："+cloudErrorText(error);
   }
   updatePhotoControls();
+  updatePushUI();
 }
 async function initCloud(){
   updateCloudUI();
@@ -1523,6 +1754,7 @@ async function initCloud(){
     $("cloudConfigMissing").style.display = "block";
     $("cloudConfigMissing").textContent = "配置已填写，但云端库加载失败："+cloudErrorText(error);
     updatePhotoControls();
+    updatePushUI();
   }
 }
 /* 启动封面：1.5 秒后自动淡出，点一下立即跳过 */
@@ -1831,6 +2063,7 @@ async function uploadLocalState(){
     await writeStateToCloud();
     setCloudLink(true);
     subscribeHouse();
+    try{ await syncAllTodoReminders(); }catch(error){ console.warn("同步待办提醒失败", error); }
     toast("本机数据已上传，之后会自动同步 ☁️");
   }catch(error){ toast("上传失败："+cloudErrorText(error)); }
 }
@@ -1844,6 +2077,7 @@ async function pullCloudState(ask=true, silent=false){
   localSaveOnly();
   setCloudLink(true);
   await hydratePhotoUrls(false);
+  try{ await syncAllTodoReminders(); }catch(error){ console.warn("同步待办提醒失败", error); }
   applyTheme(S.theme);
   renderAll();
   if(!silent) toast("已从云端拉取最新数据");
@@ -2226,6 +2460,12 @@ function todayTodoList(){
   const done = (S.doneMap[TODAY] || {});
   return S.todos.filter(t => t.bucket === "today" && (t.repeat || !t.done));
 }
+function todoMeta(t){
+  return whoTag(t.who)
+    +(t.dueAt ? '<span>🕘 '+esc(formatTodoDueAt(t.dueAt))+'</span>' : '')
+    +(t.reminderHours ? '<span>🔔 提前'+Number(t.reminderHours)+'小时</span>' : '')
+    +(t.repeat ? '<span>🔁 每天</span>' : '');
+}
 function renderTodo(){
   const groups = [
     { key:"today",    title:"📌 今天" },
@@ -2244,14 +2484,14 @@ function renderTodo(){
       html += '<div class="list-item">'
         + '<input type="checkbox" class="chk" data-check="'+t.id+'"'+(isDone?" checked":"")+'>'
         + '<div class="txt'+(isDone?" done":"")+'">'+esc(t.text)
-        + '<div class="meta">'+whoTag(t.who)+(t.repeat?'<span>🔁 每天</span>':'')+'</div></div>'
+        + '<div class="meta">'+todoMeta(t)+'</div></div>'
         + delBtn(t.id,"todo") + '</div>';
     });
     if(g.key === "today" && doneOnce.length){
       html += '<div style="font-size:12px; color:var(--text2); padding:8px 4px 0">已完成（点勾可撤销）：</div>';
       doneOnce.forEach(t=>{
         html += '<div class="list-item"><input type="checkbox" class="chk" data-check="'+t.id+'" checked>'
-          + '<div class="txt done">'+esc(t.text)+'<div class="meta">'+whoTag(t.who)+'</div></div></div>';
+          + '<div class="txt done">'+esc(t.text)+'<div class="meta">'+todoMeta(t)+'</div></div></div>';
       });
     }
     html += '</div>';
@@ -2371,7 +2611,7 @@ function renderHome(){
   items.slice(0,5).forEach(t=>{
     const isDone = !!done[t.id];
     hh += '<div class="list-item"><input type="checkbox" class="chk" data-check="'+t.id+'"'+(isDone?" checked":"")+'>'
-      + '<div class="txt'+(isDone?" done":"")+'">'+esc(t.text)+'<div class="meta">'+whoTag(t.who)+'</div></div></div>';
+      + '<div class="txt'+(isDone?" done":"")+'">'+esc(t.text)+'<div class="meta">'+todoMeta(t)+'</div></div></div>';
   });
   $("homeTodoList").innerHTML = hh;
 
@@ -3537,6 +3777,8 @@ function bindEvents(){
   $("joinHouseBtn").addEventListener("click", joinCloudHouse);
   $("switchHouseBtn").addEventListener("click", switchCloudHouse);
   $("cloudDownloadBtn").addEventListener("click", ()=>pullCloudState(true,false));
+  $("enablePushBtn").addEventListener("click", enableXiaojiaPush);
+  $("disablePushBtn").addEventListener("click", disableXiaojiaPush);
   $("cloudSignoutBtn").addEventListener("click", async ()=>{
     if(!supabaseClient) return;
     const {error} = await supabaseClient.auth.signOut();
@@ -3609,6 +3851,7 @@ function bindEvents(){
         else { todo.done = false; }
       }
       markDemoGone(); save(); renderAll();
+      syncTodoReminder(todo).catch(error=>console.warn("更新待办提醒失败", error));
       return;
     }
 
@@ -3622,6 +3865,7 @@ function bindEvents(){
           .catch(error=>{ save(); renderAll(); toast("照片已从页面移除，但云端清理失败："+cloudErrorText(error)); });
         return;
       }
+      const deletedTodo = kind === "todo" ? S.todos.find(x=>x.id===id) : null;
       if(kind === "todo") S.todos = S.todos.filter(x=>x.id!==id);
       else if(kind === "meal"){
         const item = S.meals.find(x=>x.id===id); photoIds = item?.photoIds || [];
@@ -3642,6 +3886,10 @@ function bindEvents(){
       else if(kind === "period") S.periods = S.periods.filter(x=>x.id!==id);
       else if(kind === "expense") S.expenses = S.expenses.filter(x=>x.id!==id);
       const finishDelete = ()=>{ save(); renderAll(); toast("已删除"); };
+      if(deletedTodo && cloudReady() && cloudSyncEnabled){
+        deleteTodoReminderById(id).then(finishDelete).catch(error=>{ save(); renderAll(); toast("待办已删除，但提醒清理失败："+cloudErrorText(error)); });
+        return;
+      }
       if(photoIds.length){
         deletePhotoRefs(photoIds).then(finishDelete).catch(error=>{
           save(); renderAll(); toast("记录已删除，但照片清理失败："+cloudErrorText(error));
@@ -3724,6 +3972,9 @@ function bindEvents(){
     const bucketChip = t.closest("#sub-life-todo .card .chip[data-bucket]");
     if(bucketChip){ todoBucket = bucketChip.dataset.bucket; syncChips(); return; }
 
+    const todoReminderChip = t.closest("#sub-life-todo .chip[data-todo-remind]");
+    if(todoReminderChip){ todoReminderHours = Number(todoReminderChip.dataset.todoRemind) || 0; syncChips(); return; }
+
     /* 记录页 餐别 */
     const mealChip = t.closest("#page-health .chip[data-meal]");
     if(mealChip){ openMealModal(mealChip.dataset.meal); return; }
@@ -3746,6 +3997,8 @@ function syncChips(){
   document.querySelectorAll("[data-bucket]").forEach(c=>c.classList.toggle("on", c.dataset.bucket===todoBucket));
   document.querySelectorAll("[data-meal]").forEach(c=>c.classList.toggle("on", c.dataset.meal===mealSel));
   document.querySelectorAll("[data-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.remind)===annivRemind));
+  document.querySelectorAll("[data-todo-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.todoRemind)===todoReminderHours));
+  updateTodoReminderNote();
 }
 
 /* ---------- 记账弹窗绑定 ---------- */
@@ -3773,14 +4026,30 @@ function bindAddButtons(){
       });
     }
   });
-  $("todoAddBtn").addEventListener("click", ()=>{
+  $("todoAddBtn").addEventListener("click", async ()=>{
     const v = $("todoInput").value.trim();
     if(!v){ toast("先写要做什么哦"); return; }
-    S.todos.push({ id:uid(), text:v, bucket:todoBucket, repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY, recorder:MY_UID() });
+    const dueDate = $("todoDueDate").value;
+    const dueTime = $("todoDueTime").value;
+    if((dueDate && !dueTime) || (!dueDate && dueTime)){ toast("预约提醒要同时填日期和时间"); return; }
+    const dueAt = todoDueIso(dueDate,dueTime);
+    if((dueDate && dueTime) && !dueAt){ toast("日期或时间不对，请重新选择"); return; }
+    if(dueAt && todoReminderHours && new Date(dueAt).getTime() <= Date.now()){ toast("预约时间已经过去了，请重新选择"); return; }
+    if(todoReminderHours && !dueAt){ toast("要提醒小佳，请先填预约日期和时间"); return; }
+    const item = {
+      id:uid(), text:v, bucket:dueDate ? todoBucketForDate(dueDate) : todoBucket,
+      repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY,
+      dueAt:dueAt || null, reminderHours:dueAt ? todoReminderHours : 0, recorder:MY_UID()
+    };
+    S.todos.push(item);
     $("todoInput").value = ""; $("todoRepeat").checked = false;
-    markDemoGone(); save(); renderAll(); toast("已添加待办 ✅");
+    $("todoDueDate").value = ""; $("todoDueTime").value = "";
+    markDemoGone(); save(); renderAll();
+    try{ await syncTodoReminder(item); toast(item.reminderHours ? "已添加待办，小佳会收到提醒 🔔" : "已添加待办 ✅"); }
+    catch(error){ toast("待办已保存，但提醒同步失败："+cloudErrorText(error)); }
   });
   $("todoInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("todoAddBtn").click(); });
+  [$("todoDueDate"),$("todoDueTime")].forEach(input=>{ if(input) input.addEventListener("change", updateTodoReminderNote); });
 
   $("mealModalDate") && $("mealModalDate").addEventListener("change", ()=>{});
   const md = $("mealDate");
@@ -3981,6 +4250,7 @@ if(nameBtn && nameModal){
 }
 bindAddButtons();
 syncChips();
+updatePushUI();
 setGate(true);
 renderAll();
 initCloud();
@@ -3988,7 +4258,7 @@ initCloud();
 /* PWA：注册离线缓存（仅 https 生效） */
 if("serviceWorker" in navigator && location.protocol === "https:"){
   window.addEventListener("load", ()=>{
-    navigator.serviceWorker.register("./sw.js").then(reg=>reg.update()).catch(()=>{});
+    navigator.serviceWorker.register("./sw.js").then(reg=>{ reg.update(); refreshPushState(); }).catch(()=>{});
   });
 }
 </script>
