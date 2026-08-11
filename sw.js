@@ -2,7 +2,7 @@
   情侣小屋 PWA 离线缓存
   策略：优先用网络（保证拿到最新版），网络失败时用缓存（离线也能打开）。
 */
-const CACHE = "xiaojia-house-v4-p1";
+const CACHE = "xiaojia-house-v5-reminders";
 const PRECACHE = [
   "./", "./index.html", "./supabase-config.js", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./vendor/supabase.min.js",
@@ -50,5 +50,30 @@ self.addEventListener("fetch", e => {
       return res;
     }).catch(() => cached || Response.error());
     return cached || network;
+  }));
+});
+
+self.addEventListener("push", e => {
+  let data = {};
+  try{ data = e.data ? e.data.json() : {}; }catch(_){ data = { body:e.data ? e.data.text() : "小佳专属小屋有一条提醒" }; }
+  const title = data.title || "小佳专属小屋提醒";
+  const options = {
+    body: data.body || "有一条待办提醒，点开查看。",
+    icon: data.icon || "./icons/icon-192.png",
+    badge: data.badge || "./icons/icon-192.png",
+    tag: data.tag || "xiaojia-house-reminder",
+    renotify: true,
+    data: { url: data.url || "./" }
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const target = e.notification.data && e.notification.data.url ? e.notification.data.url : "./";
+  e.waitUntil(clients.matchAll({ type:"window", includeUncontrolled:true }).then(list=>{
+    const existing = list.find(client=>"focus" in client);
+    if(existing){ existing.navigate(target); return existing.focus(); }
+    return clients.openWindow(target);
   }));
 });
