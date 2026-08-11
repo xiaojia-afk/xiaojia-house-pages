@@ -1486,19 +1486,22 @@ async function syncTodoReminder(todo){
   const payload = todoReminderPayload(todo);
   if(!payload){ await deleteTodoReminderById(todo?.id); return; }
   const result = await supabaseClient.from("xj_todo_reminders").upsert({
-    house_id:currentHouse.id, ...payload, created_by:cloudSession.user.id,
-    status:"pending", sent_at:null, processing_at:null, last_error:null
+    house_id:currentHouse.id, ...payload, created_by:cloudSession.user.id
   }, { onConflict:"house_id,todo_id" });
   if(result.error) throw result.error;
 }
 async function syncAllTodoReminders(){
   if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
   const rows = (S.todos || []).map(todoReminderPayload).filter(Boolean).map(row=>({
-    house_id:currentHouse.id, ...row, created_by:cloudSession.user.id,
-    status:"pending", sent_at:null, processing_at:null, last_error:null
+    house_id:currentHouse.id, ...row, created_by:cloudSession.user.id
   }));
   if(!rows.length) return;
   const result = await supabaseClient.from("xj_todo_reminders").upsert(rows, { onConflict:"house_id,todo_id" });
+  if(result.error) throw result.error;
+}
+async function deleteAllTodoReminders(){
+  if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
+  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id);
   if(result.error) throw result.error;
 }
 function setCloudStatus(text, kind="off"){
@@ -3827,6 +3830,9 @@ function bindEvents(){
     const photoIds = (S.photos || []).map(photo=>photo.id);
     if(photoIds.length && cloudReady() && cloudSyncEnabled){
       try{ await deletePhotoRefs(photoIds); }catch(error){ toast("照片清理失败，数据仍会清空："+cloudErrorText(error)); }
+    }
+    if(cloudReady() && cloudSyncEnabled){
+      try{ await deleteAllTodoReminders(); }catch(error){ toast("提醒清理失败，数据仍会清空："+cloudErrorText(error)); }
     }
     S = emptyState(); save(); applyTheme(S.theme); renderAll();
     goPage("home");
