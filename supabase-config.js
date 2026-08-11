@@ -5,5 +5,6 @@
 */
 window.XIAOJIA_SUPABASE_CONFIG = {
   url: "https://wxeonvvtffiwjdqdlpdn.supabase.co",
-  anonKey: "sb_publishable_syYiitJGmmWyPZdsqssrBA_p6ISlNOJ"
+  anonKey: "sb_publishable_syYiitJGmmWyPZdsqssrBA_p6ISlNOJ",
+  vapidPublicKey: "BAVRvWWzFtR8zfhzpf5VKLpN7RX9h8Z0vwz9c2UbqCZYK_Maq2lYCdMCs5FBAGH8Vp-sdEXfGV1rFJUPdJAi1Dc"
 };
