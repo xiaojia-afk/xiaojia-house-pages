@@ -2,9 +2,9 @@
   情侣小屋 PWA 离线缓存
   策略：优先用网络（保证拿到最新版），网络失败时用缓存（离线也能打开）。
 */
-const CACHE = "xiaojia-house-v5-reminders";
+const CACHE = "xiaojia-house-v6-reminders-vapid";
 const PRECACHE = [
-  "./", "./index.html", "./supabase-config.js", "./manifest.webmanifest",
+  "./", "./index.html", "./supabase-config.js?v=20260812-push2", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./vendor/supabase.min.js",
   "./assets/empty-roll-cake.jpg", "./assets/logo-chef-bread.jpg", "./assets/mascot-watercolor.jpg",
   "./assets/nav-home.jpg", "./assets/nav-todo.jpg", "./assets/nav-record.jpg", "./assets/nav-diary.jpg",
