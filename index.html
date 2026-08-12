@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-build="2026-08-12-push1">
+<html lang="zh-CN" data-build="2026-08-12-push2-custom">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>情侣小屋</title>
 <style>
-/* ============ 颜色（浅色/深色自动切换） ============ */
+/* ============ 颜色（浅色/深色与按时间自动） ============ */
 :root{
   --bg:#fff1f7; --bg2:#f7e2f1; --card:#ffffff;
   --text:#4a3b52; --text2:#75667b; --border:#eadfea;
@@ -121,6 +121,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   background:var(--bg); padding:10px 12px; outline:none;
 }
 .input:focus{border-color:var(--pink)}
+.todo-custom-reminder-value{flex:0 1 110px; min-width:90px}
+.todo-custom-reminder-unit{flex:0 1 130px; min-width:110px}
 .btn{
   border:none; border-radius:14px; padding:10px 18px; font-size:14px; font-weight:600;
   background:linear-gradient(120deg,var(--pink),var(--lav)); color:#fff;
@@ -742,6 +744,16 @@ body[data-active-page="chat"] #asstFloat{display:none}
         <button class="chip" data-todo-remind="0">不提醒</button>
         <button class="chip" data-todo-remind="30">提前 30 小时</button>
         <button class="chip on" data-todo-remind="48">提前 48 小时</button>
+        <button class="chip" data-todo-remind="custom">自定义</button>
+      </div>
+      <div class="row" id="todoCustomReminderRow" hidden>
+        <span style="font-size:12px; color:var(--text2)">提前：</span>
+        <input class="input todo-custom-reminder-value" id="todoCustomReminderValue" type="number" min="1" max="525600" inputmode="decimal" placeholder="填写数字" aria-label="自定义提醒数字">
+        <select class="input todo-custom-reminder-unit" id="todoCustomReminderUnit" aria-label="自定义提醒单位">
+          <option value="minutes">分钟</option>
+          <option value="hours" selected>小时</option>
+          <option value="days">天</option>
+        </select>
       </div>
       <div class="push-state" id="todoReminderNote">填日期和时间后，默认提前 48 小时提醒小佳。</div>
       <div class="row">
@@ -981,8 +993,9 @@ body[data-active-page="chat"] #asstFloat{display:none}
       <div class="row">
         <button class="chip" data-theme-opt="light">☀️ 浅色</button>
         <button class="chip" data-theme-opt="dark">🌙 深色</button>
-        <button class="chip" data-theme-opt="auto">🔄 跟随系统</button>
+        <button class="chip" data-theme-opt="auto">🕒 按时间自动</button>
       </div>
+      <div class="photo-note">按时间自动：每天 18:00 到次日 06:00 使用深色，其余时间使用浅色。</div>
     </div>
 
     <div class="card" style="box-shadow:none" id="cloudCard">
@@ -1224,7 +1237,13 @@ function normalizeState(data){
   if(typeof next.demo !== "boolean") next.demo = false;
   next.todos.forEach(todo=>{
     if(!todo || typeof todo !== "object") return;
-    if(typeof todo.reminderHours !== "number" || ![0,30,48].includes(todo.reminderHours)) todo.reminderHours = 0;
+    const savedMinutes = Number(todo.reminderMinutes);
+    const legacyHours = Number(todo.reminderHours);
+    const minutes = Number.isInteger(savedMinutes) && savedMinutes >= 0 && savedMinutes <= MAX_REMINDER_MINUTES
+      ? savedMinutes
+      : ([30,48].includes(legacyHours) ? legacyHours * 60 : 0);
+    todo.reminderMinutes = minutes;
+    todo.reminderHours = [30 * 60, 48 * 60].includes(minutes) ? minutes / 60 : 0;
     if(todo.dueAt && Number.isNaN(new Date(todo.dueAt).getTime())) delete todo.dueAt;
   });
   ["meals","sports","diaries"].forEach(k=>{
@@ -1268,7 +1287,9 @@ let cloudSyncTimer = null;
 let cloudSyncBusy = false;
 let cloudSyncDirty = false;
 let cloudLibraryPromise = null;
-let todoReminderHours = 48;
+let todoReminderMode = "preset";
+let todoReminderMinutes = 48 * 60;
+const MAX_REMINDER_MINUTES = 365 * 24 * 60;
 let pushSubscription = null;
 const PUSH_FUNCTION_NAME = "xj-send-todo-reminders";
 
@@ -1354,16 +1375,46 @@ function formatTodoDueAt(value){
   if(Number.isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("zh-CN", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit", hour12:false }).format(d);
 }
+function reminderMinutesFromTodo(todo){
+  const minutes = Number(todo?.reminderMinutes);
+  if(Number.isInteger(minutes) && minutes >= 0 && minutes <= MAX_REMINDER_MINUTES) return minutes;
+  const hours = Number(todo?.reminderHours);
+  return [30,48].includes(hours) ? hours * 60 : 0;
+}
+function reminderLeadText(minutes){
+  const value = Number(minutes);
+  if(!Number.isInteger(value) || value <= 0) return "不提醒";
+  if(value % (24 * 60) === 0) return "提前 "+(value / (24 * 60))+" 天";
+  if(value % 60 === 0) return "提前 "+(value / 60)+" 小时";
+  return "提前 "+value+" 分钟";
+}
+function customReminderMinutes(){
+  const value = Number($("todoCustomReminderValue")?.value || "");
+  const unit = $("todoCustomReminderUnit")?.value || "hours";
+  const multiplier = unit === "days" ? 24 * 60 : unit === "hours" ? 60 : 1;
+  const minutes = Math.round(value * multiplier);
+  return Number.isFinite(value) && value > 0 && Number.isInteger(minutes) && minutes <= MAX_REMINDER_MINUTES ? minutes : 0;
+}
+function selectedTodoReminderMinutes(){
+  return todoReminderMode === "custom" ? customReminderMinutes() : todoReminderMinutes;
+}
+function updateCustomReminderUI(){
+  const row = $("todoCustomReminderRow");
+  if(row) row.hidden = todoReminderMode !== "custom";
+}
 function updateTodoReminderNote(){
   const note = $("todoReminderNote");
   if(!note) return;
   const date = $("todoDueDate")?.value || "";
   const time = $("todoDueTime")?.value || "";
-  if(!todoReminderHours){ note.textContent = "这条待办不发送手机通知。"; note.className = "push-state"; return; }
-  if(!date || !time){ note.textContent = "填好日期和时间后，默认提前 "+todoReminderHours+" 小时提醒小佳。"; note.className = "push-state warn"; return; }
+  const minutes = selectedTodoReminderMinutes();
+  updateCustomReminderUI();
+  if(todoReminderMode === "custom" && !minutes){ note.textContent = "请输入有效的自定义时间（最多提前 365 天）。"; note.className = "push-state warn"; return; }
+  if(!minutes){ note.textContent = "这条待办不发送手机通知。"; note.className = "push-state"; return; }
+  if(!date || !time){ note.textContent = "填好日期和时间后，默认"+reminderLeadText(minutes)+"提醒小佳。"; note.className = "push-state warn"; return; }
   const dueAt = todoDueIso(date,time);
   if(!dueAt){ note.textContent = "日期或时间格式不对，请重新选择。"; note.className = "push-state warn"; return; }
-  const remindAt = new Date(new Date(dueAt).getTime() - todoReminderHours*3600000);
+  const remindAt = new Date(new Date(dueAt).getTime() - minutes*60000);
   note.textContent = "小佳将在约 "+formatTodoDueAt(remindAt.toISOString())+" 收到提醒，事项时间是 "+formatTodoDueAt(dueAt)+"。";
   note.className = "push-state ok";
 }
@@ -1455,13 +1506,14 @@ async function disableXiaojiaPush(){
 }
 function todoReminderPayload(todo){
   if(!todo || todo.repeat || todo.done || !todo.dueAt) return null;
-  const hours = Number(todo.reminderHours);
+  const minutes = reminderMinutesFromTodo(todo);
   const due = new Date(todo.dueAt);
-  if(![30,48].includes(hours) || Number.isNaN(due.getTime())) return null;
+  if(!minutes || Number.isNaN(due.getTime())) return null;
+  const hours = [30 * 60, 48 * 60].includes(minutes) ? minutes / 60 : null;
   return {
     todo_id:String(todo.id), todo_text:String(todo.text || "待办事项").slice(0,240),
-    due_at:due.toISOString(), reminder_hours:hours,
-    remind_at:new Date(due.getTime()-hours*3600000).toISOString()
+    due_at:due.toISOString(), reminder_minutes:minutes, reminder_hours:hours,
+    remind_at:new Date(due.getTime()-minutes*60000).toISOString()
   };
 }
 async function deleteTodoReminderById(todoId){
@@ -2452,9 +2504,10 @@ function todayTodoList(){
   return S.todos.filter(t => t.bucket === "today" && (t.repeat || !t.done));
 }
 function todoMeta(t){
+  const reminderMinutes = reminderMinutesFromTodo(t);
   return whoTag(t.who)
     +(t.dueAt ? '<span>🕘 '+esc(formatTodoDueAt(t.dueAt))+'</span>' : '')
-    +(t.reminderHours ? '<span>🔔 提前'+Number(t.reminderHours)+'小时</span>' : '')
+    +(reminderMinutes ? '<span>🔔 '+esc(reminderLeadText(reminderMinutes))+'</span>' : '')
     +(t.repeat ? '<span>🔁 每天</span>' : '');
 }
 function renderTodo(){
@@ -3670,9 +3723,13 @@ function asstUnhide(){
 })();
 
 /* ---------- 主题 ---------- */
+function isNightTime(){
+  const hour = new Date().getHours();
+  return hour >= 18 || hour < 6;
+}
 function applyTheme(theme){
   const t = theme === "auto"
-    ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    ? (isNightTime() ? "dark" : "light")
     : theme;
   document.documentElement.setAttribute("data-theme", t);
   $("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
@@ -3727,9 +3784,7 @@ function bindEvents(){
   document.querySelectorAll("[data-theme-opt]").forEach(b=>{
     b.addEventListener("click", ()=>{ S.theme = b.dataset.themeOpt; save(); applyTheme(S.theme); });
   });
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{
-    if(S.theme === "auto") applyTheme("auto");
-  });
+  window.setInterval(()=>{ if(S && S.theme === "auto") applyTheme("auto"); }, 60000);
 
  /* 设置弹窗 */
  $("settingsBtn").addEventListener("click", ()=>goPage("me"));
@@ -3967,7 +4022,19 @@ function bindEvents(){
     if(bucketChip){ todoBucket = bucketChip.dataset.bucket; syncChips(); return; }
 
     const todoReminderChip = t.closest("#sub-life-todo .chip[data-todo-remind]");
-    if(todoReminderChip){ todoReminderHours = Number(todoReminderChip.dataset.todoRemind) || 0; syncChips(); return; }
+    if(todoReminderChip){
+      const value = todoReminderChip.dataset.todoRemind;
+      if(value === "custom"){
+        todoReminderMode = "custom";
+        syncChips();
+        $("todoCustomReminderValue")?.focus();
+      }else{
+        todoReminderMode = "preset";
+        todoReminderMinutes = (Number(value) || 0) * 60;
+        syncChips();
+      }
+      return;
+    }
 
     /* 记录页 餐别 */
     const mealChip = t.closest("#page-health .chip[data-meal]");
@@ -3991,7 +4058,14 @@ function syncChips(){
   document.querySelectorAll("[data-bucket]").forEach(c=>c.classList.toggle("on", c.dataset.bucket===todoBucket));
   document.querySelectorAll("[data-meal]").forEach(c=>c.classList.toggle("on", c.dataset.meal===mealSel));
   document.querySelectorAll("[data-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.remind)===annivRemind));
-  document.querySelectorAll("[data-todo-remind]").forEach(c=>c.classList.toggle("on", Number(c.dataset.todoRemind)===todoReminderHours));
+  document.querySelectorAll("[data-todo-remind]").forEach(c=>{
+    const value = c.dataset.todoRemind;
+    const active = value === "custom"
+      ? todoReminderMode === "custom"
+      : todoReminderMode !== "custom" && Number(value) * 60 === todoReminderMinutes;
+    c.classList.toggle("on", active);
+  });
+  updateCustomReminderUI();
   updateTodoReminderNote();
 }
 
@@ -4028,22 +4102,28 @@ function bindAddButtons(){
     if((dueDate && !dueTime) || (!dueDate && dueTime)){ toast("预约提醒要同时填日期和时间"); return; }
     const dueAt = todoDueIso(dueDate,dueTime);
     if((dueDate && dueTime) && !dueAt){ toast("日期或时间不对，请重新选择"); return; }
-    if(dueAt && todoReminderHours && new Date(dueAt).getTime() <= Date.now()){ toast("预约时间已经过去了，请重新选择"); return; }
-    if(todoReminderHours && !dueAt){ toast("要提醒小佳，请先填预约日期和时间"); return; }
+    const reminderMinutes = selectedTodoReminderMinutes();
+    if(todoReminderMode === "custom" && !reminderMinutes){ toast("请填写有效的自定义提醒时间"); $("todoCustomReminderValue")?.focus(); return; }
+    if(dueAt && reminderMinutes && new Date(dueAt).getTime() <= Date.now()){ toast("预约时间已经过去了，请重新选择"); return; }
+    if(reminderMinutes && !dueAt){ toast("要提醒小佳，请先填预约日期和时间"); return; }
     const item = {
       id:uid(), text:v, bucket:dueDate ? todoBucketForDate(dueDate) : todoBucket,
       repeat:$("todoRepeat").checked, done:false, who:todoWho, date:TODAY,
-      dueAt:dueAt || null, reminderHours:dueAt ? todoReminderHours : 0, recorder:MY_UID()
+      dueAt:dueAt || null,
+      reminderMinutes:dueAt ? reminderMinutes : 0,
+      reminderHours:dueAt && [30 * 60, 48 * 60].includes(reminderMinutes) ? reminderMinutes / 60 : 0,
+      recorder:MY_UID()
     };
     S.todos.push(item);
     $("todoInput").value = ""; $("todoRepeat").checked = false;
     $("todoDueDate").value = ""; $("todoDueTime").value = "";
     markDemoGone(); save(); renderAll();
-    try{ await syncTodoReminder(item); toast(item.reminderHours ? "已添加待办，小佳会收到提醒 🔔" : "已添加待办 ✅"); }
+    try{ await syncTodoReminder(item); toast(item.reminderMinutes ? "已添加待办，小佳会收到提醒 🔔" : "已添加待办 ✅"); }
     catch(error){ toast("待办已保存，但提醒同步失败："+cloudErrorText(error)); }
   });
   $("todoInput").addEventListener("keydown", e=>{ if(e.key==="Enter") $("todoAddBtn").click(); });
   [$("todoDueDate"),$("todoDueTime")].forEach(input=>{ if(input) input.addEventListener("change", updateTodoReminderNote); });
+  [$("todoCustomReminderValue"),$("todoCustomReminderUnit")].forEach(input=>{ if(input){ input.addEventListener("input", updateTodoReminderNote); input.addEventListener("change", updateTodoReminderNote); } });
 
   $("mealModalDate") && $("mealModalDate").addEventListener("change", ()=>{});
   const md = $("mealDate");
