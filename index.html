@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-build="2026-08-12-push2-custom-spacing">
+<html lang="zh-CN" data-build="2026-08-14-push3-apple-retry">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -1521,7 +1521,7 @@ function todoReminderPayload(todo){
 }
 async function deleteTodoReminderById(todoId){
   if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
-  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id).eq("todo_id",String(todoId));
+  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id).eq("todo_id",String(todoId)).in("status",["pending","sending"]);
   if(result.error) throw result.error;
 }
 async function syncTodoReminder(todo){
