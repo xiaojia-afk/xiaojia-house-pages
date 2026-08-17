@@ -249,6 +249,31 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .hist-cell.sel .dot{background:#fff}
 .hist-sec{margin-top:8px}
 .hist-sec-title{font-size:13px; font-weight:600; margin-bottom:4px}
+/* ============ 时光轴升级 ============ */
+.timeline-hero{
+  position:relative; overflow:hidden; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:126px; padding:18px 20px; margin-bottom:12px; border:1px solid var(--border); border-radius:22px;
+  background:linear-gradient(135deg,rgba(244,143,177,.24),rgba(179,157,219,.24)); box-shadow:var(--shadow)
+}
+.timeline-hero::after{content:""; position:absolute; width:160px; height:160px; right:-48px; bottom:-72px; border-radius:50%; background:rgba(255,255,255,.23)}
+.timeline-hero-copy{position:relative; z-index:1; min-width:0}
+.timeline-hero-title{font-size:24px; font-weight:800; letter-spacing:1px}
+.timeline-hero-note{margin-top:6px; color:var(--text2); font-size:12px; line-height:1.7; max-width:270px}
+.timeline-hero-mark{position:relative; z-index:1; flex:0 0 auto; width:64px; height:64px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(255,255,255,.55); color:var(--pink-deep); font-size:43px; line-height:1; box-shadow:0 5px 15px rgba(149,117,205,.13)}
+.timeline-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px}
+.timeline-stat{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:66px; padding:8px 4px; border:1px solid var(--border); border-radius:16px; background:var(--card); box-shadow:var(--shadow)}
+.timeline-stat .num{font-size:21px; font-weight:800; color:var(--pink-deep); font-variant-numeric:tabular-nums}
+.timeline-stat .lab{margin-top:2px; color:var(--text2); font-size:11px}
+.timeline-day-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px 9px; border-bottom:1px solid var(--border)}
+.timeline-day-title{font-size:18px; font-weight:800}
+.timeline-day-note{margin-top:3px; color:var(--text2); font-size:11.5px}
+@media (max-width:460px){
+  .timeline-hero{min-height:112px; padding:16px}
+  .timeline-hero-title{font-size:22px}
+  .timeline-hero-mark{width:56px; height:56px; font-size:37px}
+  .timeline-stats{gap:6px}
+  .timeline-stat{min-height:62px}
+}
 .modal-mask{
   position:fixed; inset:0; background:rgba(40,25,45,.45); z-index:100;
   display:none; align-items:flex-end; justify-content:center;
@@ -868,6 +893,18 @@ body[data-active-page="chat"] #asstFloat{display:none}
     </div>
 
     <div id="sub-life-timeline" style="display:none">
+      <div class="timeline-hero">
+        <div class="timeline-hero-copy">
+          <div class="timeline-hero-title">我们的时光</div>
+          <div class="timeline-hero-note" id="timelineHeroNote">把一起发生过的日子，慢慢收进这里</div>
+        </div>
+        <div class="timeline-hero-mark" aria-hidden="true">♡</div>
+      </div>
+      <div class="timeline-stats" aria-label="时光统计">
+        <div class="timeline-stat"><span class="num" id="timelineDaysCount">0</span><span class="lab">有记录的天</span></div>
+        <div class="timeline-stat"><span class="num" id="timelineDiaryCount">0</span><span class="lab">篇日记</span></div>
+        <div class="timeline-stat"><span class="num" id="timelinePhotoCount">0</span><span class="lab">张照片</span></div>
+      </div>
       <div class="card">
         <div class="card-title">📅 时间轴 <span class="more">翻日历，看那天我们一起做了什么</span></div>
         <div class="row" style="margin-bottom:8px">
@@ -3089,6 +3126,7 @@ function recordedDates(){
   (S.sports||[]).forEach(s=>add(s.date));
   (S.weights||[]).forEach(w=>add(w.date));
   (S.sleeps||[]).forEach(s=>add(s.start));
+  (S.anniversaries||[]).forEach(a=>add(a.date));
   (S.photos||[]).forEach(p=>add(p.created_at));
   return set;
 }
@@ -3107,14 +3145,21 @@ function monthMatrix(year, month){
 function renderTimeline(){
   const cal = $("histCal"), body = $("histDayBody");
   if(!cal || !body) return;
+  const recSet = recordedDates();
+  const recordedDayList = Object.keys(recSet).sort();
+  const firstRecordedDay = recordedDayList[0];
+  $("timelineDaysCount").textContent = recordedDayList.length;
+  $("timelineDiaryCount").textContent = (S.diaries||[]).length;
+  $("timelinePhotoCount").textContent = (S.photos||[]).length;
+  $("timelineHeroNote").textContent = firstRecordedDay
+    ? "从 "+dateText(firstRecordedDay)+" 开始，把一起发生过的日子留在这里"
+    : "还没有记录，写下第一件小事吧";
   const dt = new Date(histDate+"T00:00:00");
   const y = dt.getFullYear(), m = dt.getMonth();
   $("histMonthLabel").textContent = y+" 年 "+(m+1)+" 月";
   const di = $("histDateInput");
   di.value = histDate;
   di.max = TODAY;
-  const recSet = recordedDates();
-  const todayObj = new Date(TODAY+"T00:00:00");
   const wd = ["日","一","二","三","四","五","六"];
   let h = '<div class="hist-week">'+["一","二","三","四","五","六","日"].map(w=>"<span>"+w+"</span>").join("")+'</div>';
   monthMatrix(y, m).forEach(row=>{
@@ -3143,10 +3188,13 @@ function renderTimeline(){
   const weights = (S.weights||[]).filter(x=>x.date===histDate);
   const sleeps = (S.sleeps||[]).filter(x=>String(x.start).slice(0,10)===histDate);
   const annivs = (S.anniversaries||[]).filter(a=>a.date===histDate);
-  const total = meals.length+todos.length+diaries.length+moods.length+exps.length+sports.length+weights.length+sleeps.length+annivs.length;
+  const dayPhotos = (S.photos||[]).filter(p=>String(p.created_at).slice(0,10)===histDate);
+  const total = meals.length+todos.length+diaries.length+moods.length+exps.length+sports.length+weights.length+sleeps.length+annivs.length+dayPhotos.length;
   const item = (icon, text, sub, who) => '<div class="list-item"><div class="txt"><div>'+icon+' '+esc(text)+'</div>'
     + (sub ? '<div class="meta">'+sub+'</div>' : '') + (who ? '<div class="meta">'+whoTag(who)+'</div>' : '') + '</div></div>';
-  let b = '<div class="photo-note" style="margin:4px 2px 6px">'+histDate+'（周'+wd[dt.getDay()]+'）共 '+total+' 条记录</div>';
+  const dayTitle = histDate === TODAY ? "今天" : (m+1)+"月"+dt.getDate()+"日";
+  let b = '<div class="timeline-day-head"><div><div class="timeline-day-title">'+dayTitle+'</div><div class="timeline-day-note">'+histDate+'（周'+wd[dt.getDay()]+'） · 共 '+total+' 条记录</div></div>'
+    + (histDate !== TODAY ? '<button class="btn small ghost" id="timelineTodayBtn">回到今天</button>' : '') + '</div>';
   const sec = (title, html) => html ? '<div class="hist-sec"><div class="hist-sec-title">'+title+'</div>'+html+'</div>' : '';
   let mealHtml = "";
   ["breakfast","lunch","dinner","snack"].forEach(meal=>{
@@ -3165,12 +3213,13 @@ function renderTimeline(){
   b += sec("🌙 睡眠", sleeps.map(s=>item("😴", s.end ? "已睡 "+Math.round(s.minutes/60*10)/10+" 小时" : "睡前打卡", (s.who||"")==="xiaojia"?"小佳":"我", s.who)).join(""));
   b += sec("❤️ 纪念日", annivs.map(a=>item("🎉", a.name, dateText(a.date))).join(""));
   b += sec("📷 照片", "");
-  const dayPhotos = (S.photos||[]).filter(p=>String(p.created_at).slice(0,10)===histDate);
   if(dayPhotos.length){
     b += '<div class="photo-strip">'+dayPhotos.filter(photoPreviewUrl).map(p=>'<img loading="lazy" src="'+esc(photoPreviewUrl(p))+'" alt="" data-photo-path="'+esc(p.storage_path||"")+'" data-photo-preview-path="'+esc(photoPreviewPath(p))+'">').join("")+'</div>';
   }
   if(!total) b += '<div class="empty">'+emptyArt()+'这一天还没有记录</div>';
   body.innerHTML = b;
+  const todayButton = $("timelineTodayBtn");
+  if(todayButton) todayButton.addEventListener("click", ()=>{ histDate = TODAY; renderTimeline(); });
   refreshVisiblePhotos();
 }
 /* ---------- 生活页 ---------- */
