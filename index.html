@@ -267,6 +267,14 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .timeline-day-head{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px 9px; border-bottom:1px solid var(--border)}
 .timeline-day-title{font-size:18px; font-weight:800}
 .timeline-day-note{margin-top:3px; color:var(--text2); font-size:11.5px}
+.timeline-empty{padding:18px 8px 12px}
+.timeline-empty-actions{width:min(100%,360px); display:flex; flex-direction:column; align-items:center; gap:10px}
+.timeline-empty-add{min-width:190px}
+.timeline-add-menu{display:none; width:100%; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:10px; border:1px dashed var(--border); border-radius:16px; background:var(--bg)}
+.timeline-add-menu.show{display:grid}
+.timeline-add-choice{display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; padding:10px 11px; border:1px solid var(--border); border-radius:13px; background:var(--card); color:var(--text); text-align:left; cursor:pointer}
+.timeline-add-choice span{font-size:13px; font-weight:600}
+.timeline-add-choice small{font-size:10.5px; color:var(--text2)}
 @media (max-width:460px){
   .timeline-hero{min-height:112px; padding:16px}
   .timeline-hero-title{font-size:22px}
@@ -848,6 +856,7 @@ body[data-active-page="chat"] #asstFloat{display:none}
     <div id="sub-mood" style="display:none">
       <div class="card">
         <div class="card-title">😊 今天的心情</div>
+        <div class="row"><span style="font-size:12px; color:var(--text2)">记录日期：</span><input class="input" id="moodDate" type="date" style="flex:1"></div>
         <div class="mood-row" id="moodRow"></div>
         <div class="row" style="margin-top:10px">
           <span style="font-size:12px; color:var(--text2)">谁记的：</span>
@@ -960,6 +969,7 @@ body[data-active-page="chat"] #asstFloat{display:none}
     <div id="sub-weight" style="display:none">
       <div class="card">
         <div class="card-title">⚖️ 记体重</div>
+        <div class="row"><span style="font-size:12px; color:var(--text2)">记录日期：</span><input class="input" id="weightDate" type="date" style="flex:1"></div>
         <div class="row">
           <input class="input" id="weightInput" type="number" step="0.1" min="20" max="200" placeholder="公斤，如 52.5">
           <button class="btn small" id="weightAddBtn">记录</button>
@@ -977,6 +987,7 @@ body[data-active-page="chat"] #asstFloat{display:none}
     <div id="sub-sport" style="display:none">
       <div class="card">
         <div class="card-title">💪 记运动</div>
+        <div class="row"><span style="font-size:12px; color:var(--text2)">记录日期：</span><input class="input" id="sportDate" type="date" style="flex:1"></div>
         <div class="row">
           <select class="input" id="sportType" style="flex:1">
             <option>散步</option><option>跑步</option><option>跳绳</option><option>游泳</option>
@@ -2623,7 +2634,7 @@ function refreshTodayIfNeeded(){
   const previous = TODAY;
   TODAY = next;
   if(histDate === previous) histDate = TODAY;
-  ["mealDate","mealModalDate","diaryDate","moneyDate","periodDate"].forEach(id=>{
+  ["mealDate","mealModalDate","diaryDate","moneyDate","periodDate","weightDate","sportDate","moodDate"].forEach(id=>{
     const input = $(id);
     if(input && input.value === previous) input.value = TODAY;
   });
@@ -2798,8 +2809,8 @@ function renderHome(){
 
 /* ---------- 心情 ---------- */
 let moodWho = "mine";
-function renderMoodRow(el){
-  const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho) || S.moods.find(m=>m.date===TODAY);
+function renderMoodRow(el, dateStr=TODAY){
+  const todayMood = S.moods.find(m=>m.date===dateStr && m.who===moodWho) || S.moods.find(m=>m.date===dateStr);
   let h = "";
   MOODS.forEach(m=>{
     const on = todayMood && todayMood.mood === m.id;
@@ -2854,6 +2865,9 @@ function renderRecord(){
 
   /* 饮食：每餐一个卡片 */
   if($("mealDate") && !$("mealDate").value) $("mealDate").value = TODAY;
+  if($("weightDate") && !$("weightDate").value) $("weightDate").value = TODAY;
+  if($("sportDate") && !$("sportDate").value) $("sportDate").value = TODAY;
+  [$("mealDate"),$("weightDate"),$("sportDate")].forEach(input=>{ if(input) input.max = TODAY; });
   const mealDateSel = ($("mealDate") && $("mealDate").value) || TODAY;
   renderMealCards(mealDateSel);
 
@@ -2980,6 +2994,7 @@ function renderPeriod(){
       : "📅 再记一次开始日期，就能预测下次时间了";
   }
   if($("periodDate") && !$("periodDate").value) $("periodDate").value = TODAY;
+  if($("periodDate")) $("periodDate").max = TODAY;
   let h = "";
   S.periods.filter(p=>p.who===periodWho).slice().sort((a,b)=>b.start.localeCompare(a.start)).slice(0,30).forEach(p=>{
     h += '<div class="list-item"><div class="txt"><b>'+p.start+'</b> 开始<div class="meta">'+whoTag(p.who)+'</div></div>'
@@ -3216,11 +3231,79 @@ function renderTimeline(){
   if(dayPhotos.length){
     b += '<div class="photo-strip">'+dayPhotos.filter(photoPreviewUrl).map(p=>'<img loading="lazy" src="'+esc(photoPreviewUrl(p))+'" alt="" data-photo-path="'+esc(p.storage_path||"")+'" data-photo-preview-path="'+esc(photoPreviewPath(p))+'">').join("")+'</div>';
   }
-  if(!total) b += '<div class="empty">'+emptyArt()+'这一天还没有记录</div>';
+  if(!total){
+    b += '<div class="empty timeline-empty">'+emptyArt()+'<div>这一天还没有记录</div>'
+      + '<div class="timeline-empty-actions">'
+      + '<button class="btn small timeline-empty-add" id="timelineEmptyAddBtn" aria-expanded="false">＋ 添加这天的记录</button>'
+      + '<div class="timeline-add-menu" id="timelineAddMenu" aria-hidden="true">'
+      + '<button class="timeline-add-choice" data-timeline-add="meal"><span>🍚 饮食</span><small>记录某一餐</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="weight"><span>⚖️ 体重</span><small>填写当天体重</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="sport"><span>💪 运动</span><small>记录运动时长</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="diary"><span>📖 日记</span><small>写下当天发生的事</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="mood"><span>😊 心情</span><small>记录当天心情</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="anniv"><span>❤️ 纪念日</span><small>添加一个重要日期</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="money"><span>💰 记账</span><small>记一笔当天收支</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="period"><span>🌸 生理期</span><small>记录开始日期</small></button>'
+      + '<button class="timeline-add-choice" data-timeline-add="sleep"><span>🌙 睡眠（实时）</span><small>现在开始睡眠打卡</small></button>'
+      + '</div></div></div>';
+  }
   body.innerHTML = b;
   const todayButton = $("timelineTodayBtn");
   if(todayButton) todayButton.addEventListener("click", ()=>{ histDate = TODAY; renderTimeline(); });
+  const addButton = $("timelineEmptyAddBtn"), addMenu = $("timelineAddMenu");
+  if(addButton && addMenu){
+    addButton.addEventListener("click", ()=>{
+      const open = addMenu.classList.toggle("show");
+      addButton.setAttribute("aria-expanded", open ? "true" : "false");
+      addMenu.setAttribute("aria-hidden", open ? "false" : "true");
+    });
+    addMenu.querySelectorAll("[data-timeline-add]").forEach(choice=>{
+      choice.addEventListener("click", ()=>timelineQuickAdd(choice.dataset.timelineAdd, histDate));
+    });
+  }
   refreshVisiblePhotos();
+}
+function timelineSetDate(id, date){
+  const input = $(id);
+  if(!input) return;
+  input.value = date;
+  if(input.type === "date") input.max = TODAY;
+}
+function timelineFocus(id){
+  const input = $(id);
+  if(input) setTimeout(()=>input.focus(), 0);
+}
+function timelineQuickAdd(kind, date){
+  const targetDate = /^\d{4}-\d{2}-\d{2}$/.test(String(date||"")) ? date : TODAY;
+  if(kind === "meal"){
+    recordSub = "diet"; goPage("health");
+    timelineSetDate("mealDate", targetDate); renderRecord();
+    openMealModal("breakfast", targetDate); timelineFocus("mealInput");
+  }else if(kind === "weight"){
+    recordSub = "weight"; goPage("health");
+    timelineSetDate("weightDate", targetDate); renderRecord(); timelineFocus("weightInput");
+  }else if(kind === "sport"){
+    recordSub = "sport"; goPage("health");
+    timelineSetDate("sportDate", targetDate); renderRecord(); timelineFocus("sportMinutes");
+  }else if(kind === "period"){
+    recordSub = "period"; goPage("health");
+    timelineSetDate("periodDate", targetDate); renderRecord(); timelineFocus("periodDate");
+  }else if(kind === "sleep"){
+    recordSub = "sleep"; goPage("health");
+    toast("睡眠按实时开始/结束，已打开睡眠记录页");
+  }else if(kind === "diary"){
+    lifeSub = "diary"; goPage("life");
+    timelineSetDate("diaryDate", targetDate); renderLife(); timelineFocus("diaryText");
+  }else if(kind === "mood"){
+    lifeSub = "mood"; goPage("life");
+    timelineSetDate("moodDate", targetDate); renderLife(); timelineFocus("moodDate");
+  }else if(kind === "anniv"){
+    lifeSub = "anniv"; goPage("life");
+    timelineSetDate("annivDate", targetDate); renderLife(); timelineFocus("annivName");
+  }else if(kind === "money"){
+    lifeSub = "money"; goPage("life");
+    openMoneyModal(targetDate); timelineFocus("moneyAmount");
+  }
 }
 /* ---------- 生活页 ---------- */
 let lifeSub = "todo", diarySub = "diary", diaryWho = "mine", annivWho = "mine";
@@ -3255,10 +3338,10 @@ function renderMoneyCats(){
   box.innerHTML = MONEY_CATS[moneyType].map(c=>'<button class="chip'+(c[0]===moneyCat?" on":"")+'" data-mcat="'+c[0]+'">'+c[1]+' '+c[0]+'</button>').join("");
   box.querySelectorAll("[data-mcat]").forEach(b=>{ b.addEventListener("click", ()=>{ moneyCat = b.dataset.mcat; renderMoneyCats(); }); });
 }
-function openMoneyModal(){
+function openMoneyModal(dateOverride){
   moneyType = "out"; moneyCat = "餐饮";
   $("moneyAmount").value = ""; $("moneyNote").value = "";
-  $("moneyDate").value = TODAY;
+  $("moneyDate").value = dateOverride || TODAY;
   $("moneyTypeOut").classList.add("on"); $("moneyTypeIn").classList.remove("on");
   document.querySelectorAll("#moneyModal .chip[data-mwho]").forEach(c=>c.classList.toggle("on", c.dataset.mwho===moneyWho));
   renderMoneyCats();
@@ -3274,10 +3357,10 @@ function saveMoney(){
   toast("记好了 💰");
 }
 /* ---------- 记餐弹窗 ---------- */
-function openMealModal(meal){
+function openMealModal(meal, dateOverride){
   mealSel = meal;
   $("mealModalTitle").textContent = "记"+MEALS[meal];
-  $("mealModalDate").value = TODAY;
+  $("mealModalDate").value = dateOverride || TODAY;
   $("mealInput").value = "";
   const pi = $("mealPhotoInput");
   if(pi) pi.value = "";
@@ -3357,7 +3440,9 @@ function renderDiary(){
   $("diaryList").innerHTML = h || '<div class="empty">'+emptyArt()+'还没有日记，写第一篇吧</div>';
 
   /* 心情 */
-  renderMoodRow($("moodRow"));
+  if($("moodDate") && !$("moodDate").value) $("moodDate").value = TODAY;
+  if($("moodDate")) $("moodDate").max = TODAY;
+  renderMoodRow($("moodRow"), ($("moodDate") && $("moodDate").value) || TODAY);
   renderMoodList();
 
   /* 纪念日 */
@@ -4051,12 +4136,13 @@ function bindEvents(){
 
     /* 心情选择 */
     if(t.classList && t.classList.contains("mood")){
-      const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho);
+      const moodDate = t.closest("#sub-mood") ? (($("moodDate") && $("moodDate").value) || TODAY) : TODAY;
+      const todayMood = S.moods.find(m=>m.date===moodDate && m.who===moodWho);
       if(t.classList.contains("on")){
         S.moods = S.moods.filter(m=>m!==todayMood);
       }else{
         if(todayMood){ todayMood.mood = t.dataset.mood; }
-        else { S.moods.push({ id:uid(), date:TODAY, mood:t.dataset.mood, note:"", who:moodWho, recorder:MY_UID() }); }
+        else { S.moods.push({ id:uid(), date:moodDate, mood:t.dataset.mood, note:"", who:moodWho, recorder:MY_UID() }); }
       }
       markDemoGone(); save(); renderAll(); toast("心情已记录");
       return;
@@ -4230,22 +4316,25 @@ function bindAddButtons(){
   $("mealModalDate") && $("mealModalDate").addEventListener("change", ()=>{});
   const md = $("mealDate");
   if(md) md.addEventListener("change", ()=>renderRecord());
+  const moodDateInput = $("moodDate");
+  if(moodDateInput) moodDateInput.addEventListener("change", ()=>renderLife());
 
   $("weightAddBtn").addEventListener("click", async ()=>{
     if(await addWeight($("weightInput").value)) $("weightInput").value = "";
   });
   $("homeWeightBtn").addEventListener("click", async ()=>{
-    if(await addWeight($("homeWeightInput").value)) $("homeWeightInput").value = "";
+    if(await addWeight($("homeWeightInput").value, TODAY)) $("homeWeightInput").value = "";
   });
-  async function addWeight(v){
+  async function addWeight(v, dateOverride){
     const kg = parseFloat(v);
     if(!kg || kg < 20 || kg > 200){ toast("填一个合理的体重数字（公斤）"); return false; }
-    const idx = S.weights.findIndex(w=>w.date===TODAY && w.who===weightWho);
+    const date = dateOverride || $("weightDate").value || TODAY;
+    const idx = S.weights.findIndex(w=>w.date===date && w.who===weightWho);
     if(idx >= 0){
-      if(!await confirmDel("今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return false;
+      if(!await confirmDel(date===TODAY ? "今天你已经记过体重了，要覆盖成 "+kg+" kg 吗？" : dateText(date)+"已经记过体重了，要覆盖成 "+kg+" kg 吗？")) return false;
       S.weights[idx].kg = kg;
     }else{
-      S.weights.push({ date:TODAY, kg, who:weightWho, recorder:MY_UID() });
+      S.weights.push({ date, kg, who:weightWho, recorder:MY_UID() });
     }
     markDemoGone(); save(); renderAll(); toast("体重已记录 ⚖️");
     return true;
@@ -4255,7 +4344,8 @@ function bindAddButtons(){
     const type = $("sportType").value;
     const min = parseInt($("sportMinutes").value, 10);
     if(!min || min < 1){ toast("填一下运动了多久（分钟）"); return; }
-    const item = { id:uid(), date:TODAY, type, minutes:min, who:sportWho, photoIds:[], recorder:MY_UID() };
+    const date = $("sportDate").value || TODAY;
+    const item = { id:uid(), date, type, minutes:min, who:sportWho, photoIds:[], recorder:MY_UID() };
     if(!await uploadPhotosForRecord("sport", item, "sportPhotoInput")) return;
     S.sports.push(item);
     $("sportMinutes").value = "";
@@ -4275,7 +4365,8 @@ function bindAddButtons(){
   });
 
   $("moodSaveBtn").addEventListener("click", ()=>{
-    const todayMood = S.moods.find(m=>m.date===TODAY && m.who===moodWho);
+    const moodDate = $("moodDate").value || TODAY;
+    const todayMood = S.moods.find(m=>m.date===moodDate && m.who===moodWho);
     if(!todayMood){ toast("先点一个心情表情哦"); return; }
     todayMood.note = $("moodNote").value.trim();
     markDemoGone(); save(); renderAll(); toast("已保存");
