@@ -189,6 +189,7 @@ label.small{font-size:12px; color:var(--text2); display:flex; align-items:center
 .photo-tile{position:relative; aspect-ratio:1; overflow:hidden; border-radius:14px; border:1px solid var(--border); background:var(--bg)}
 .photo-tile img{width:100%; height:100%; display:block; object-fit:cover}
 .photo-tile .del-btn{position:absolute; top:3px; right:3px; width:25px; height:25px; padding:0; border-radius:50%; background:rgba(40,25,45,.62); color:#fff}
+.photo-tile-caption{position:absolute; left:5px; right:5px; bottom:5px; padding:4px 6px; border-radius:8px; background:rgba(40,25,45,.62); color:#fff; font-size:10px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none}
 .photo-empty{grid-column:1/-1; text-align:center; color:var(--text2); font-size:12.5px; padding:13px 8px; line-height:1.7; border:1px dashed var(--border); border-radius:14px}
 .photo-strip{display:flex; gap:6px; margin-top:6px; overflow-x:auto}
 .photo-strip img{width:46px; height:46px; flex:0 0 46px; object-fit:cover; border-radius:10px; border:1px solid var(--border); background:var(--bg)}
@@ -739,6 +740,7 @@ body[data-active-page="chat"] #asstFloat{display:none}
 
     <div class="card">
       <div class="card-title">📷 我们的照片墙 <span class="more" id="wallPhotoHint"></span></div>
+      <div class="row" id="wallScopeChips" style="margin-bottom:6px; flex-wrap:wrap; gap:5px"></div>
       <div class="row" id="wallMonthChips" style="margin-bottom:8px; flex-wrap:wrap; gap:5px"></div>
       <div class="photo-wall" id="homePhotoWall"></div>
       <div class="row">
@@ -2422,12 +2424,33 @@ async function refreshVisiblePhotos(){
     imgs.forEach(im=>{ const key = im.dataset.photoPreviewPath || im.dataset.photoPath; const u = map[key]; if(u) im.src = u; });
   }, 120);
 }
-let wallMonth = "all";
+const PHOTO_ALBUM_KINDS = ["wall", "meal", "sport", "diary", "chat"];
+const PHOTO_SCOPE_LABELS = { all:"全部照片", wall:"照片墙", meal:"饮食", sport:"运动", diary:"日记", chat:"聊天" };
+let wallScope = "all", wallMonth = "all";
+function photoKindLabel(kind){ return PHOTO_SCOPE_LABELS[kind] || "其他"; }
+function albumPhotoRefs(){
+  return (S.photos || []).filter(photo=>PHOTO_ALBUM_KINDS.includes(photo.record_kind) && photoPreviewUrl(photo));
+}
+function renderWallScopeChips(){
+  const box = $("wallScopeChips");
+  if(!box) return;
+  const scopes = ["all", "wall", "meal", "sport", "diary", "chat"];
+  box.innerHTML = scopes.map(scope=>'<button class="chip'+(scope===wallScope?" on":"")+'" data-ws="'+scope+'">'+PHOTO_SCOPE_LABELS[scope]+"</button>").join("");
+  box.querySelectorAll("[data-ws]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      wallScope = b.dataset.ws;
+      renderWallScopeChips();
+      renderWallMonthChips();
+      renderPhotoWall();
+      refreshVisiblePhotos();
+    });
+  });
+}
 function renderWallMonthChips(){
   const box = $("wallMonthChips");
   if(!box) return;
   const months = [];
-  (S.photos || []).forEach(p=>{
+  albumPhotoRefs().forEach(p=>{
     const m = String(p.created_at || "").slice(0,7);
     if(m && !months.includes(m)) months.push(m);
   });
@@ -2441,16 +2464,24 @@ function renderWallMonthChips(){
 function renderPhotoWall(){
   const wall = $("homePhotoWall");
   if(!wall) return;
-  let refs = (S.photos || []).filter(photo=>photo.record_kind === "wall" && photoPreviewUrl(photo));
+  let refs = albumPhotoRefs();
+  if(wallScope !== "all") refs = refs.filter(photo=>photo.record_kind === wallScope);
   if(wallMonth !== "all") refs = refs.filter(p=>String(p.created_at || "").slice(0,7) === wallMonth);
   refs = refs.slice(0,12);
   if(!refs.length){
-    wall.innerHTML = '<div class="photo-empty">连接云端后，把你们喜欢的照片放进这里吧 ✨</div>';
+    wall.innerHTML = '<div class="photo-empty">'+(wallScope === "all" ? "连接云端后，把你们喜欢的照片放进这里吧 ✨" : "这个分类还没有照片 ✨")+'</div>';
+    if($("wallPhotoHint")) $("wallPhotoHint").textContent = "";
     updatePhotoControls();
     return;
   }
-  wall.innerHTML = refs.map(photo=>'<div class="photo-tile"><img loading="lazy" src="'+esc(photoPreviewUrl(photo))+'" alt="'+esc(photo.original_name || "照片墙")+'" data-photo-path="'+esc(photo.storage_path || "")+'" data-photo-preview-path="'+esc(photoPreviewPath(photo))+'">'
-    + delBtn(photo.id,"photo") + '</div>').join("");
+  wall.innerHTML = refs.map(photo=>{
+    const createdDate = String(photo.created_at || "").slice(0,10).replace(/-/g,"/");
+    const caption = photoKindLabel(photo.record_kind) + (createdDate ? " · " + createdDate : "");
+    const del = photo.record_kind === "wall" ? delBtn(photo.id,"photo") : "";
+    return '<div class="photo-tile"><img loading="lazy" src="'+esc(photoPreviewUrl(photo))+'" alt="'+esc(photo.original_name || "照片")+'" data-photo-path="'+esc(photo.storage_path || "")+'" data-photo-preview-path="'+esc(photoPreviewPath(photo))+'">'
+      + del + '<div class="photo-tile-caption">'+esc(caption)+'</div></div>';
+  }).join("");
+  if($("wallPhotoHint")) $("wallPhotoHint").textContent = refs.length + " 张";
   updatePhotoControls();
 }
 async function deletePhotoRefs(ids){
@@ -2770,8 +2801,9 @@ function renderHome(){
       + delBtn(m.id,"meal") + '</div>';
   });
   $("homeMealList").innerHTML = mh;
-  renderPhotoWall();
+  renderWallScopeChips();
   renderWallMonthChips();
+  renderPhotoWall();
 
   /* 今日体重 */
   const todayWeights = S.weights.filter(w=>w.date===TODAY);
