@@ -1600,7 +1600,7 @@ function todoReminderPayload(todo){
 }
 async function deleteTodoReminderById(todoId){
   if(!cloudReady() || !cloudSyncEnabled || !currentHouse) return;
-  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id).eq("todo_id",String(todoId)).in("status",["pending","sending"]);
+  const result = await supabaseClient.from("xj_todo_reminders").delete().eq("house_id",currentHouse.id).eq("todo_id",String(todoId)).in("status",["pending","sending","failed"]);
   if(result.error) throw result.error;
 }
 async function syncTodoReminder(todo){
